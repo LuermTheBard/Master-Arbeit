@@ -74,14 +74,17 @@ def plot_1d_correlations(plot_data_1d_correlation, line_name=None):
     for campaign, plot_data in plot_data_1d_correlation.items():
         super_title = campaign
 
-        if line_name and line_name not in plot_data.keys():
-            available_lines = ", ".join(plot_data.keys())
-            raise ValueError(
-                f"The specified line_name '{line_name}' does not exist in the plot data for campaign '{campaign}'. "
-                f"Available lines are: {available_lines}."
-            )
+        all_lines = {key.casefold(): key for key in plot_data.keys()}
+        if line_name:
+            normalized_line_name = line_name.casefold()
+            if normalized_line_name not in all_lines:
+                available_lines = ", ".join(all_lines.values())
+                raise ValueError(
+                    f"The specified line_name '{line_name}' does not exist in the plot data for campaign '{campaign}'. "
+                    f"Available lines are: {available_lines}."
+                )
+            line_name = all_lines[normalized_line_name]  # Retrieve original key
 
         for line, data_list in plot_data.items():
-            if not line_name or line == line_name:
+            if not line_name or line.casefold() == line_name.casefold():
                 plot_1d_correlation_data(data_list, line, super_title)
-
