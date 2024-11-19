@@ -29,6 +29,7 @@ def plot_all_1d_corr():
     one_dim_correlation_plot_data = create_1d_correlation_plot_data(one_dim_correlation_data)
     plot_1d_correlations(one_dim_correlation_plot_data)
 
+
 @task
 def plot_line_1d_corr(line_name=None):
     """
@@ -49,22 +50,22 @@ def plot_line_1d_corr(line_name=None):
     plot_1d_correlations(one_dim_correlation_plot_data, line_name=line_name)
 
 
-def run_task(tasks):
-    for task in tasks:
+def run_task(commands):
+    for command in commands:
         try:
-            # Split task name and additional arguments
-            parts = task.split(":")
-            task_name = parts[0]
+            # Split command name and additional arguments
+            parts = command.split(":")
+            name_of_task = parts[0]
             task_args = parts[1:] if len(parts) > 1 else []
 
-            print(f"Running {task_name} with arguments {task_args}...")
+            print(f"Running {name_of_task} with arguments {task_args}...")
 
-            # Call the task with unpacked arguments
-            registered_tasks[task_name](*task_args)
+            # Call the command with unpacked arguments
+            registered_tasks[name_of_task](*task_args)
         except KeyError:
-            print(f"Task '{task}' is not available.")
+            print(f"Task '{command}' is not available.")
         except Exception as e:
-            print(f"An error occurred while running '{task}': {e}")
+            print(f"An error occurred while running '{command}': {e}")
 
 
 if __name__ == "__main__":

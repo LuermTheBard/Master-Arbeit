@@ -83,7 +83,7 @@ def plot_1d_correlations(plot_data_1d_correlation, line_name=None):
                     f"The specified line_name '{line_name}' does not exist in the plot data for campaign '{campaign}'. "
                     f"Available lines are: {available_lines}."
                 )
-            line_name = all_lines[normalized_line_name]  # Retrieve original key
+            line_name = all_lines[normalized_line_name]
 
         for line, data_list in plot_data.items():
             if not line_name or line.casefold() == line_name.casefold():
