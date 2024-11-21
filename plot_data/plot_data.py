@@ -135,17 +135,6 @@ def compare_plots_across_continua(
     save_only=False,
     comparison_dir_name="comparisons"
 ):
-    """
-    Vergleicht gleichnamige Plots aus verschiedenen Super-Titeln nebeneinander und speichert sie optional.
-
-    Args:
-        plot_data_1d_correlation (dict): Plot-Daten, geordnet nach Kampagne (Super-Titeln).
-        line_name (str, optional): Die Linie, die verglichen werden soll. Wenn None, werden alle Linien verglichen.
-        output_dir (str, optional): Verzeichnis, in dem die Vergleichsplots gespeichert werden.
-        save_only (bool, optional): Wenn True, werden die Plots nur gespeichert und nicht angezeigt.
-        comparison_dir_name (str, optional): Unterverzeichnis für Vergleichsplots. Standard: "comparisons".
-    """
-
     # Sammeln aller verfügbaren Linien, wenn kein spezifischer line_name angegeben ist
     all_line_names = set()
     for campaign, plot_data in plot_data_1d_correlation.items():
@@ -154,7 +143,6 @@ def compare_plots_across_continua(
     # Wenn kein `line_name` angegeben ist, vergleiche alle Linien
     lines_to_compare = [line_name] if line_name else all_line_names
 
-    # Iteriere über die zu vergleichenden Linien
     for current_line_name in lines_to_compare:
         comparison_data = []
         for campaign, plot_data in plot_data_1d_correlation.items():
@@ -165,35 +153,42 @@ def compare_plots_across_continua(
                 comparison_data.append((campaign, line_data))
 
         if not comparison_data:
-            print(f"Keine Daten für die Linie '{current_line_name}' in den bereitgestellten Super-Titeln gefunden.")
+            print(f"Keine Daten für die Linie '{current_line_name}' gefunden.")
             continue
-
-        # Plotten der Vergleichsdaten
 
         # Anzahl der Subplots für die kombinierte Figur bestimmen
         num_campaigns = len(comparison_data)
-
-        # Kombinierte Subplots erstellen (1 Zeile, num_campaigns Spalten)
         fig_combined, axs_combined = plt.subplots(1, num_campaigns, figsize=(15, 6), sharey=True)
-        if num_campaigns == 1:  # Falls nur eine Kampagne vorhanden ist, axs als Liste behandeln
+        if num_campaigns == 1:
             axs_combined = [axs_combined]
 
-        # Iteration durch die Kampagnen
         for i, (campaign, data_list) in enumerate(comparison_data):
             # Einzelne Figur erstellen
             plt.figure(figsize=(10, 6))
+            x_min = 0
+            x_max = 0
+            y_min = 0
+            y_max = 0
             for data in data_list:
                 x = data[1]
                 y = data[2]
+                if min(x) < x_min:
+                    x_min = min(x)
+                if max(x) > x_max:
+                    x_max = max(x)
+                if min(y) < y_min:
+                    y_min = min(y)
+                if max(y) > y_max:
+                    y_max = max(y)
                 plt.plot(x, y, label=f"{data[0]}")
 
             plt.xlabel("time shift (tau)")
             plt.ylabel("Correlation Coefficient")
             plt.title(f"Vergleich für Linie: {current_line_name} ({campaign})")
-            plt.legend(loc="upper right", fontsize=10)
+            plt.xticks(range(int(x_min), int(x_max) + 2, 1))
+            plt.yticks([round(i/10, 2) for i in range(int(y_min * 10 - 2), int(y_max * 10 + 2), 1)])
             plt.grid(True)
 
-            # Optional speichern
             if output_dir:
                 campaign_dir = Path(output_dir) / campaign / comparison_dir_name
                 campaign_dir.mkdir(parents=True, exist_ok=True)
@@ -203,10 +198,9 @@ def compare_plots_across_continua(
             if not save_only:
                 plt.show()
 
-            # Schließen der einzelnen Figur
             plt.close()
 
-            # Daten in kombinierte Subplots einfügen
+            # Kombinierte Subplots
             ax = axs_combined[i]
             for data in data_list:
                 x = data[1]
@@ -215,28 +209,24 @@ def compare_plots_across_continua(
 
             ax.set_xlabel("time shift (tau)")
             if i == 0:
-                ax.set_ylabel("Correlation Coefficient")  # Nur beim ersten Plot Y-Achse beschriften
+                ax.set_ylabel("Correlation Coefficient")
             ax.set_title(f"Vergleich: {campaign}")
-            ax.legend(loc="upper right", fontsize=8)
+            ax.set_xticks(range(int(x_min), int(x_max) + 2, 1))  # 2er-Schritte
+            ax.set_yticks([round(i/10, 2) for i in range(int(y_min * 10 - 2), int(y_max * 10 + 2), 1)])  # 0.2-Schritte
             ax.grid(True)
+            ax.legend(loc="upper right", fontsize=8)
 
-        # Gemeinsamen Titel für die kombinierte Figur setzen
+        # Titel und Layout für die kombinierte Figur
         fig_combined.suptitle(f"Vergleich für Linie: {current_line_name}")
-
-        # Layout optimieren
         fig_combined.tight_layout(rect=(0, 0, 1, 0.95))
 
-        # Kombinierte Figur speichern
         if output_dir:
             comparison_dir = Path(output_dir) / comparison_dir_name
             comparison_dir.mkdir(parents=True, exist_ok=True)
             combined_save_path = comparison_dir / f"{current_line_name.replace(' ', '_')}_combined_comparison.png"
             fig_combined.savefig(combined_save_path)
 
-        # Kombinierte Figur anzeigen, falls nicht nur speichern
         if not save_only:
             plt.show()
 
-        # Schließen der kombinierten Figur
         plt.close(fig_combined)
-
