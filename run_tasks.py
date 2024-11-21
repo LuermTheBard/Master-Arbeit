@@ -3,7 +3,7 @@ import subprocess
 
 from handle_data.handle_data import create_1d_correlation_plot_data
 from import_data.import_data import import_1d_correlation_data
-from plot_data.plot_data import plot_1d_correlations
+from plot_data.plot_data import process_1d_correlations
 
 # Dictionary to store registered tasks
 registered_tasks = {}
@@ -27,7 +27,7 @@ def plot_all_1d_corr():
     """
     one_dim_correlation_data = import_1d_correlation_data()
     one_dim_correlation_plot_data = create_1d_correlation_plot_data(one_dim_correlation_data)
-    plot_1d_correlations(one_dim_correlation_plot_data)
+    process_1d_correlations(one_dim_correlation_plot_data)
 
 
 @task
@@ -47,7 +47,7 @@ def plot_line_1d_corr(line_name=None):
 
     one_dim_correlation_data = import_1d_correlation_data()
     one_dim_correlation_plot_data = create_1d_correlation_plot_data(one_dim_correlation_data)
-    plot_1d_correlations(one_dim_correlation_plot_data, line_name=line_name)
+    process_1d_correlations(one_dim_correlation_plot_data, line_name=line_name)
 
 
 def run_task(commands):
