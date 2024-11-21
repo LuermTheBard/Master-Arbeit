@@ -86,7 +86,10 @@ def process_1d_correlation_data(data_list, line, super_title, output_dir=None, s
 
         save_path = None
         if output_dir:
-            save_path = f"{output_dir}/{title.replace(' ', '_').replace('/', '_')}.png"
+            save_dir = output_dir / super_title
+            if not save_dir.exists():
+                save_dir.mkdir()
+            save_path = f"{save_dir}/{title.replace(' ', '_').replace('/', '_')}.png"
 
         process_plot(params, save_path=save_path, save_only=save_only)
 
