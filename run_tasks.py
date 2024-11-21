@@ -1,5 +1,6 @@
 import sys
 import subprocess
+from pathlib import Path
 
 from handle_data.handle_data import create_1d_correlation_plot_data
 from import_data.import_data import import_1d_correlation_data
@@ -50,8 +51,8 @@ def compare_and_save_all_1d_corr(output_dir=DEFAULT_OUTPUT_DIR):
     """
     save all 1D correlations.
     """
-
-    if not output_dir.exists():
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
         output_dir.mkdir(parents=True)
 
     one_dim_correlation_data = import_1d_correlation_data()
@@ -83,7 +84,7 @@ def run_task(commands):
     for command in commands:
         try:
             # Split command name and additional arguments
-            parts = command.split(":")
+            parts = command.split("::")
             name_of_task = parts[0]
             task_args = parts[1:] if len(parts) > 1 else []
 
