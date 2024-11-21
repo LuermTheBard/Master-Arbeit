@@ -224,7 +224,7 @@ def compare_plots_across_continua(
         fig_combined.suptitle(f"Vergleich für Linie: {current_line_name}")
 
         # Layout optimieren
-        fig_combined.tight_layout(rect=[0, 0, 1, 0.95])
+        fig_combined.tight_layout(rect=(0, 0, 1, 0.95))
 
         # Kombinierte Figur speichern
         if output_dir:
