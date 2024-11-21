@@ -3,7 +3,7 @@ import subprocess
 
 from handle_data.handle_data import create_1d_correlation_plot_data
 from import_data.import_data import import_1d_correlation_data
-from plot_data.plot_data import process_1d_correlations
+from plot_data.plot_data import process_1d_correlations, compare_plots_across_continua
 from settings import DEFAULT_OUTPUT_DIR
 
 # Dictionary to store registered tasks
@@ -30,6 +30,7 @@ def plot_all_1d_corr():
     one_dim_correlation_plot_data = create_1d_correlation_plot_data(one_dim_correlation_data)
     process_1d_correlations(one_dim_correlation_plot_data)
 
+
 @task
 def save_all_1d_corr(output_dir=DEFAULT_OUTPUT_DIR):
     """
@@ -42,6 +43,20 @@ def save_all_1d_corr(output_dir=DEFAULT_OUTPUT_DIR):
     one_dim_correlation_data = import_1d_correlation_data()
     one_dim_correlation_plot_data = create_1d_correlation_plot_data(one_dim_correlation_data)
     process_1d_correlations(one_dim_correlation_plot_data, output_dir=output_dir, save_only=True)
+
+
+@task
+def compare_and_save_all_1d_corr(output_dir=DEFAULT_OUTPUT_DIR):
+    """
+    save all 1D correlations.
+    """
+
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
+
+    one_dim_correlation_data = import_1d_correlation_data()
+    one_dim_correlation_plot_data = create_1d_correlation_plot_data(one_dim_correlation_data)
+    compare_plots_across_continua(one_dim_correlation_plot_data, output_dir=output_dir, save_only=True)
 
 
 @task
