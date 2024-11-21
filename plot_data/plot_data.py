@@ -5,7 +5,16 @@ from matplotlib import pyplot as plt
 matplotlib.use("Qt5Agg")
 
 
-def simple_plot(params):
+def process_plot(params, save_path=None, save_only=False):
+    """
+    Erstellt eine Grafik basierend auf den übergebenen Parametern und speichert sie optional.
+
+    Args:
+        params (dict): Parameter für die Grafik.
+        save_path (str, optional): Pfad, unter dem die Grafik gespeichert wird.
+        save_only (bool, optional): Wenn True, wird die Grafik nur gespeichert und nicht angezeigt.
+    """
+    plt.figure()
     plt.plot(params["x"], params["y"], label=params["label"], color="b", linewidth=2)
     plt.xlabel(params["xlabel"], fontsize=params["label_fontsize"])
     plt.ylabel(params["ylabel"], fontsize=params["label_fontsize"])
@@ -17,10 +26,27 @@ def simple_plot(params):
     plt.xticks(params["x_ticks"])
     plt.yticks(params["y_ticks"])
     plt.grid(True)
-    plt.show()
+
+    if save_path:
+        plt.savefig(save_path)
+
+    if not save_only:
+        plt.show()
+
+    plt.close()
 
 
-def plot_1d_correlation_data(data_list, line, super_title):
+def process_1d_correlation_data(data_list, line, super_title, output_dir=None, save_only=False):
+    """
+    Erstellt oder speichert 1D-Korrelationsdaten als Bilder.
+
+    Args:
+        data_list (list): Liste von Daten für die Korrelation.
+        line (str): Linienbezeichnung.
+        super_title (str): Übergeordneter Titel der Grafik.
+        output_dir (str, optional): Verzeichnis, in dem die Grafiken gespeichert werden.
+        save_only (bool, optional): Wenn True, werden die Plots nur gespeichert und nicht angezeigt.
+    """
     xlabel = "time shift (tau)"
     ylabel = "Correlation Coefficient"
     label_fontsize = 12
@@ -57,19 +83,26 @@ def plot_1d_correlation_data(data_list, line, super_title):
             "title": title,
             "title_fontsize": title_fontsize
         }
-        simple_plot(params)
+
+        save_path = None
+        if output_dir:
+            save_path = f"{output_dir}/{title.replace(' ', '_').replace('/', '_')}.png"
+
+        process_plot(params, save_path=save_path, save_only=save_only)
 
 
-def plot_1d_correlations(plot_data_1d_correlation, line_name=None):
+def process_1d_correlations(plot_data_1d_correlation, output_dir=None, save_only=False, line_name=None):
     """
-    Plots 1D correlations for all lines or a specific line.
+    Erstellt oder speichert 1D-Korrelationen für alle Linien oder eine spezifische Linie als Bilder.
 
     Args:
-        plot_data_1d_correlation (dict): The plot data dictionary.
-        line_name (str, optional): The specific line name to plot. If None, plots all lines.
+        plot_data_1d_correlation (dict): Plot-Daten.
+        output_dir (str, optional): Verzeichnis, in dem die Bilder gespeichert werden.
+        save_only (bool, optional): Wenn True, werden die Plots nur gespeichert und nicht angezeigt.
+        line_name (str, optional): Spezifische Linie. Wenn None, werden alle Linien verarbeitet.
 
     Raises:
-        ValueError: If line_name is specified but does not exist in the plot data keys.
+        ValueError: Wenn line_name angegeben, aber nicht in den Daten vorhanden ist.
     """
     for campaign, plot_data in plot_data_1d_correlation.items():
         super_title = campaign
@@ -87,4 +120,4 @@ def plot_1d_correlations(plot_data_1d_correlation, line_name=None):
 
         for line, data_list in plot_data.items():
             if not line_name or line.casefold() == line_name.casefold():
-                plot_1d_correlation_data(data_list, line, super_title)
+                process_1d_correlation_data(data_list, line, super_title, output_dir=output_dir, save_only=save_only)
