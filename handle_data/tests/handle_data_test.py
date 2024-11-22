@@ -1,4 +1,4 @@
-from handle_data.handle_data import calc_broad_lines_doppler_shift_with_error
+from handle_data.handle_data import calc_broad_lines_doppler_shift_with_error, calc_error
 
 
 def test_calc_broad_lines_doppler_shift_with_error():
@@ -64,6 +64,32 @@ def test_calc_broad_lines_doppler_shift_with_error():
             f"For line {line}, expected Doppler shift error: {expected_shift_err}, got: {calculated_shift_err}"
         )
 
-    print("All tests passed!")
+    print("Test passed: test_calc_broad_lines_doppler_shift_with_error()")
+
+
+def test_calc_error():
+    # Input parameters
+    delta_lambda_ref = 10.0  # Doppler shift of the reference line
+    delta_lambda_ref_err = 0.5  # Error in the Doppler shift of the reference line
+    delta_v_c = 0.001524  # Calculated Doppler shift in velocity space
+    lambda_rest_ref = 6563.0  # Rest wavelength of the reference line
+    lambda_rest_ref_err = 1.0  # Error in the rest wavelength of the reference line
+
+    # Expected result for delta_v_c_err
+    expected_delta_v_c_err = delta_v_c * (
+        ((delta_lambda_ref_err / delta_lambda_ref) if delta_lambda_ref != 0 else 0) ** 2 +
+        ((lambda_rest_ref_err / lambda_rest_ref) if lambda_rest_ref != 0 else 0) ** 2
+    ) ** 0.5
+
+    # Call the function
+    calculated_delta_v_c_err = calc_error(delta_lambda_ref, delta_lambda_ref_err, delta_v_c, lambda_rest_ref,
+                                          lambda_rest_ref_err)
+
+    # Assertion
+    assert abs(calculated_delta_v_c_err - expected_delta_v_c_err) < 1e-6, (
+        f"Expected delta_v_c_err: {expected_delta_v_c_err}, got: {calculated_delta_v_c_err}"
+    )
+
+    print("Test passed: calc_error()")
 
 

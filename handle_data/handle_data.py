@@ -45,44 +45,51 @@ def calc_broad_lines_doppler_shift_with_error(
 
     Returns:
         Tuple[Dict[str, Tuple[float, float]], float, float]:
-            - A dictionary with the line names as keys and their calculated Doppler shifts (delta_lambda) and errors as values.
+            - A dictionary with the line names as keys and their calculated Doppler shifts (delta_lambda) and errors as
+            values.
             - The Doppler shift of the reference line in velocity space (delta_v / c).
             - The error in the Doppler shift of the reference line in velocity space (delta_v / c).
     """
-    # Calculate the Doppler shift in velocity space for the reference line
+    # Calculate the Doppler shift and error for the reference line
     delta_v_c = delta_lambda_ref / lambda_rest_ref
-    delta_v_c_err = 0.0
-
-    if lambda_rest_ref_err != 0 or delta_lambda_ref_err != 0:
-        delta_v_c_err = delta_v_c * (
-            ((delta_lambda_ref_err / delta_lambda_ref) if delta_lambda_ref != 0 else 0) ** 2 +
-            ((lambda_rest_ref_err / lambda_rest_ref) if lambda_rest_ref != 0 else 0) ** 2
-        ) ** 0.5
+    delta_v_c_err = calc_error(delta_lambda_ref, delta_lambda_ref_err, delta_v_c, lambda_rest_ref, lambda_rest_ref_err)
 
     print(f"Doppler shift (delta_v / c) for the reference line {ref_name}: {delta_v_c:.6f} ± {delta_v_c_err:.6f}")
 
-    # Initialize the result dictionary
-    line_doppler_shifts = {}
-
     # Calculate Doppler shifts and errors for each line
-    for line_name, lambda_rest in line_rest_lambda_dict.items():
+    line_doppler_shifts = {
+        line_name: (
+            delta_lambda_line := delta_v_c * lambda_rest,
+            calc_error(lambda_rest, line_rest_lambda_err_dict.get(line_name, 0.0), delta_lambda_line, delta_v_c,
+                       delta_v_c_err)
+        )
+        for line_name, lambda_rest in line_rest_lambda_dict.items()
+    }
+
+    # Print results
+    for line_name, (delta_lambda_line, delta_lambda_line_err) in line_doppler_shifts.items():
         lambda_rest_err = line_rest_lambda_err_dict.get(line_name, 0.0)
-
-        # Calculate the Doppler shift
-        delta_lambda_line = delta_v_c * lambda_rest
-
-        # Calculate the error
-        delta_lambda_line_err = 0.0
-        if lambda_rest_err != 0 or delta_v_c_err != 0:
-            delta_lambda_line_err = delta_lambda_line * (
-                ((lambda_rest_err / lambda_rest) if lambda_rest != 0 else 0) ** 2 +
-                ((delta_v_c_err / delta_v_c) if delta_v_c != 0 else 0) ** 2
-            ) ** 0.5
-
-        line_doppler_shifts[line_name] = (delta_lambda_line, delta_lambda_line_err)
-
-        print(f"Line: {line_name}, Rest wavelength: {lambda_rest} ± {lambda_rest_err}, "
+        print(f"Line: {line_name}, Rest wavelength: {line_rest_lambda_dict[line_name]} ± {lambda_rest_err}, "
               f"Doppler shift (delta_lambda): {delta_lambda_line:.6f} ± {delta_lambda_line_err:.6f}")
 
     return line_doppler_shifts, delta_v_c, delta_v_c_err
 
+
+def calc_error(value: float, value_err: float, result: float, ref_value: float, ref_value_err: float) -> float:
+    """
+    Calculates the propagated error for a given result based on its inputs and their errors.
+
+    Args:
+        value (float): First value.
+        value_err (float): Error in the first value.
+        result (float): Calculated result.
+        ref_value (float): Reference value.
+        ref_value_err (float): Error in the reference value.
+
+    Returns:
+        float: Propagated error in the result.
+    """
+    return result * (
+        ((value_err / value) if value != 0 else 0) ** 2 +
+        ((ref_value_err / ref_value) if ref_value != 0 else 0) ** 2
+    ) ** 0.5
