@@ -190,7 +190,8 @@ def compare_plots_across_continua(
             plt.grid(True)
 
             if output_dir:
-                campaign_dir = Path(output_dir) / campaign / comparison_dir_name
+                package_output_dir = output_dir / "plot_data" / "compare_plots_across_continua"
+                campaign_dir = Path(package_output_dir) / campaign / comparison_dir_name
                 campaign_dir.mkdir(parents=True, exist_ok=True)
                 save_path = campaign_dir / f"{current_line_name.replace(' ', '_')}_{campaign}_comparison.png"
                 plt.savefig(save_path)
@@ -221,7 +222,8 @@ def compare_plots_across_continua(
         fig_combined.tight_layout(rect=(0, 0, 1, 0.95))
 
         if output_dir:
-            comparison_dir = Path(output_dir) / comparison_dir_name
+            package_output_dir= output_dir / "plot_data" / "compare_plots_across_continua"
+            comparison_dir = Path(package_output_dir) / comparison_dir_name
             comparison_dir.mkdir(parents=True, exist_ok=True)
             combined_save_path = comparison_dir / f"{current_line_name.replace(' ', '_')}_combined_comparison.png"
             fig_combined.savefig(combined_save_path)
