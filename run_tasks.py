@@ -2,8 +2,8 @@ import sys
 import subprocess
 from pathlib import Path
 
-from handle_data.handle_data import create_1d_correlation_plot_data
-from import_data.import_data import import_1d_correlation_data
+from handle_data.handle_data import create_1d_correlation_plot_data, calc_broad_lines_doppler_shift_with_error
+from import_data.import_data import import_1d_correlation_data, load_dopplershift_data_from_toml
 from plot_data.plot_data import process_1d_correlations, compare_plots_across_continua
 from settings import DEFAULT_OUTPUT_DIR
 
@@ -73,11 +73,37 @@ def plot_line_1d_corr(line_name=None):
     """
     # Prüfen, ob line_name definiert ist
     if not line_name:
-        raise ValueError("Please specify a line name in the following form: plot_line_1d_corr:line_name")
+        raise ValueError("Please specify a line name in the following form: plot_line_1d_corr::line_name")
 
     one_dim_correlation_data = import_1d_correlation_data()
     one_dim_correlation_plot_data = create_1d_correlation_plot_data(one_dim_correlation_data)
     process_1d_correlations(one_dim_correlation_plot_data, line_name=line_name)
+
+
+@task
+def calc_dopplershift_correction(file_name=None):
+    if not file_name:
+        raise ValueError("Please specify a file name in the following form: calc_dopplershift_correction::file_name")
+
+    toml_data = load_dopplershift_data_from_toml(file_name)
+
+    ref_name = toml_data["reference_shift"]["name"]
+
+    lambda_rest_ref = toml_data["central_wavelengths"][ref_name]
+    lambda_rest_ref_err = toml_data["central_wavelengths_err"][f"{ref_name}_err"]
+
+    delta_lambda_ref = toml_data["reference_shift"]["delta_lambda"]
+    delta_lambda_ref_err = toml_data["reference_shift"]["delta_lambda_err"]
+
+    line_rest_lambda_dict = toml_data["central_wavelengths"]
+    line_rest_lambda_dict.pop(ref_name)
+
+    line_rest_lambda_err_dict = toml_data["central_wavelengths_err"]
+    line_rest_lambda_err_dict.pop(f"{ref_name}_err")
+
+    calc_broad_lines_doppler_shift_with_error(delta_lambda_ref, delta_lambda_ref_err, lambda_rest_ref,
+                                              lambda_rest_ref_err, ref_name, line_rest_lambda_dict,
+                                              line_rest_lambda_err_dict)
 
 
 def run_task(commands):
@@ -92,7 +118,7 @@ def run_task(commands):
 
             # Call the command with unpacked arguments
             registered_tasks[name_of_task](*task_args)
-        except KeyError:
+        except KeyError as k:
             print(f"Task '{command}' is not available.")
         except Exception as e:
             print(f"An error occurred while running '{command}': {e}")

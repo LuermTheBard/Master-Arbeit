@@ -34,7 +34,7 @@ def calc_broad_lines_doppler_shift_with_error(
     ref_name: str,
     line_rest_lambda_dict: Dict[str, float],
     line_rest_lambda_err_dict: Dict[str, float]
-) -> Tuple[Dict[str, Tuple[float, float]], float, float]:
+):
     """
     First calculates the Doppler shift of the reference line in velocity space (delta_v / c)
     and then derives the corresponding Doppler shifts and their errors for the provided lines in a dictionary.
@@ -101,13 +101,11 @@ def calc_broad_lines_doppler_shift_with_error(
     # Save results to a file
     _calc_broad_lines_doppler_shift_save_to_txt(result_data)
 
-    return line_doppler_shifts, delta_v_c, delta_v_c_err
-
 
 def _calc_broad_lines_doppler_shift_save_to_txt(result_data: Dict,
                                                 output_file_path: Path = DEFAULT_DOPPLERSHIFT_SAVE_FILENAME):
     """
-    Saves the input values and calculated results to a text file.
+    Saves the input values and calculated results to a text file, including Doppler-shifted wavelengths.
 
     Args:
         result_data (Dict): A dictionary containing all the relevant input parameters and results.
@@ -127,13 +125,27 @@ def _calc_broad_lines_doppler_shift_save_to_txt(result_data: Dict,
         file.write(f"Lambda Rest Ref: {ref_data['lambda_rest_ref']:.6f} ± {ref_data['lambda_rest_ref_err']:.6f}\n")
         file.write(f"Doppler Shift (delta_v / c): {ref_data['delta_v_c']:.6f} ± {ref_data['delta_v_c_err']:.6f}\n")
 
-        file.write("\nLine Rest Wavelengths and Errors:\n")
+        file.write("\nLine Rest Wavelengths, Doppler Shifts, and Shifted Wavelengths:\n")
         for line_name, line_data in result_data["lines"].items():
-            file.write(f"{line_name}: Rest Wavelength = {line_data['rest_wavelength']:.6f} ± {line_data['rest_wavelength_err']:.6f}, "
-                       f"Doppler Shift = {line_data['doppler_shift']:.6f} ± {line_data['doppler_shift_err']:.6f}\n")
+            rest_wavelength = line_data['rest_wavelength']
+            rest_wavelength_err = line_data['rest_wavelength_err']
+            doppler_shift = line_data['doppler_shift']
+            doppler_shift_err = line_data['doppler_shift_err']
+
+            # Berechnung der verschobenen Wellenlängen
+            shifted_wavelength_left = rest_wavelength - doppler_shift
+            shifted_wavelength_right = rest_wavelength + doppler_shift
+
+            # Fehlerberechnung für die verschobenen Wellenlängen (Fehlerfortpflanzung)
+            shifted_wavelength_left_err = (rest_wavelength_err ** 2 + doppler_shift_err ** 2) ** 0.5
+            shifted_wavelength_right_err = (rest_wavelength_err ** 2 + doppler_shift_err ** 2) ** 0.5
+
+            file.write(f"{line_name}: Rest Wavelength = {rest_wavelength:.6f} ± {rest_wavelength_err:.6f}, "
+                       f"Doppler Shift = {doppler_shift:.6f} ± {doppler_shift_err:.6f}, "
+                       f"Shifted Wavelength Left = {shifted_wavelength_left:.6f} ± {shifted_wavelength_left_err:.6f}, "
+                       f"Shifted Wavelength Right = {shifted_wavelength_right:.6f} ± {shifted_wavelength_right_err:.6f}\n")
 
     print(f"Results saved to {file_name}")
-
 
 def calc_error(value: float, value_err: float, result: float, ref_value: float, ref_value_err: float) -> float:
     """
