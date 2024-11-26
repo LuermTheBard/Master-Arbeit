@@ -17,11 +17,13 @@ def import_1d_correlation_data():
 
     data_path = find_prime_data_folder()
 
-    galaxie_campaigns = [f.name for f in data_path.iterdir() if f.is_dir()]
+    campains_path = data_path / "campains"
+
+    galaxie_campaigns = [f.name for f in campains_path.iterdir() if f.is_dir()]
     galaxie_campaigns_dict = dict()
     for campaign in galaxie_campaigns:
         continua_dict = dict()
-        campaign_path = (data_path / campaign)
+        campaign_path = (campains_path / campaign)
         if "1DCorrelations" in [f.name for f in campaign_path.iterdir()]:
 
             one_dim_correlation_path = (campaign_path / "1DCorrelations")
