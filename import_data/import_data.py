@@ -1,14 +1,32 @@
 from pathlib import Path
 import numpy as np
 
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
+
+
 DATA_PATH = Path.cwd().parent / "data"
 
 
 def find_prime_data_folder():
     current_working_directory = Path.cwd()
-    for folder in current_working_directory.rglob("data"):
-        print(f"'data' folder found at: {folder}")
-        return folder
+
+    # Suche in den aktuellen und zwei übergeordneten Verzeichnissen
+    for i in range(3):
+        potential_data_folder = current_working_directory / "data"
+        if potential_data_folder.exists() and potential_data_folder.is_dir():
+            print(f"'data' folder found at: {potential_data_folder}")
+            return potential_data_folder
+        current_working_directory = current_working_directory.parent
+
+    # Falls 'data' nicht in den ersten drei Ebenen gefunden wurde, rekursive Suche im Baum
+    for folder in Path.cwd().rglob("data"):
+        if folder.is_dir():
+            print(f"'data' folder found at: {folder}")
+            return folder
+
     print("No 'data' folder found.")
     return None
 
@@ -50,3 +68,18 @@ def import_1d_correlation_data():
         galaxie_campaigns_dict[str(campaign)] = continua_dict
 
     return galaxie_campaigns_dict
+
+
+def load_dopplershift_data_from_toml(toml_name, toml_path=None):
+
+    if toml_path is None:
+        data_path = find_prime_data_folder()
+
+        toml_path = data_path / "dopplershift_calc_data" / toml_name
+    else:
+        toml_path = toml_path / toml_name
+
+    with open(str(toml_path), "rb") as file:
+        dopplershift_data = tomllib.load(file)
+
+    return dopplershift_data
