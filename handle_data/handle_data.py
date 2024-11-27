@@ -125,7 +125,7 @@ def _calc_broad_lines_doppler_shift_save_to_txt(result_data: Dict,
         file.write(f"Lambda Rest Ref: {ref_data['lambda_rest_ref']:.6f} ± {ref_data['lambda_rest_ref_err']:.6f}\n")
         file.write(f"Doppler Shift (delta_v / c): {ref_data['delta_v_c']:.6f} ± {ref_data['delta_v_c_err']:.6f}\n")
 
-        file.write("\nLine Rest Wavelengths, Doppler Shifts, and Shifted Wavelengths:\n")
+        file.write("\nLine Rest Wavelengths, Doppler Shifts, and Shifted Wavelengths:\n\n")
         for line_name, line_data in result_data["lines"].items():
             rest_wavelength = line_data['rest_wavelength']
             rest_wavelength_err = line_data['rest_wavelength_err']
@@ -140,12 +140,13 @@ def _calc_broad_lines_doppler_shift_save_to_txt(result_data: Dict,
             shifted_wavelength_left_err = (rest_wavelength_err ** 2 + doppler_shift_err ** 2) ** 0.5
             shifted_wavelength_right_err = (rest_wavelength_err ** 2 + doppler_shift_err ** 2) ** 0.5
 
-            file.write(f"{line_name}: Rest Wavelength = {rest_wavelength:.6f} ± {rest_wavelength_err:.6f}, "
-                       f"Doppler Shift = {doppler_shift:.6f} ± {doppler_shift_err:.6f}, "
-                       f"Shifted Wavelength Left = {shifted_wavelength_left:.6f} ± {shifted_wavelength_left_err:.6f}, "
-                       f"Shifted Wavelength Right = {shifted_wavelength_right:.6f} ± {shifted_wavelength_right_err:.6f}\n")
+            file.write(f"{line_name}: \n\nRest Wavelength = {rest_wavelength:.6f} ± {rest_wavelength_err:.6f}, \n"
+                       f"Doppler Shift = {doppler_shift:.6f} ± {doppler_shift_err:.6f}, \n"
+                       f"Shifted Wavelength Left = {shifted_wavelength_left:.6f} ± {shifted_wavelength_left_err:.6f},\n"
+                       f"Shifted Wavelength Right = {shifted_wavelength_right:.6f} ± {shifted_wavelength_right_err:.6f}\n\n")
 
     print(f"Results saved to {file_name}")
+
 
 def calc_error(value: float, value_err: float, result: float, ref_value: float, ref_value_err: float) -> float:
     """
