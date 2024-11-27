@@ -35,7 +35,7 @@ def import_1d_correlation_data():
 
     data_path = find_prime_data_folder()
 
-    campains_path = data_path / "campains"
+    campains_path = data_path / "campaigns"
 
     galaxie_campaigns = [f.name for f in campains_path.iterdir() if f.is_dir()]
     galaxie_campaigns_dict = dict()

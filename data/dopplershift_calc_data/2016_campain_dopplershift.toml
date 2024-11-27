@@ -1,0 +1,48 @@
+[central_wavelengths]
+
+# H-alpha
+H_alpha = 6562.82
+
+# H-beta
+H_beta = 4861.33
+
+# H-gamma
+H_gamma = 4340.47
+
+# H-delta
+H_delta = 4101.74
+
+He_I_5875 = 5875.6
+
+He_I_5015 = 5015.7
+
+He_II_4685 = 4685.7
+
+OI_8446 = 8446.35
+
+[central_wavelengths_err]
+
+H_alpha_err = 2
+
+H_beta_err = 2
+
+H_gamma_err = 2
+
+H_delta_err = 2
+
+He_I_5875_err = 2
+
+He_I_5004_err = 2
+
+He_II_5004_err = 2
+
+OI_8465_err = 2
+
+
+[reference_shift]
+
+name = 'H_beta'
+
+delta_lambda = 34.6
+delta_lambda_err = 0.1
+
