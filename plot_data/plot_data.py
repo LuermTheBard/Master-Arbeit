@@ -195,7 +195,7 @@ def plot_individual(data_list, current_line_name, campaign, output_dir, save_onl
     plt.grid(visible=True, which='both', linestyle='--', linewidth=0.5)
 
     if output_dir:
-        save_path = prepare_output_path(output_dir, campaign, current_line_name, is_combined=False)
+        save_path = prepare_output_path(output_dir, campaign, current_line_name, "plot_individual", is_combined=False)
         plt.savefig(save_path)
 
     if not save_only:
@@ -228,6 +228,7 @@ def plot_combined(comparison_data, current_line_name, output_dir, save_only):
             y_min, y_max = min(y_min, min(y)), max(y_max, max(y))
             ax.plot(x, y, label=f"{data[0]}")
 
+
         ax.set_xlabel("time shift (tau)")
         if i == 0:
             ax.set_ylabel("Correlation Coefficient")
@@ -241,7 +242,7 @@ def plot_combined(comparison_data, current_line_name, output_dir, save_only):
     fig_combined.tight_layout(rect=(0, 0, 1, 0.95))
 
     if output_dir:
-        save_path = prepare_output_path(output_dir, None, current_line_name, is_combined=True)
+        save_path = prepare_output_path(output_dir, None, current_line_name, "plot_combined",  is_combined=True)
         fig_combined.savefig(save_path)
 
     if not save_only:
@@ -250,11 +251,76 @@ def plot_combined(comparison_data, current_line_name, output_dir, save_only):
     plt.close(fig_combined)
 
 
-def prepare_output_path(output_dir, campaign, line_name, is_combined):
+def plot_combined_averaged(comparison_data, current_line_name, output_dir, save_only):
+    """
+    Creates and optionally saves or displays combined plots for a specific line across campaigns,
+    displaying only the average of the data points.
+
+    Args:
+        comparison_data (list): List of tuples, each containing campaign names and their respective data points.
+        current_line_name (str): Name of the line being plotted.
+        output_dir (Path or None): Directory where the plot will be saved. If None, plots are not saved.
+        save_only (bool): If True, the plot will only be saved and not displayed.
+    """
+    num_campaigns = len(comparison_data)
+    fig_combined, axs_combined = plt.subplots(1, num_campaigns, figsize=(15, 6), sharey=True)
+    axs_combined = axs_combined if num_campaigns > 1 else [axs_combined]
+
+    for i, (campaign, data_list) in enumerate(comparison_data):
+        ax = axs_combined[i]
+        x_min, x_max, y_min, y_max = float("inf"), float("-inf"), float("inf"), float("-inf")
+
+        all_x = []
+        all_y = []
+
+        for data in data_list:
+            x, y = data[1], data[2]
+            all_x.append(x)
+            all_y.append(y)
+            x_min, x_max = min(x_min, min(x)), max(x_max, max(x))
+            y_min, y_max = min(y_min, min(y)), max(y_max, max(y))
+
+        # Compute the average across all data sets for this campaign
+        avg_x = np.linspace(x_min, x_max, 500)  # Interpolated x for consistent averaging
+        avg_y = np.zeros_like(avg_x)
+        count = np.zeros_like(avg_x)
+
+        for x, y in zip(all_x, all_y):
+            y_interp = np.interp(avg_x, x, y)  # Interpolate y values to avg_x
+            avg_y += y_interp
+            count += 1
+
+        avg_y /= count
+        ax.plot(avg_x, avg_y, label="Average over continua", color="blue", linewidth=2)
+
+        ax.set_xlabel("time shift (tau)")
+        if i == 0:
+            ax.set_ylabel("Correlation Coefficient")
+        ax.set_title(f"Average Comparison: {campaign}")
+        ax.set_xticks(range(int(x_min), int(x_max) + 2, 1))
+        ax.set_yticks([round(i / 10, 2) for i in range(int(y_min * 10 - 2), int(y_max * 10 + 2), 1)])
+        ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5)
+        ax.legend(loc="upper right", fontsize=8)
+
+    fig_combined.suptitle(f"Average Comparison for Line: {current_line_name}")
+    fig_combined.tight_layout(rect=(0, 0, 1, 0.95))
+
+    if output_dir:
+        save_path = prepare_output_path(output_dir, None, current_line_name, "plot_combined_averaged", is_combined=True)
+        fig_combined.savefig(save_path)
+
+    if not save_only:
+        plt.show()
+
+    plt.close(fig_combined)
+
+
+def prepare_output_path(output_dir, campaign, line_name, methode_name, is_combined):
     """
     Prepares the output path for saving plots.
 
     Args:
+        methode_name: 
         output_dir (Path): Base directory for saving plots.
         campaign (str or None): Campaign name for individual plots. None for combined plots.
         line_name (str): Name of the line being plotted.
@@ -264,7 +330,7 @@ def prepare_output_path(output_dir, campaign, line_name, is_combined):
         Path: The full path for the output file.
     """
     sub_dir = "combined" if is_combined else campaign
-    comparison_dir = Path(output_dir) / "plot_data" / "compare_plots_across_continua" / sub_dir
+    comparison_dir = Path(output_dir) / "plot_data" / methode_name / sub_dir
     comparison_dir.mkdir(parents=True, exist_ok=True)
     file_name = f"{line_name.replace(' ', '_')}_{'combined' if is_combined else campaign}_comparison.png"
     return comparison_dir / file_name
@@ -300,4 +366,6 @@ def compare_plots_across_continua(
             plot_individual(data_list, current_line_name, campaign, output_dir, save_only)
 
         plot_combined(comparison_data, current_line_name, output_dir, save_only)
+
+        plot_combined_averaged(comparison_data, current_line_name, output_dir, save_only)
 
