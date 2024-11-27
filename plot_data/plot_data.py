@@ -204,63 +204,17 @@ def plot_individual(data_list, current_line_name, campaign, output_dir, save_onl
     plt.close()
 
 
-def plot_combined(comparison_data, current_line_name, output_dir, save_only):
-    """
-    Creates and optionally saves or displays combined plots for a specific line across campaigns.
-
-    Args:
-        comparison_data (list): List of tuples, each containing campaign names and their respective data points.
-        current_line_name (str): Name of the line being plotted.
-        output_dir (Path or None): Directory where the plot will be saved. If None, plots are not saved.
-        save_only (bool): If True, the plot will only be saved and not displayed.
-    """
-    num_campaigns = len(comparison_data)
-    fig_combined, axs_combined = plt.subplots(1, num_campaigns, figsize=(15, 6), sharey=True)
-    axs_combined = axs_combined if num_campaigns > 1 else [axs_combined]
-
-    for i, (campaign, data_list) in enumerate(comparison_data):
-        ax = axs_combined[i]
-        x_min, x_max, y_min, y_max = float("inf"), float("-inf"), float("inf"), float("-inf")
-
-        for data in data_list:
-            x, y = data[1], data[2]
-            x_min, x_max = min(x_min, min(x)), max(x_max, max(x))
-            y_min, y_max = min(y_min, min(y)), max(y_max, max(y))
-            ax.plot(x, y, label=f"{data[0]}")
-
-
-        ax.set_xlabel("time shift (tau)")
-        if i == 0:
-            ax.set_ylabel("Correlation Coefficient")
-        ax.set_title(f"Comparison: {campaign}")
-        ax.set_xticks(range(int(x_min), int(x_max) + 2, 1))
-        ax.set_yticks([round(i / 10, 2) for i in range(int(y_min * 10 - 2), int(y_max * 10 + 2), 1)])
-        ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5)
-        ax.legend(loc="upper right", fontsize=8)
-
-    fig_combined.suptitle(f"Comparison for Line: {current_line_name}")
-    fig_combined.tight_layout(rect=(0, 0, 1, 0.95))
-
-    if output_dir:
-        save_path = prepare_output_path(output_dir, None, current_line_name, "plot_combined",  is_combined=True)
-        fig_combined.savefig(save_path)
-
-    if not save_only:
-        plt.show()
-
-    plt.close(fig_combined)
-
-
-def plot_combined_averaged(comparison_data, current_line_name, output_dir, save_only):
+def plot_combined(comparison_data, current_line_name, output_dir, save_only, show_average=False, show_only_average=False):
     """
     Creates and optionally saves or displays combined plots for a specific line across campaigns,
-    displaying only the average of the data points.
+    with an option to show only the average of the data points.
 
     Args:
         comparison_data (list): List of tuples, each containing campaign names and their respective data points.
         current_line_name (str): Name of the line being plotted.
         output_dir (Path or None): Directory where the plot will be saved. If None, plots are not saved.
         save_only (bool): If True, the plot will only be saved and not displayed.
+        show_average (bool): If True, only the average of the data points will be displayed.
     """
     num_campaigns = len(comparison_data)
     fig_combined, axs_combined = plt.subplots(1, num_campaigns, figsize=(15, 6), sharey=True)
@@ -280,33 +234,51 @@ def plot_combined_averaged(comparison_data, current_line_name, output_dir, save_
             x_min, x_max = min(x_min, min(x)), max(x_max, max(x))
             y_min, y_max = min(y_min, min(y)), max(y_max, max(y))
 
-        # Compute the average across all data sets for this campaign
-        avg_x = np.linspace(x_min, x_max, 500)  # Interpolated x for consistent averaging
-        avg_y = np.zeros_like(avg_x)
-        count = np.zeros_like(avg_x)
+            if not show_only_average:
+                if show_average:
+                    linestyle = '--'
+                else:
+                    linestyle="-"
+                ax.plot(x, y, label=f"{data[0]}", linestyle=linestyle)
 
-        for x, y in zip(all_x, all_y):
-            y_interp = np.interp(avg_x, x, y)  # Interpolate y values to avg_x
-            avg_y += y_interp
-            count += 1
+        # Compute and plot average if show_average is True
+        if show_average or show_only_average:
+            avg_x = np.linspace(x_min, x_max, 500)  # Interpolated x for consistent averaging
+            avg_y = np.zeros_like(avg_x)
+            count = np.zeros_like(avg_x)
 
-        avg_y /= count
-        ax.plot(avg_x, avg_y, label="Average over continua", color="blue", linewidth=2)
+            for x, y in zip(all_x, all_y):
+                y_interp = np.interp(avg_x, x, y)  # Interpolate y values to avg_x
+                avg_y += y_interp
+                count += 1
+
+            avg_y /= count
+            ax.plot(avg_x, avg_y, label="Average over continua", color="blue", linewidth=2)
 
         ax.set_xlabel("time shift (tau)")
         if i == 0:
             ax.set_ylabel("Correlation Coefficient")
-        ax.set_title(f"Average Comparison: {campaign}")
+        ax.set_title(f"{'Average ' if show_average else ''}Comparison: {campaign}")
         ax.set_xticks(range(int(x_min), int(x_max) + 2, 1))
         ax.set_yticks([round(i / 10, 2) for i in range(int(y_min * 10 - 2), int(y_max * 10 + 2), 1)])
         ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5)
         ax.legend(loc="upper right", fontsize=8)
 
-    fig_combined.suptitle(f"Average Comparison for Line: {current_line_name}")
+    fig_combined.suptitle(f"{'Average ' if show_average else ''}Comparison for Line: {current_line_name}")
     fig_combined.tight_layout(rect=(0, 0, 1, 0.95))
 
     if output_dir:
-        save_path = prepare_output_path(output_dir, None, current_line_name, "plot_combined_averaged", is_combined=True)
+        if show_average:
+            methode_name = "plot_combined_with_average"
+        elif show_only_average:
+            methode_name = "plot_average"
+        else:
+            methode_name = "plot_combined"
+
+        save_path = prepare_output_path(output_dir, None,
+                                        current_line_name,
+                                        methode_name,
+                                        is_combined=True)
         fig_combined.savefig(save_path)
 
     if not save_only:
@@ -367,5 +339,5 @@ def compare_plots_across_continua(
 
         plot_combined(comparison_data, current_line_name, output_dir, save_only)
 
-        plot_combined_averaged(comparison_data, current_line_name, output_dir, save_only)
-
+        plot_combined(comparison_data, current_line_name, output_dir, save_only, show_average=True)
+        plot_combined(comparison_data, current_line_name, output_dir, save_only, show_only_average=True)
