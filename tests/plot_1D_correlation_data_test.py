@@ -1,4 +1,4 @@
-from plot_data.plot_data import get_all_line_names, collect_comparison_data, prepare_output_path, \
+from plot_data.plot_1D_correlation_data import get_all_line_names, collect_comparison_data, prepare_output_path, \
     compare_plots_across_continua, plot_individual, plot_combined
 
 

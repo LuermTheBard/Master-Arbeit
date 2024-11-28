@@ -4,7 +4,7 @@ from pathlib import Path
 
 from handle_data.handle_data import create_1d_correlation_plot_data, calc_broad_lines_doppler_shift_with_error
 from import_data.import_data import import_1d_correlation_data, load_dopplershift_data_from_toml
-from plot_data.plot_data import process_1d_correlations, compare_plots_across_continua
+from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua
 from settings import DEFAULT_OUTPUT_DIR
 
 # Dictionary to store registered tasks
