@@ -144,3 +144,6 @@ def import_1d_lightcurve_data():
         galaxie_campaigns_dict[campaign] = {"lines": line_dict, "continua": continua_dict}
 
     return galaxie_campaigns_dict
+
+
+import_1d_lightcurve_data()
