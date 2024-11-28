@@ -76,6 +76,20 @@ def plot_and_save_1d_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
 
 
 @task
+def save_1d_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
+    """
+    save all 1D correlations.
+    """
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir.mkdir(parents=True)
+
+    one_dim_lightcurve_data = import_1d_lightcurve_data()
+    plot_1d_lightcurves(one_dim_lightcurve_data, output_dir, save_only=True)
+
+
+
+@task
 def plot_line_1d_corr(line_name=None):
     """
     Plots 1D correlations for a specific line.
