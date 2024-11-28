@@ -6,7 +6,6 @@ try:
 except ImportError:
     import tomli as tomllib
 
-
 DATA_PATH = Path.cwd().parent / "data"
 
 
@@ -32,7 +31,6 @@ def find_prime_data_folder():
 
 
 def import_1d_correlation_data():
-
     data_path = find_prime_data_folder()
 
     campains_path = data_path / "campaigns"
@@ -71,7 +69,6 @@ def import_1d_correlation_data():
 
 
 def load_dopplershift_data_from_toml(toml_name, toml_path=None):
-
     if toml_path is None:
         data_path = find_prime_data_folder()
 
@@ -83,3 +80,67 @@ def load_dopplershift_data_from_toml(toml_name, toml_path=None):
         dopplershift_data = tomllib.load(file)
 
     return dopplershift_data
+
+
+def process_light_curves(light_curves, one_dim_lightcurves_path):
+    """
+    Verarbeitet Light-Curve-Dateien und erstellt ein Dictionary mit den Daten.
+
+    Args:
+        light_curves (list): Liste der Dateinamen der Light-Curves.
+        one_dim_lightcurves_path (Path): Pfad zum Verzeichnis der Light-Curve-Dateien.
+
+    Returns:
+        dict: Ein Dictionary mit den verarbeiteten Light-Curve-Daten.
+    """
+    result_dict = {}
+
+    for curve in light_curves:
+        text_file_path = str(one_dim_lightcurves_path / curve)
+
+        with open(text_file_path, "r") as file:
+            header = file.readline().strip().split(",")
+            light_curve_data = np.loadtxt(text_file_path).T
+
+        curve_name = header[0].split(" ")[1]
+        array_names = ['timestamps [MJD]', 'fluxes [ergs/s/cm2/A]', 'fluxerrs [ergs/s/cm2/A]']
+
+        light_curve_data_dict = {name: light_curve_data[i] for i, name in enumerate(array_names)}
+        result_dict[curve_name] = light_curve_data_dict
+
+    return result_dict
+
+
+def import_1d_lightcurve_data():
+    """
+    Importiert 1D-Light-Curve-Daten aus den Kampagnenverzeichnissen und erstellt ein verschachteltes Dictionary.
+
+    Returns:
+        dict: Ein Dictionary mit den Daten aller Kampagnen, geordnet nach Lines und Continua.
+    """
+    data_path = find_prime_data_folder()
+    campaigns_path = data_path / "campaigns"
+
+    galaxie_campaigns = [f.name for f in campaigns_path.iterdir() if f.is_dir()]
+    galaxie_campaigns_dict = {}
+
+    for campaign in galaxie_campaigns:
+        continua_dict = {}
+        line_dict = {}
+        campaign_path = campaigns_path / campaign
+
+        if "1DLightCurves" in [f.name for f in campaign_path.iterdir()]:
+            one_dim_lightcurves_path = campaign_path / "1DLightCurves"
+
+            # Light-Curves identifizieren
+            continua_light_curves = [f.name for f in one_dim_lightcurves_path.glob('Cont*.txt')]
+            line_light_curves = [f.name for f in one_dim_lightcurves_path.glob("*.txt") if "Cont" not in f.name]
+
+            # Daten verarbeiten
+            continua_dict = process_light_curves(continua_light_curves, one_dim_lightcurves_path)
+            line_dict = process_light_curves(line_light_curves, one_dim_lightcurves_path)
+
+        # Ergebnisse der aktuellen Kampagne speichern
+        galaxie_campaigns_dict[campaign] = {"lines": line_dict, "continua": continua_dict}
+
+    return galaxie_campaigns_dict
