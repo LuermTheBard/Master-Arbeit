@@ -1,5 +1,8 @@
+import warnings
 from pathlib import Path
 import numpy as np
+
+from astropy.io import fits
 
 try:
     import tomllib
@@ -146,4 +149,71 @@ def import_1d_lightcurve_data():
     return galaxie_campaigns_dict
 
 
-import_1d_lightcurve_data()
+def import_fits_data():
+    """
+    Importiert FITS-Daten aus einem Verzeichnis und erstellt ein verschachteltes Dictionary.
+    Gibt Warnungen aus, falls Daten oder notwendige Header-Parameter fehlen.
+
+    Returns:
+        dict: Ein Dictionary mit den Daten, Headern und x-Achsen-Werten aller FITS-Dateien im Verzeichnis.
+    """
+    data_path = find_prime_data_folder()
+    fits_folder = data_path / "fits"
+    fits_files = list(fits_folder.glob("*.fits"))
+
+    fits_data_dict = {}
+
+    for fits_file in fits_files:
+        with fits.open(fits_file) as hdul:
+            # Ein Dictionary für die aktuelle FITS-Datei erstellen
+            file_data = {
+                "data": [],
+                "headers": [],
+                "x_axis": []  # Hier speichern wir die x-Achsen-Werte
+            }
+
+            # Jede HDU der Datei verarbeiten
+            for i, hdu in enumerate(hdul):
+                if hdu.data is None:
+                    warnings.warn(
+                        f"Keine Daten in HDU-{i} der Datei '{fits_file.name}'.",
+                        UserWarning
+                    )
+                    file_data["data"].append(None)
+                else:
+                    file_data["data"].append(hdu.data)
+
+                # Header speichern
+                file_data["headers"].append(dict(hdu.header))
+
+                # X-Achsen-Werte berechnen, falls WCS-Parameter vorhanden sind
+                header = hdu.header
+                if "CRVAL1" in header and "CD1_1" in header and "CRPIX1" in header:
+                    crval1 = header.get("CRVAL1", 0.0)
+                    cd1_1 = header.get("CD1_1", 1.0)
+                    crpix1 = header.get("CRPIX1", 1.0)
+
+                    if hdu.data is not None:
+                        n_pixels = hdu.data.shape[-1]  # Anzahl der Pixel entlang der x-Achse
+                        x_axis = (np.arange(n_pixels) - (crpix1 - 1)) * cd1_1 + crval1
+                        file_data["x_axis"].append(x_axis.tolist())  # In eine Liste konvertieren für JSON-Kompatibilität
+                    else:
+                        warnings.warn(
+                            f"Keine Daten verfügbar, um x-Achse für HDU-{i} in Datei '{fits_file.name}' zu berechnen.",
+                            UserWarning
+                        )
+                        file_data["x_axis"].append(None)
+                else:
+                    warnings.warn(
+                        f"Fehlende WCS-Parameter (CRVAL1, CD1_1, CRPIX1) in HDU-{i} der Datei '{fits_file.name}'.",
+                        UserWarning
+                    )
+                    file_data["x_axis"].append(None)
+
+            # Ergebnisse speichern, Schlüssel ist der Dateiname
+            fits_data_dict[fits_file.name] = file_data
+
+    return fits_data_dict
+
+
+import_fits_data()
