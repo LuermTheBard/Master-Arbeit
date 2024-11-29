@@ -4,9 +4,10 @@ from pathlib import Path
 
 from handle_data.handle_data import create_1d_correlation_plot_data, calc_broad_lines_doppler_shift_with_error
 from import_data.import_data import import_1d_correlation_data, load_dopplershift_data_from_toml, \
-    import_1d_lightcurve_data
+    import_1d_lightcurve_data, import_fits_data
 from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua
-from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves
+from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_lightcurves_with_offset
+from plot_data.plot_fits_data import plot_avg_rms
 from settings import DEFAULT_OUTPUT_DIR
 
 # Dictionary to store registered tasks
@@ -86,6 +87,32 @@ def save_1d_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
 
     one_dim_lightcurve_data = import_1d_lightcurve_data()
     plot_1d_lightcurves(one_dim_lightcurve_data, output_dir, save_only=True)
+
+
+@task
+def plot_and_save_1d_lightcurves_with_offset(output_dir=DEFAULT_OUTPUT_DIR):
+    """
+    save all 1D correlations.
+    """
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir.mkdir(parents=True)
+
+    one_dim_lightcurve_data = import_1d_lightcurve_data()
+    plot_1d_lightcurves_with_offset(one_dim_lightcurve_data, output_dir)
+
+
+@task
+def save_1d_lightcurves_with_offset(output_dir=DEFAULT_OUTPUT_DIR):
+    """
+    save all 1D correlations.
+    """
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir.mkdir(parents=True)
+
+    one_dim_lightcurve_data = import_1d_lightcurve_data()
+    plot_1d_lightcurves_with_offset(one_dim_lightcurve_data, output_dir, save_only=True, y_offset=0.15)
 
 
 

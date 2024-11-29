@@ -301,8 +301,7 @@ def prepare_output_path(output_dir, campaign, line_name, methode_name, is_combin
     Returns:
         Path: The full path for the output file.
     """
-    sub_dir = "combined" if is_combined else campaign
-    comparison_dir = Path(output_dir) / "plot_data" / methode_name / sub_dir
+    comparison_dir = Path(output_dir) / "plot_1d_correlations" / methode_name
     comparison_dir.mkdir(parents=True, exist_ok=True)
     file_name = f"{line_name.replace(' ', '_')}_{'combined' if is_combined else campaign}_comparison.png"
     return comparison_dir / file_name
