@@ -44,10 +44,11 @@ def test_prepare_output_path(tmp_path):
     is_combined = False
 
     # Erwarteter Pfad
-    expected_path = output_dir / "plot_data" / "compare_plots_across_continua" / campaign / "LineA_campaign_1_comparison.png"
+    expected_path = (output_dir / "plot_1d_correlations" / "test" /
+                     "LineA_campaign_1_comparison.png")
 
     # Test
-    result_path = prepare_output_path(output_dir, campaign, line_name, is_combined)
+    result_path = prepare_output_path(output_dir, campaign, line_name, "test", is_combined)
 
     # Überprüfen, ob der Pfad korrekt erstellt wurde
     assert result_path == expected_path

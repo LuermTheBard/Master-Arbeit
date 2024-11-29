@@ -159,7 +159,7 @@ def plot_1d_lightcurves_with_offset(galaxie_campaigns_dict, output_dir, save_onl
         fig_combined, axs_combined = plt.subplots(1, 2, figsize=(15, 6), sharey=True)
 
         plot_lightcurve_with_offset(
-            light_curve_data["lines"], xlabel, ylabel, yerr_name, axs_combined[0],0.25, y_multiplier=1.0
+            light_curve_data["lines"], xlabel, ylabel, yerr_name, axs_combined[0], 0.25, y_multiplier=1.0
         )
         axs_combined[0].set_title("1D Lightcurves of lines (with offset)")
 

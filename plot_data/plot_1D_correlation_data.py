@@ -204,12 +204,14 @@ def plot_individual(data_list, current_line_name, campaign, output_dir, save_onl
     plt.close()
 
 
-def plot_combined(comparison_data, current_line_name, output_dir, save_only, show_average=False, show_only_average=False):
+def plot_combined(comparison_data, current_line_name, output_dir, save_only, show_average=False,
+                  show_only_average=False):
     """
     Creates and optionally saves or displays combined plots for a specific line across campaigns,
     with an option to show only the average of the data points.
 
     Args:
+        show_only_average:
         comparison_data (list): List of tuples, each containing campaign names and their respective data points.
         current_line_name (str): Name of the line being plotted.
         output_dir (Path or None): Directory where the plot will be saved. If None, plots are not saved.
@@ -238,7 +240,7 @@ def plot_combined(comparison_data, current_line_name, output_dir, save_only, sho
                 if show_average:
                     linestyle = '--'
                 else:
-                    linestyle="-"
+                    linestyle = "-"
                 ax.plot(x, y, label=f"{data[0]}", linestyle=linestyle)
 
         # Compute and plot average if show_average is True
@@ -308,10 +310,10 @@ def prepare_output_path(output_dir, campaign, line_name, methode_name, is_combin
 
 
 def compare_plots_across_continua(
-    plot_data_1d_correlation,
-    line_name=None,
-    output_dir=None,
-    save_only=False,
+        plot_data_1d_correlation,
+        line_name=None,
+        output_dir=None,
+        save_only=False,
 ):
     """
     Main function to compare plots for specific lines across multiple campaigns.

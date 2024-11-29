@@ -196,7 +196,7 @@ def import_fits_data():
                     if hdu.data is not None:
                         n_pixels = hdu.data.shape[-1]  # Anzahl der Pixel entlang der x-Achse
                         x_axis = (np.arange(n_pixels) - (crpix1 - 1)) * cd1_1 + crval1
-                        file_data["x_axis"].append(x_axis.tolist())  # In eine Liste konvertieren für JSON-Kompatibilität
+                        file_data["x_axis"].append(x_axis.tolist())
                     else:
                         warnings.warn(
                             f"Keine Daten verfügbar, um x-Achse für HDU-{i} in Datei '{fits_file.name}' zu berechnen.",

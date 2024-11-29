@@ -32,28 +32,29 @@ def test_calc_broad_lines_doppler_shift_with_error():
     # Expected results
     expected_delta_v_c = delta_lambda_ref / lambda_rest_ref
     expected_delta_v_c_err = expected_delta_v_c * (
-        ((delta_lambda_ref_err / delta_lambda_ref) if delta_lambda_ref != 0 else 0) ** 2 +
-        ((lambda_rest_ref_err / lambda_rest_ref) if lambda_rest_ref != 0 else 0) ** 2
+            ((delta_lambda_ref_err / delta_lambda_ref) if delta_lambda_ref != 0 else 0) ** 2 +
+            ((lambda_rest_ref_err / lambda_rest_ref) if lambda_rest_ref != 0 else 0) ** 2
     ) ** 0.5
 
     expected_doppler_shifts = {
         "H-beta": (expected_delta_v_c * 4861.0, expected_delta_v_c * 4861.0 * (
-            ((1.0 / 4861.0) if 4861.0 != 0 else 0) ** 2 +
-            ((expected_delta_v_c_err / expected_delta_v_c) if expected_delta_v_c != 0 else 0) ** 2
+                ((1.0 / 4861.0) if 4861.0 != 0 else 0) ** 2 +
+                ((expected_delta_v_c_err / expected_delta_v_c) if expected_delta_v_c != 0 else 0) ** 2
         ) ** 0.5),
         "H-gamma": (expected_delta_v_c * 4340.0, expected_delta_v_c * 4340.0 * (
-            ((0.5 / 4340.0) if 4340.0 != 0 else 0) ** 2 +
-            ((expected_delta_v_c_err / expected_delta_v_c) if expected_delta_v_c != 0 else 0) ** 2
+                ((0.5 / 4340.0) if 4340.0 != 0 else 0) ** 2 +
+                ((expected_delta_v_c_err / expected_delta_v_c) if expected_delta_v_c != 0 else 0) ** 2
         ) ** 0.5),
         "H-delta": (expected_delta_v_c * 4102.0, expected_delta_v_c * 4102.0 * (
-            ((1.5 / 4102.0) if 4102.0 != 0 else 0) ** 2 +
-            ((expected_delta_v_c_err / expected_delta_v_c) if expected_delta_v_c != 0 else 0) ** 2
+                ((1.5 / 4102.0) if 4102.0 != 0 else 0) ** 2 +
+                ((expected_delta_v_c_err / expected_delta_v_c) if expected_delta_v_c != 0 else 0) ** 2
         ) ** 0.5)
     }
 
     # Assertions
     assert abs(delta_v_c - expected_delta_v_c) < 1e-6, f"Expected delta_v_c: {expected_delta_v_c}, got: {delta_v_c}"
-    assert abs(delta_v_c_err - expected_delta_v_c_err) < 1e-6, f"Expected delta_v_c_err: {expected_delta_v_c_err}, got: {delta_v_c_err}"
+    assert abs(delta_v_c_err - expected_delta_v_c_err) < 1e-6, \
+        f"Expected delta_v_c_err: {expected_delta_v_c_err}, got: {delta_v_c_err}"
 
     for line, (expected_shift, expected_shift_err) in expected_doppler_shifts.items():
         calculated_shift, calculated_shift_err = doppler_shifts[line]
@@ -77,8 +78,8 @@ def test_calc_error():
 
     # Expected result for delta_v_c_err
     expected_delta_v_c_err = delta_v_c * (
-        ((delta_lambda_ref_err / delta_lambda_ref) if delta_lambda_ref != 0 else 0) ** 2 +
-        ((lambda_rest_ref_err / lambda_rest_ref) if lambda_rest_ref != 0 else 0) ** 2
+            ((delta_lambda_ref_err / delta_lambda_ref) if delta_lambda_ref != 0 else 0) ** 2 +
+            ((lambda_rest_ref_err / lambda_rest_ref) if lambda_rest_ref != 0 else 0) ** 2
     ) ** 0.5
 
     # Call the function
@@ -91,5 +92,3 @@ def test_calc_error():
     )
 
     print("Test passed: calc_error()")
-
-

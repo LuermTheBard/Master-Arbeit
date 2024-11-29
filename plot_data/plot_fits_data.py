@@ -29,14 +29,14 @@ def plot_two_spectra(x, y1, y2, xlabel, ylabel1, ylabel2, title1, title2, super_
     fig, axs = plt.subplots(2, 1, figsize=(15, 8), sharex=True)  # Zwei Zeilen, gemeinsame x-Achse
 
     # Erster Subplot
-    axs[0].plot(x, y1, label="Spectrum 1")
+    axs[0].plot(x, y1, label=title1)
     axs[0].set_ylabel(ylabel1)
     axs[0].set_title(title1)
     axs[0].grid(visible=True, which='both', linestyle='--', linewidth=0.5)
     axs[0].legend()
 
     # Zweiter Subplot
-    axs[1].plot(x, y2, label="Spectrum 2", color='orange')
+    axs[1].plot(x, y2, label=title2, color='orange')
     axs[1].set_xlabel(xlabel)
     axs[1].set_ylabel(ylabel2)
     axs[1].set_title(title2)
@@ -47,7 +47,7 @@ def plot_two_spectra(x, y1, y2, xlabel, ylabel1, ylabel2, title1, title2, super_
     fig.suptitle(super_title, fontsize=16)
 
     # Layout anpassen, um Überlappungen zu vermeiden
-    fig.tight_layout(rect=[0, 0, 1, 0.96])  # Platz für den Supertitle lassen
+    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.96))  # Platz für den Supertitle lassen
 
     # Plot anzeigen
     plt.show()
@@ -97,6 +97,3 @@ def plot_avg_rms(fits_data):
                      avg_titel,
                      rms_title,
                      galaxy_name)
-
-
-
