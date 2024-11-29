@@ -137,6 +137,13 @@ def plot_line_1d_corr(line_name=None):
 
 
 @task
+def plot_avg_rms_spec():
+
+    fits_data = import_fits_data()
+    plot_avg_rms(fits_data)
+
+
+@task
 def calc_dopplershift_correction(file_name=None):
     if not file_name:
         raise ValueError("Please specify a file name in the following form: calc_dopplershift_correction::file_name")
