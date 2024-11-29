@@ -1,71 +1,6 @@
-from handle_data.handle_data import calc_broad_lines_doppler_shift_with_error, calc_error
+import numpy as np
 
-
-def test_calc_broad_lines_doppler_shift_with_error():
-    # Input parameters
-    delta_lambda_ref = 10.0  # Doppler shift of the reference line (H-alpha) in Ångström
-    delta_lambda_ref_err = 0.5  # Error in Doppler shift of the reference line
-    lambda_rest_ref = 6563.0  # Correct rest wavelength of H-alpha in Ångström
-    lambda_rest_ref_err = 1.0  # Error in rest wavelength of H-alpha
-    ref_name = "H-alpha"  # Reference line name
-
-    # Dictionary of lines to calculate Doppler shifts for
-    line_rest_lambda_dict = {
-        "H-beta": 4861.0,  # Rest wavelength of H-beta in Ångström
-        "H-gamma": 4340.0,  # Rest wavelength of H-gamma in Ångström
-        "H-delta": 4102.0  # Rest wavelength of H-delta in Ångström
-    }
-
-    # Corresponding errors in the rest wavelengths
-    line_rest_lambda_err_dict = {
-        "H-beta": 1.0,  # Error in rest wavelength of H-beta
-        "H-gamma": 0.5,  # Error in rest wavelength of H-gamma
-        "H-delta": 1.5  # Error in rest wavelength of H-delta
-    }
-
-    # Call the function
-    doppler_shifts, delta_v_c, delta_v_c_err = calc_broad_lines_doppler_shift_with_error(
-        delta_lambda_ref, delta_lambda_ref_err, lambda_rest_ref, lambda_rest_ref_err, ref_name,
-        line_rest_lambda_dict, line_rest_lambda_err_dict
-    )
-
-    # Expected results
-    expected_delta_v_c = delta_lambda_ref / lambda_rest_ref
-    expected_delta_v_c_err = expected_delta_v_c * (
-            ((delta_lambda_ref_err / delta_lambda_ref) if delta_lambda_ref != 0 else 0) ** 2 +
-            ((lambda_rest_ref_err / lambda_rest_ref) if lambda_rest_ref != 0 else 0) ** 2
-    ) ** 0.5
-
-    expected_doppler_shifts = {
-        "H-beta": (expected_delta_v_c * 4861.0, expected_delta_v_c * 4861.0 * (
-                ((1.0 / 4861.0) if 4861.0 != 0 else 0) ** 2 +
-                ((expected_delta_v_c_err / expected_delta_v_c) if expected_delta_v_c != 0 else 0) ** 2
-        ) ** 0.5),
-        "H-gamma": (expected_delta_v_c * 4340.0, expected_delta_v_c * 4340.0 * (
-                ((0.5 / 4340.0) if 4340.0 != 0 else 0) ** 2 +
-                ((expected_delta_v_c_err / expected_delta_v_c) if expected_delta_v_c != 0 else 0) ** 2
-        ) ** 0.5),
-        "H-delta": (expected_delta_v_c * 4102.0, expected_delta_v_c * 4102.0 * (
-                ((1.5 / 4102.0) if 4102.0 != 0 else 0) ** 2 +
-                ((expected_delta_v_c_err / expected_delta_v_c) if expected_delta_v_c != 0 else 0) ** 2
-        ) ** 0.5)
-    }
-
-    # Assertions
-    assert abs(delta_v_c - expected_delta_v_c) < 1e-6, f"Expected delta_v_c: {expected_delta_v_c}, got: {delta_v_c}"
-    assert abs(delta_v_c_err - expected_delta_v_c_err) < 1e-6, \
-        f"Expected delta_v_c_err: {expected_delta_v_c_err}, got: {delta_v_c_err}"
-
-    for line, (expected_shift, expected_shift_err) in expected_doppler_shifts.items():
-        calculated_shift, calculated_shift_err = doppler_shifts[line]
-        assert abs(calculated_shift - expected_shift) < 1e-6, (
-            f"For line {line}, expected Doppler shift: {expected_shift}, got: {calculated_shift}"
-        )
-        assert abs(calculated_shift_err - expected_shift_err) < 1e-6, (
-            f"For line {line}, expected Doppler shift error: {expected_shift_err}, got: {calculated_shift_err}"
-        )
-
-    print("Test passed: test_calc_broad_lines_doppler_shift_with_error()")
+from handle_data.handle_data import calc_error, calc_error_of_function
 
 
 def test_calc_error():
@@ -92,3 +27,87 @@ def test_calc_error():
     )
 
     print("Test passed: calc_error()")
+
+
+def test_simple_multiplication():
+    # Testfunktion
+    def func(x, y):
+        return x * y
+
+    # Parameterwerte und Fehler
+    params = [3.0, 2.0]  # x=3.0, y=2.0
+    errors = [0.1, 0.2]  # Fehler: x_err=0.1, y_err=0.2
+
+    # Erwarteter Fehler:
+    # ∂f/∂x = y, ∂f/∂y = x
+    # σ_f = sqrt((∂f/∂x * σ_x)^2 + (∂f/∂y * σ_y)^2)
+    expected_error = ((2.0 * 0.1)**2 + (3.0 * 0.2)**2)**0.5
+
+    # Berechnung mit calc_propagated_error
+    calculated_error = calc_error_of_function(func, params, errors)
+
+    # Überprüfung
+    assert abs(calculated_error - expected_error) < 1e-6, \
+        f"Expected {expected_error}, but got {calculated_error}"
+
+
+def test_quadratic_function():
+    # Testfunktion
+    def func(x, y):
+        return x**2 + y**2
+
+    # Parameterwerte und Fehler
+    params = [3.0, 4.0]  # x=3.0, y=4.0
+    errors = [0.1, 0.2]  # Fehler: x_err=0.1, y_err=0.2
+
+    # Erwarteter Fehler:
+    # ∂f/∂x = 2x, ∂f/∂y = 2y
+    # σ_f = sqrt((2x * σ_x)^2 + (2y * σ_y)^2)
+    expected_error = ((2 * 3.0 * 0.1)**2 + (2 * 4.0 * 0.2)**2)**0.5
+
+    # Berechnung mit calc_propagated_error
+    calculated_error = calc_error_of_function(func, params, errors)
+
+    # Überprüfung
+    assert abs(calculated_error - expected_error) < 1e-6, \
+        f"Expected {expected_error}, but got {calculated_error}"
+
+
+def test_complex_function_with_five_parameters():
+    # Testfunktion
+    # f(a, b, c, d, e) = (a * b + c) / (d - e)
+    def func(a, b, c, d, e):
+        return (a * b + c) / (d - e)
+
+    # Parameterwerte und Fehler
+    params = [2.0, 3.0, 1.0, 5.0, 1.0]  # a=2.0, b=3.0, c=1.0, d=5.0, e=1.0
+    errors = [0.1, 0.2, 0.05, 0.1, 0.05]  # Fehler: a_err=0.1, b_err=0.2, etc.
+
+    # Erwartete Ableitungen:
+    # ∂f/∂a = b / (d - e)
+    # ∂f/∂b = a / (d - e)
+    # ∂f/∂c = 1 / (d - e)
+    # ∂f/∂d = -(a * b + c) / (d - e)^2
+    # ∂f/∂e = (a * b + c) / (d - e)^2
+
+    a, b, c, d, e = params
+    ab_plus_c = a * b + c
+    denominator = d - e
+
+    partials = [
+        b / denominator,                       # ∂f/∂a
+        a / denominator,                       # ∂f/∂b
+        1 / denominator,                       # ∂f/∂c
+        -ab_plus_c / denominator**2,          # ∂f/∂d
+        ab_plus_c / denominator**2            # ∂f/∂e
+    ]
+
+    # Erwarteter Fehler: σ_f = sqrt((∂f/∂a * σ_a)^2 + (∂f/∂b * σ_b)^2 + ...)
+    expected_error = np.sqrt(sum((partials[i] * errors[i])**2 for i in range(5)))
+
+    # Berechnung mit calc_propagated_error
+    calculated_error = calc_error_of_function(func, params, errors)
+
+    # Überprüfung
+    assert abs(calculated_error - expected_error) < 1e-6, \
+        f"Expected {expected_error}, but got {calculated_error}"

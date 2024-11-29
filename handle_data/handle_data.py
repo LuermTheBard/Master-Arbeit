@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Dict, Tuple
+import numpy as np
 
 from settings import DEFAULT_OUTPUT_DIR
 
@@ -166,3 +167,33 @@ def calc_error(value: float, value_err: float, result: float, ref_value: float, 
         ((value_err / value) if value != 0 else 0) ** 2 +
         ((ref_value_err / ref_value) if ref_value != 0 else 0) ** 2
     ) ** 0.5
+
+
+def calc_error_of_function(func, params, errors):
+    """
+    Calculates the propagated error for a given function and its input parameters.
+
+    Args:
+        func (callable): The function to evaluate. It should take parameters as input.
+        params (list or np.array): List or array of input parameter values.
+        errors (list or np.array): List or array of errors associated with the input parameters.
+
+    Returns:
+        float: Propagated error in the result.
+    """
+    # Convert params and errors to numpy arrays for easy manipulation
+    params = np.array(params)
+    errors = np.array(errors)
+
+    # Numerical partial derivatives with respect to each parameter
+    partial_derivatives = np.zeros_like(params, dtype=float)
+    delta = 1e-8  # Small increment for numerical differentiation
+
+    for i in range(len(params)):
+        params_step = params.copy()
+        params_step[i] += delta
+        partial_derivatives[i] = (func(*params_step) - func(*params)) / delta
+
+    # Propagated error calculation
+    propagated_error = np.sqrt(np.sum((partial_derivatives * errors) ** 2))
+    return propagated_error
