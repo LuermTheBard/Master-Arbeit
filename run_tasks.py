@@ -2,11 +2,11 @@ import sys
 import subprocess
 from pathlib import Path
 
-from handle_data.handle_data import sort_1d_corr_data_for_lines
+from handle_data.handle_data import sort_1d_corr_data_for_lines, calc_time_lag_of_line
 from handle_data.dopplershift import calc_broad_lines_doppler_shift_with_error
 from import_data.import_data import import_1d_correlation_data, load_dopplershift_data_from_toml, \
     import_1d_lightcurve_data, import_fits_data
-from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua
+from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua, plot_fit_results
 from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_lightcurves_with_offset
 from plot_data.plot_fits_data import plot_avg_rms
 from settings import DEFAULT_OUTPUT_DIR
@@ -116,7 +116,6 @@ def save_1d_lightcurves_with_offset(output_dir=DEFAULT_OUTPUT_DIR):
     plot_1d_lightcurves_with_offset(one_dim_lightcurve_data, output_dir, save_only=True, y_offset=0.15)
 
 
-
 @task
 def plot_line_1d_corr(line_name=None):
     """
@@ -139,9 +138,18 @@ def plot_line_1d_corr(line_name=None):
 
 @task
 def plot_avg_rms_spec():
-
     fits_data = import_fits_data()
     plot_avg_rms(fits_data)
+
+
+@task
+def calc_and_plot_time_lag():
+    one_dim_correlation_data = import_1d_correlation_data()
+    sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
+    for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
+        for line, data in line_data.items():
+            time_lag_data = calc_time_lag_of_line(line, data)
+            plot_fit_results(campaign, time_lag_data)
 
 
 @task

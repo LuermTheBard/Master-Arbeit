@@ -4,6 +4,8 @@ import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
 
+from handle_data.handle_data import gaussian
+
 matplotlib.use("Qt5Agg")
 
 
@@ -342,3 +344,48 @@ def compare_plots_across_continua(
 
         plot_combined(comparison_data, current_line_name, output_dir, save_only, show_average=True)
         plot_combined(comparison_data, current_line_name, output_dir, save_only, show_only_average=True)
+
+
+def plot_fit_results(campaign, fit_results):
+    """
+    Erstellt einen Plot der Fit-Daten einschließlich des Fits und markiert den Time Lag.
+
+    Parameters:
+        fit_results (list): Eine Liste von Dictionaries, die die Fit-Daten enthalten.
+                            Jedes Dictionary sollte mindestens die Schlüssel "x_values", "y_values",
+                            "time_lag", "amplitude", "std_dev" und "fit_success" enthalten.
+    """
+    for result in fit_results:
+        if not result.get("fit_success", False):
+            print(f"Fit für {result['continuum']} fehlgeschlagen.")
+            continue
+
+        # Extrahieren der Daten
+        x_values = np.array(result["x_values"])
+        y_values = np.array(result["y_values"])
+        time_lag = result["time_lag"]
+        amplitude = result["amplitude"]
+        std_dev = result["std_dev"]
+
+
+        # Erstellen der Fit-Kurve
+        x_fit = np.linspace(x_values.min(), x_values.max(), 500)
+        y_fit = gaussian(x_fit, amplitude, time_lag, std_dev)
+
+        # Plot erstellen
+        plt.figure(figsize=(10, 6))
+        plt.plot(x_values, y_values, '-', label="Data", markersize=5)
+        plt.plot(x_fit, y_fit, '--', label="Gaussian Fit")
+        plt.axvline(time_lag, color='red', linestyle='--', label=f"Time Lag (τ) = {time_lag:.2f}")
+
+        # Achsenbeschriftungen und Titel
+        plt.xlabel("Time Shift (τ)", fontsize=12)
+        plt.ylabel("Correlation Coefficient", fontsize=12)
+        plt.title(f"{campaign}\n\nFit for {result['continuum']}", fontsize=14)
+
+        # Gitter und Legende
+        plt.grid(True)
+        plt.legend()
+
+        # Plot anzeigen
+        plt.show()
