@@ -23,146 +23,132 @@ def sort_1d_corr_data_for_lines(galaxy_campaigns_dict):
 
 
 def gaussian_with_baseline(x, a, x0, sigma, c):
+    """Berechnet eine Gauß-Funktion mit Baseline."""
     return a * np.exp(-((x - x0) ** 2) / (2 * sigma ** 2)) + c
 
 
-def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_tolerance=0.1):
+def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_tolerance=0.1, fit_method="turningpoints"):
     """
-    Passt eine Gauß-Funktion mit einer variablen Baseline (innerhalb eines Bereichs) an das größte Maximum der gegebenen Daten
-    für jede Datenreihe an und berechnet Fit-Parameter, Time Lag und Fehler.
+    Passt eine Gauß-Funktion mit variabler Baseline an das größte Maximum der gegebenen Daten
+    und berechnet Fit-Parameter, Time Lag und Fehler.
 
     Parameters:
         line_name (str): Der Name der Linie.
-        continuum_x_y_tuple_list (list): Eine Liste von Tupeln, wobei jedes Tupel aus
-                                         (continuum, x, y) besteht:
-                                         - continuum: Name des Kontinuums.
-                                         - x: Array der x-Werte.
-                                         - y: Array der y-Werte.
-        baseline_tolerance (float): Toleranzbereich für die Baseline. Die Baseline kann in
-                                    [min(y) - tolerance, min(y) + tolerance] optimiert werden.
+        continuum_x_y_tuple_list (list): Liste von (continuum, x, y)-Tupeln.
+        baseline_tolerance (float): Toleranzbereich für die Baseline.
+        fit_method (str): Methode zur Auswahl des Fit-Fensters ("minima" oder "turningpoints").
 
     Returns:
-        list: Eine Liste von Dictionaries mit Fit-Parametern, Time Lag, Fehlern und weiteren Informationen.
+        list: Ergebnisse mit Fit-Parametern und zusätzlichen Informationen.
     """
-
-
+    fit_window_func = get_fit_window_function(fit_method)
     results = []
 
-    for continuum_x_y_tuple in continuum_x_y_tuple_list:
-        continuum, x, y = continuum_x_y_tuple
+    for continuum, x, y in continuum_x_y_tuple_list:
+        x, y = np.asarray(x).flatten(), np.asarray(y).flatten()
 
-        # Sicherstellen, dass x und y als 1D-Arrays vorliegen
-        x = np.asarray(x).flatten()
-        y = np.asarray(y).flatten()
-
-        # Lokale Maxima und Minima finden
-        peak_indices, _ = find_peaks(y)
-        min_indices, _ = find_peaks(-y)  # Minima finden durch Invertieren von y
-
-        if len(peak_indices) == 0:
-            results.append({
-                "line_name": line_name,
-                "continuum": continuum,
-                "x_values": x.tolist(),
-                "y_values": y.tolist(),
-                "error": "Keine Maxima gefunden.",
-                "fit_success": False,
-            })
+        max_index = get_largest_peak_index(y)
+        if max_index is None:
+            results.append(create_error_result(line_name, continuum, x, y, "Keine Maxima gefunden."))
             continue
 
-        # Größtes lokales Maximum auswählen
-        max_index = peak_indices[np.argmax(y[peak_indices])]
-        max_x = x[max_index]
-        max_y = y[max_index]
-
-        #left_min, right_min, x_fit_data, y_fit_data = fit_window_with_minima(max_index, min_indices, x, y)
-        left_min, right_min, x_fit_data, y_fit_data = fit_window_with_turningpoints(max_index, x, y)
-
-        # Baseline bestimmen und Toleranzbereich festlegen
-        baseline = np.min(y)
-        c_min = baseline - baseline_tolerance
-        c_max = baseline + baseline_tolerance
-
-        # Initiale Schätzwerte für den Fit
-        initial_guess = [max_y - baseline, max_x, 1.0, baseline]  # [Amplitude, Mittelwert, Standardabweichung, Baseline]
-        bounds = ([0, x_fit_data.min(), 0, c_min],  # Untergrenzen für die Parameter
-                  [np.inf, x_fit_data.max(), np.inf, c_max])  # Obergrenzen für die Parameter
-
-        # Curve-Fitting durchführen
         try:
-            popt, pcov = curve_fit(gaussian_with_baseline, x_fit_data, y_fit_data, p0=initial_guess, bounds=bounds)
-            a, x0, sigma, c = popt
-            errors = np.sqrt(np.diag(pcov))
-            a_err, x0_err, sigma_err, c_err = errors
-
-            fit_result = {
-                "line_name": line_name,
-                "continuum": continuum,
-                "amplitude": a,
-                "amplitude_error": a_err,
-                "time_lag": x0,  # mean als time_lag
-                "time_lag_error": x0_err,  # Fehler für time_lag
-                "std_dev": sigma,
-                "std_dev_error": sigma_err,
-                "baseline": c,
-                "baseline_error": c_err,
-                "fit_window_start": x[left_min],  # Start des Fit-Fensters
-                "fit_window_end": x[right_min],  # Ende des Fit-Fensters
-                "x_values": x.tolist(),  # Originale x-Werte
-                "y_values": y.tolist(),  # Originale y-Werte
-                "fit_function": "a * exp(-((x - x0)^2) / (2 * sigma^2)) + c (c eingeschränkt)",
-                "fit_success": True,
-            }
-
-        except RuntimeError:
-            fit_result = {
-                "line_name": line_name,
-                "continuum": continuum,
-                "x_values": x.tolist(),
-                "y_values": y.tolist(),
-                "error": "Fit konnte nicht durchgeführt werden.",
-                "fit_success": False,
-            }
+            left, right, x_fit, y_fit = fit_window_func(max_index, x, y)
+            result = perform_gaussian_fit(line_name, continuum, x, y, x_fit, y_fit, max_index, baseline_tolerance, left, right)
+            results.append(result)
         except ValueError as e:
-            fit_result = {
-                "line_name": line_name,
-                "continuum": continuum,
-                "x_values": x.tolist(),
-                "y_values": y.tolist(),
-                "error": f"Ungültige Eingabewerte: {e}",
-                "fit_success": False,
-            }
-
-        # Ergebnis zur Liste hinzufügen
-        results.append(fit_result)
+            results.append(create_error_result(line_name, continuum, x, y, str(e)))
 
     return results
 
 
-def fit_window_with_minima(max_index, min_indices, x, y):
-    # Linkes und rechtes Minimum finden
-    left_min = min_indices[min_indices < max_index][-1] if any(min_indices < max_index) else 0
-    right_min = min_indices[min_indices > max_index][0] if any(min_indices > max_index) else len(x) - 1
-    # Fenster auf Bereich zwischen linkem und rechtem Minimum setzen
-    fit_mask = (x >= x[left_min]) & (x <= x[right_min])
-    x_fit_data = x[fit_mask]
-    y_fit_data = y[fit_mask]
-    return left_min, right_min, x_fit_data, y_fit_data
+def get_fit_window_function(fit_method):
+    """Wählt die passende Funktion für die Fit-Fenster-Berechnung aus."""
+    if fit_method == "minima":
+        return fit_window_with_minima
+    elif fit_method == "turningpoints":
+        return fit_window_with_turningpoints
+    else:
+        raise ValueError(f"Ungültige Fit-Methode: {fit_method}")
+
+
+def get_largest_peak_index(y):
+    """Findet den Index des größten lokalen Maximums."""
+    peak_indices, _ = find_peaks(y)
+    return peak_indices[np.argmax(y[peak_indices])] if peak_indices.size > 0 else None
+
+
+def fit_window_with_minima(max_index, x, y):
+    """Bestimmt das Fit-Fenster basierend auf lokalen Minima."""
+    min_indices, _ = find_peaks(-y)
+    left = min_indices[min_indices < max_index][-1] if any(min_indices < max_index) else 0
+    right = min_indices[min_indices > max_index][0] if any(min_indices > max_index) else len(x) - 1
+    return extract_fit_window(left, right, x, y)
 
 
 def fit_window_with_turningpoints(max_index, x, y):
-    # Zweite Ableitung berechnen, um Wendepunkte zu finden
-    dy = np.gradient(y, x)  # Erste Ableitung
-    d2y = np.gradient(dy, x)  # Zweite Ableitung
-    # Nullstellen der zweiten Ableitung finden (Wendepunkte)
+    """Bestimmt das Fit-Fenster basierend auf Wendepunkten."""
+    dy, d2y = np.gradient(y, x), np.gradient(np.gradient(y, x), x)
     zero_crossings = np.where(np.diff(np.sign(d2y)))[0]
-    left_wendepunkt = zero_crossings[zero_crossings < max_index][-1] if any(zero_crossings < max_index) else 0
-    right_wendepunkt = zero_crossings[zero_crossings > max_index][0] if any(zero_crossings > max_index) else len(x) - 1
-    # Fenster auf Bereich zwischen linkem und rechtem Wendepunkt setzen
-    fit_mask = (x >= x[left_wendepunkt]) & (x <= x[right_wendepunkt])
-    x_fit_data = x[fit_mask]
-    y_fit_data = y[fit_mask]
-    return left_wendepunkt, right_wendepunkt, x_fit_data, y_fit_data
+    left = zero_crossings[zero_crossings < max_index][-1] if any(zero_crossings < max_index) else 0
+    right = zero_crossings[zero_crossings > max_index][0] if any(zero_crossings > max_index) else len(x) - 1
+    return extract_fit_window(left, right, x, y)
+
+
+def extract_fit_window(left, right, x, y):
+    """Extrahiert das Fit-Fenster zwischen zwei Indizes."""
+    fit_mask = (x >= x[left]) & (x <= x[right])
+    return left, right, x[fit_mask], y[fit_mask]
+
+
+def perform_gaussian_fit(line_name, continuum, x, y, x_fit, y_fit, max_index, baseline_tolerance, left, right):
+    """Führt den Curve-Fit mit einer Gauß-Funktion durch."""
+    baseline = np.min(y)
+    c_min, c_max = baseline - baseline_tolerance, baseline + baseline_tolerance
+    initial_guess = [y[max_index] - baseline, x[max_index], 1.0, baseline]
+    bounds = ([0, x_fit.min(), 0, c_min], [np.inf, x_fit.max(), np.inf, c_max])
+
+    try:
+        popt, pcov = curve_fit(gaussian_with_baseline, x_fit, y_fit, p0=initial_guess, bounds=bounds)
+        return create_success_result(line_name, continuum, popt, np.sqrt(np.diag(pcov)), x, y, left, right)
+    except RuntimeError:
+        return create_error_result(line_name, continuum, x, y, "Fit konnte nicht durchgeführt werden.")
+
+
+def create_success_result(line_name, continuum, popt, errors, x, y, left, right):
+    """Erstellt ein Ergebnis bei erfolgreichem Fit."""
+    a, x0, sigma, c = popt
+    a_err, x0_err, sigma_err, c_err = errors
+    return {
+        "line_name": line_name,
+        "continuum": continuum,
+        "amplitude": a,
+        "amplitude_error": a_err,
+        "time_lag": x0,
+        "time_lag_error": x0_err,
+        "std_dev": sigma,
+        "std_dev_error": sigma_err,
+        "baseline": c,
+        "baseline_error": c_err,
+        "fit_window_start": x[left],
+        "fit_window_end": x[right],
+        "x_values": x.tolist(),
+        "y_values": y.tolist(),
+        "fit_function": "a * exp(-((x - x0)^2) / (2 * sigma^2)) + c",
+        "fit_success": True,
+    }
+
+
+def create_error_result(line_name, continuum, x, y, error_message):
+    """Erstellt ein Ergebnis bei fehlgeschlagenem Fit."""
+    return {
+        "line_name": line_name,
+        "continuum": continuum,
+        "x_values": x.tolist(),
+        "y_values": y.tolist(),
+        "error": error_message,
+        "fit_success": False,
+    }
 
 
 def calc_error_of_function(func, params, errors):
