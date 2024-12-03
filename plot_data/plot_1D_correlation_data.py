@@ -4,7 +4,7 @@ import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
 
-from handle_data.handle_data import gaussian
+from handle_data.handle_data import gaussian_with_baseline
 
 matplotlib.use("Qt5Agg")
 
@@ -361,16 +361,20 @@ def plot_fit_results(campaign, fit_results):
             continue
 
         # Extrahieren der Daten
+
+        line_name = result["line_name"]
+
         x_values = np.array(result["x_values"])
         y_values = np.array(result["y_values"])
         time_lag = result["time_lag"]
         amplitude = result["amplitude"]
         std_dev = result["std_dev"]
+        baseline = result["baseline"]
 
 
         # Erstellen der Fit-Kurve
         x_fit = np.linspace(x_values.min(), x_values.max(), 500)
-        y_fit = gaussian(x_fit, amplitude, time_lag, std_dev)
+        y_fit = gaussian_with_baseline(x_fit, amplitude, time_lag, std_dev, baseline)
 
         # Plot erstellen
         plt.figure(figsize=(10, 6))
@@ -381,7 +385,7 @@ def plot_fit_results(campaign, fit_results):
         # Achsenbeschriftungen und Titel
         plt.xlabel("Time Shift (τ)", fontsize=12)
         plt.ylabel("Correlation Coefficient", fontsize=12)
-        plt.title(f"{campaign}\n\nFit for {result['continuum']}", fontsize=14)
+        plt.title(f"{campaign}\n\nFit for {line_name} and {result['continuum']}", fontsize=14)
 
         # Gitter und Legende
         plt.grid(True)

@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.optimize import curve_fit
+from scipy.signal import find_peaks
 
 
 def sort_1d_corr_data_for_lines(galaxy_campaigns_dict):
-
     line_sorted_data = dict()
 
     for campaign, continua_dict in galaxy_campaigns_dict.items():
@@ -22,14 +22,14 @@ def sort_1d_corr_data_for_lines(galaxy_campaigns_dict):
     return line_sorted_data
 
 
-def gaussian(x, a, x0, sigma):
-    return a * np.exp(-((x - x0) ** 2) / (2 * sigma ** 2))
+def gaussian_with_baseline(x, a, x0, sigma, c):
+    return a * np.exp(-((x - x0) ** 2) / (2 * sigma ** 2)) + c
 
 
-def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list):
+def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_tolerance=0.1):
     """
-    Passt eine Gauß-Funktion an das größte Maximum der gegebenen Daten für jede Datenreihe an
-    und berechnet Fit-Parameter, Time Lag und Fehler.
+    Passt eine Gauß-Funktion mit einer variablen Baseline (innerhalb eines Bereichs) an das größte Maximum der gegebenen Daten
+    für jede Datenreihe an und berechnet Fit-Parameter, Time Lag und Fehler.
 
     Parameters:
         line_name (str): Der Name der Linie.
@@ -38,13 +38,16 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list):
                                          - continuum: Name des Kontinuums.
                                          - x: Array der x-Werte.
                                          - y: Array der y-Werte.
+        baseline_tolerance (float): Toleranzbereich für die Baseline. Die Baseline kann in
+                                    [min(y) - tolerance, min(y) + tolerance] optimiert werden.
 
     Returns:
         list: Eine Liste von Dictionaries mit Fit-Parametern, Time Lag, Fehlern und weiteren Informationen.
     """
-    def gaussian(x, a, x0, sigma):
-        return a * np.exp(-((x - x0) ** 2) / (2 * sigma ** 2))
 
+    # Gauß-Funktion mit variabler Baseline
+    def gaussian_with_baseline(x, a, x0, sigma, c):
+        return a * np.exp(-((x - x0) ** 2) / (2 * sigma ** 2)) + c
 
     results = []
 
@@ -55,20 +58,51 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list):
         x = np.asarray(x).flatten()
         y = np.asarray(y).flatten()
 
-        # Größtes Maximum finden
-        max_index = np.argmax(y)
+        # Lokale Maxima und Minima finden
+        peak_indices, _ = find_peaks(y)
+        min_indices, _ = find_peaks(-y)  # Minima finden durch Invertieren von y
+
+        if len(peak_indices) == 0:
+            results.append({
+                "line_name": line_name,
+                "continuum": continuum,
+                "x_values": x.tolist(),
+                "y_values": y.tolist(),
+                "error": "Keine Maxima gefunden.",
+                "fit_success": False,
+            })
+            continue
+
+        # Größtes lokales Maximum auswählen
+        max_index = peak_indices[np.argmax(y[peak_indices])]
         max_x = x[max_index]
         max_y = y[max_index]
 
+        # Linkes und rechtes Minimum finden
+        left_min = min_indices[min_indices < max_index][-1] if any(min_indices < max_index) else 0
+        right_min = min_indices[min_indices > max_index][0] if any(min_indices > max_index) else len(x) - 1
+
+        # Fenster auf Bereich zwischen linkem und rechtem Minimum setzen
+        fit_mask = (x >= x[left_min]) & (x <= x[right_min])
+        x_fit_data = x[fit_mask]
+        y_fit_data = y[fit_mask]
+
+        # Baseline bestimmen und Toleranzbereich festlegen
+        baseline = np.min(y)
+        c_min = baseline - baseline_tolerance
+        c_max = baseline + baseline_tolerance
+
         # Initiale Schätzwerte für den Fit
-        initial_guess = [max_y, max_x, 1.0]  # [Amplitude, Mittelwert, Standardabweichung]
+        initial_guess = [max_y - baseline, max_x, 1.0, baseline]  # [Amplitude, Mittelwert, Standardabweichung, Baseline]
+        bounds = ([0, x_fit_data.min(), 0, c_min],  # Untergrenzen für die Parameter
+                  [np.inf, x_fit_data.max(), np.inf, c_max])  # Obergrenzen für die Parameter
 
         # Curve-Fitting durchführen
         try:
-            popt, pcov = curve_fit(gaussian, x, y, p0=initial_guess)
-            a, x0, sigma = popt  # Fit-Parameter
-            errors = np.sqrt(np.diag(pcov))  # Fehler der Fit-Parameter aus der Kovarianzmatrix
-            a_err, x0_err, sigma_err = errors
+            popt, pcov = curve_fit(gaussian_with_baseline, x_fit_data, y_fit_data, p0=initial_guess, bounds=bounds)
+            a, x0, sigma, c = popt
+            errors = np.sqrt(np.diag(pcov))
+            a_err, x0_err, sigma_err, c_err = errors
 
             fit_result = {
                 "line_name": line_name,
@@ -79,9 +113,11 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list):
                 "time_lag_error": x0_err,  # Fehler für time_lag
                 "std_dev": sigma,
                 "std_dev_error": sigma_err,
-                "x_values": x.tolist(),  # x-Werte hinzufügen
-                "y_values": y.tolist(),  # y-Werte hinzufügen
-                "fit_function": "a * exp(-((x - x0)^2) / (2 * sigma^2))",
+                "baseline": c,
+                "baseline_error": c_err,
+                "x_values": x.tolist(),  # Originale x-Werte
+                "y_values": y.tolist(),  # Originale y-Werte
+                "fit_function": "a * exp(-((x - x0)^2) / (2 * sigma^2)) + c (c eingeschränkt)",
                 "fit_success": True,
             }
 
@@ -108,6 +144,7 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list):
         results.append(fit_result)
 
     return results
+
 
 
 def calc_error_of_function(func, params, errors):
@@ -138,6 +175,3 @@ def calc_error_of_function(func, params, errors):
     # Propagated error calculation
     propagated_error = np.sqrt(np.sum((partial_derivatives * errors) ** 2))
     return propagated_error
-
-
-
