@@ -5,6 +5,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from handle_data.handle_data import gaussian_with_baseline
+from settings import DEFAULT_OUTPUT_DIR
 
 matplotlib.use("Qt5Agg")
 
@@ -346,7 +347,7 @@ def compare_plots_across_continua(
         plot_combined(comparison_data, current_line_name, output_dir, save_only, show_only_average=True)
 
 
-def plot_fit_results(campaign, fit_results, centroid=None):
+def plot_fit_results(campaign, fit_results, centroid=None, output_dir=None, save_only=False):
     """
     Erstellt einen Plot der Fit-Daten einschließlich des Fits, markiert den Time Lag
     und zeigt die Grenzen des Fensters für den Fit an, mit Achsen in 1er- und 0.1-Schritten
@@ -358,13 +359,20 @@ def plot_fit_results(campaign, fit_results, centroid=None):
                             "time_lag", "fit_window_start", "fit_window_end", "amplitude",
                             "std_dev", "baseline" und "fit_success" enthalten.
     """
+
+    if output_dir is None:
+        output_dir = DEFAULT_OUTPUT_DIR / campaign
+    else:
+        output_dir = output_dir / campaign
+
     for result in fit_results:
+        line_name = result["line_name"]
         if not result.get("fit_success", False):
-            print(f"Fit für {result['continuum']} fehlgeschlagen.")
+            print(f"Fit für {campaign}/{line_name}/{result['continuum']} fehlgeschlagen.")
             continue
 
         # Extrahieren der Daten
-        line_name = result["line_name"]
+
         x_values = np.array(result["x_values"])
         y_values = np.array(result["y_values"])
         time_lag = result["time_lag"]
@@ -404,7 +412,15 @@ def plot_fit_results(campaign, fit_results, centroid=None):
         plt.grid(True)
         plt.legend()
 
+        output_file_dir = output_dir / line_name
+        output_file_dir.mkdir(parents=True, exist_ok=True)
+        output_file = output_file_dir / f"{result['continuum']}.png"
         # Plot anzeigen
-        plt.show()
+        if save_only:
+            plt.savefig(output_file)
+            plt.close()
+        else:
+            plt.show()
+            plt.close()
 
 

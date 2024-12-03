@@ -53,6 +53,8 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
     results = []
     all_fit_windows = []
 
+
+
     # Schritt 1: Bestimme Fit-Fenster für alle Continuen
     for continuum, x, y in continuum_x_y_tuple_list:
         x, y = np.asarray(x).flatten(), np.asarray(y).flatten()
@@ -194,7 +196,7 @@ def get_largest_peak_index(y):
     return peak_indices[np.argmax(y[peak_indices])] if peak_indices.size > 0 else None
 
 
-def fit_window_with_gradient_change(max_index, x, y, threshold=0.06, min_distance=1):
+def fit_window_with_gradient_change(max_index, x, y, threshold=0.07, min_distance=1):
     """
     Bestimmt das Fit-Fenster basierend auf signifikanten positiven Änderungen im Gradienten.
 
@@ -298,6 +300,53 @@ def create_success_result(line_name, continuum, popt, errors, x, y, left, right)
         "fit_function": "a * exp(-((x - x0)^2) / (2 * sigma^2)) + c",
         "fit_success": True,
     }
+
+
+
+def calculate_overall_time_lag(results):
+    """
+    Berechnet den Gesamtwert des Time Lags und den zugehörigen Fehler basierend auf den Ergebnissen und speichert diese in einer TOML-Datei.
+
+    Parameters:
+        results (list): Die Ergebnisse, die von der calc_time_lag_of_line-Methode zurückgegeben wurden.
+        file_path (str): Der Pfad zur TOML-Datei, in die die Gesamtwerte gespeichert werden sollen.
+
+    Returns:
+        overall_results (dict or None): Der berechnete Gesamtwert des Time Lags und der Fehler, oder None wenn keine gültigen Ergebnisse vorhanden sind.
+        skipped_result (str): Informationen zu übersprungenen Ergebnissen.
+    """
+    time_lags = []
+    time_lag_errors = []
+    skipped_result = ""
+
+    for result in results:
+        if result.get("fit_success", False):
+            time_lag = result.get("time_lag")
+            time_lag_error = result.get("time_lag_error")
+            if (time_lag is not None and time_lag_error is not None
+                    and not np.isnan(time_lag) and not np.isnan(time_lag_error)):
+                time_lags.append(time_lag)
+                time_lag_errors.append(time_lag_error)
+            else:
+                skipped_result += f"Result of {result.get('continuum', 'Unknown')} and {result.get('line_name', 'Unknown')} was skipped, because of invalid values\n"
+
+    if not time_lags:
+        print("Keine gültigen Time Lag Ergebnisse gefunden.")
+        return None, skipped_result
+
+    # Gesamtwert des Time Lags berechnen (gewichteter Mittelwert)
+    weights = 1 / np.square(time_lag_errors)
+    overall_time_lag = np.sum(weights * time_lags) / np.sum(weights)
+
+    # Fehlerfortpflanzung für den Gesamtwert des Time Lags
+    overall_time_lag_error = np.sqrt(1 / np.sum(weights))
+
+    overall_results = {
+        "avg_time_lag": float(overall_time_lag),
+        "avg_time_lag_error": float(overall_time_lag_error)
+    }
+
+    return overall_results, skipped_result
 
 
 def save_lag_results_to_toml(results, file_path=None):

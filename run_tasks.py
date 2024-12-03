@@ -2,7 +2,10 @@ import sys
 import subprocess
 from pathlib import Path
 
-from handle_data.handle_data import sort_1d_corr_data_for_lines, calc_time_lag_of_line, save_lag_results_to_toml
+import toml
+
+from handle_data.handle_data import sort_1d_corr_data_for_lines, calc_time_lag_of_line, save_lag_results_to_toml, \
+    calculate_overall_time_lag
 from handle_data.dopplershift import calc_broad_lines_doppler_shift_with_error
 from import_data.import_data import import_1d_correlation_data, load_dopplershift_data_from_toml, \
     import_1d_lightcurve_data, import_fits_data
@@ -143,23 +146,30 @@ def plot_avg_rms_spec():
 
 
 @task
-def calc_and_plot_time_lag_gauss():
+def calc_and_plot_time_lag_gauss(output_dir=DEFAULT_OUTPUT_DIR):
+
+    lag_gaus_dir = output_dir / "time_lag_gauss"
+
     one_dim_correlation_data = import_1d_correlation_data()
     sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
         for line, data in line_data.items():
             time_lag_data = calc_time_lag_of_line(line, data, window_methode="gradient", baseline_tolerance=1)
-            plot_fit_results(campaign, time_lag_data)
+            plot_fit_results(campaign, time_lag_data, output_dir=lag_gaus_dir, save_only=True)
 
 
 @task
-def calc_and_plot_time_lag_centroid():
+def calc_and_plot_time_lag_centroid(output_dir=DEFAULT_OUTPUT_DIR):
+
+    lag_centroid_dir = output_dir / "time_lag_centroid"
+
+
     one_dim_correlation_data = import_1d_correlation_data()
     sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
         for line, data in line_data.items():
             time_lag_data = calc_time_lag_of_line(line, data, window_methode="gradient", lag_method="centroid")
-            plot_fit_results(campaign, time_lag_data, centroid=True)
+            plot_fit_results(campaign, time_lag_data, centroid=True, output_dir=lag_centroid_dir, save_only=True)
 
 
 @task
@@ -173,10 +183,20 @@ def calc_and_save_time_lag_gauss(output_dir=DEFAULT_OUTPUT_DIR):
     for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
         campaign_dir = lag_gaus_dir / campaign
         campaign_dir.mkdir(parents=True, exist_ok=True)
+        time_lag_file_path = campaign_dir / f"{campaign}_time_lag.toml"
+        line_lag_dict = dict()
         for line, data in line_data.items():
             time_lag_data = calc_time_lag_of_line(line, data, window_methode="gradient", baseline_tolerance=1)
             file_name = campaign_dir / f"{line}.toml"
             save_lag_results_to_toml(time_lag_data, file_name)
+            overall_results, skipped_result = calculate_overall_time_lag(time_lag_data)
+            line_lag_dict[line] = overall_results
+            line_lag_dict["skipped_results"] = skipped_result
+
+        sorted_line_lag_dict = dict(sorted(line_lag_dict.items()))
+
+        with open(time_lag_file_path, "w") as file:
+            toml.dump(sorted_line_lag_dict, file)
 
 
 @task
@@ -186,13 +206,26 @@ def calc_and_save_time_lag_centroid(output_dir=DEFAULT_OUTPUT_DIR):
 
     one_dim_correlation_data = import_1d_correlation_data()
     sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
+
+
     for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
         campaign_dir = lag_centroid_dir / campaign
         campaign_dir.mkdir(parents=True, exist_ok=True)
+        time_lag_file_path = campaign_dir / f"{campaign}_time_lag.toml"
+        line_lag_dict = dict()
         for line, data in line_data.items():
             time_lag_data = calc_time_lag_of_line(line, data, window_methode="gradient", lag_method="centroid")
-            file_name = campaign_dir / f"{line}.toml"
-            save_lag_results_to_toml(time_lag_data, file_name)
+            file_name_all = campaign_dir / f"{line}.toml"
+            save_lag_results_to_toml(time_lag_data, file_name_all)
+            overall_results, skipped_result = calculate_overall_time_lag(time_lag_data)
+            line_lag_dict[line] = overall_results
+            line_lag_dict["skipped_results"] = skipped_result
+
+        sorted_line_lag_dict = dict(sorted(line_lag_dict.items()))
+
+        with open(time_lag_file_path, "w") as file:
+            toml.dump(sorted_line_lag_dict, file)
+
 
 
 @task
