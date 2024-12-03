@@ -348,12 +348,14 @@ def compare_plots_across_continua(
 
 def plot_fit_results(campaign, fit_results):
     """
-    Erstellt einen Plot der Fit-Daten einschließlich des Fits und markiert den Time Lag.
+    Erstellt einen Plot der Fit-Daten einschließlich des Fits, markiert den Time Lag
+    und zeigt die Grenzen des Fensters für den Fit an.
 
     Parameters:
         fit_results (list): Eine Liste von Dictionaries, die die Fit-Daten enthalten.
                             Jedes Dictionary sollte mindestens die Schlüssel "x_values", "y_values",
-                            "time_lag", "amplitude", "std_dev" und "fit_success" enthalten.
+                            "time_lag", "fit_window_start", "fit_window_end", "amplitude",
+                            "std_dev", "baseline" und "fit_success" enthalten.
     """
     for result in fit_results:
         if not result.get("fit_success", False):
@@ -361,16 +363,15 @@ def plot_fit_results(campaign, fit_results):
             continue
 
         # Extrahieren der Daten
-
         line_name = result["line_name"]
-
         x_values = np.array(result["x_values"])
         y_values = np.array(result["y_values"])
         time_lag = result["time_lag"]
         amplitude = result["amplitude"]
         std_dev = result["std_dev"]
         baseline = result["baseline"]
-
+        fit_window_start = result["fit_window_start"]
+        fit_window_end = result["fit_window_end"]
 
         # Erstellen der Fit-Kurve
         x_fit = np.linspace(x_values.min(), x_values.max(), 500)
@@ -381,6 +382,8 @@ def plot_fit_results(campaign, fit_results):
         plt.plot(x_values, y_values, '-', label="Data", markersize=5)
         plt.plot(x_fit, y_fit, '--', label="Gaussian Fit")
         plt.axvline(time_lag, color='red', linestyle='--', label=f"Time Lag (τ) = {time_lag:.2f}")
+        plt.axvline(fit_window_start, color='blue', linestyle='--', label="Fit Window Start")
+        plt.axvline(fit_window_end, color='green', linestyle='--', label="Fit Window End")
 
         # Achsenbeschriftungen und Titel
         plt.xlabel("Time Shift (τ)", fontsize=12)

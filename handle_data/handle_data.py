@@ -45,9 +45,6 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
         list: Eine Liste von Dictionaries mit Fit-Parametern, Time Lag, Fehlern und weiteren Informationen.
     """
 
-    # Gauß-Funktion mit variabler Baseline
-    def gaussian_with_baseline(x, a, x0, sigma, c):
-        return a * np.exp(-((x - x0) ** 2) / (2 * sigma ** 2)) + c
 
     results = []
 
@@ -115,6 +112,8 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
                 "std_dev_error": sigma_err,
                 "baseline": c,
                 "baseline_error": c_err,
+                "fit_window_start": x[left_min],  # Start des Fit-Fensters
+                "fit_window_end": x[right_min],  # Ende des Fit-Fensters
                 "x_values": x.tolist(),  # Originale x-Werte
                 "y_values": y.tolist(),  # Originale y-Werte
                 "fit_function": "a * exp(-((x - x0)^2) / (2 * sigma^2)) + c (c eingeschränkt)",
