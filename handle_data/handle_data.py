@@ -1,6 +1,13 @@
+from collections import Counter
+
 import numpy as np
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
+
+import toml
+
+
+from settings import DEFAULT_OUTPUT_DIR
 
 
 def sort_1d_corr_data_for_lines(galaxy_campaigns_dict):
@@ -44,7 +51,9 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
     """
     fit_window_func = get_fit_window_function(window_methode)
     results = []
+    all_fit_windows = []
 
+    # Schritt 1: Bestimme Fit-Fenster für alle Continuen
     for continuum, x, y in continuum_x_y_tuple_list:
         x, y = np.asarray(x).flatten(), np.asarray(y).flatten()
 
@@ -55,12 +64,39 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
 
         try:
             left, right, x_fit, y_fit = fit_window_func(max_index, x, y)
+            all_fit_windows.append((left, right))
+        except ValueError as e:
+            results.append(create_error_result(line_name, continuum, x, y, str(e)))
+
+    # Schritt 2: Bestimme die häufigsten `left` und `right`-Werte
+    if not all_fit_windows:
+        return results  # Keine gültigen Fenster gefunden, Ergebnisse zurückgeben
+
+    left_counts = Counter([window[0] for window in all_fit_windows])
+    right_counts = Counter([window[1] for window in all_fit_windows])
+
+    most_common_left = left_counts.most_common(1)[0][0]
+    most_common_right = right_counts.most_common(1)[0][0]
+
+    # Schritt 3: Verwende das häufigste Fenster für alle Continuen
+    for continuum, x, y in continuum_x_y_tuple_list:
+        x, y = np.asarray(x).flatten(), np.asarray(y).flatten()
+
+        max_index = get_largest_peak_index(y)
+        if max_index is None:
+            continue
+
+        try:
+            # Fenster basierend auf häufigsten Werten extrahieren
+            x_fit = x[most_common_left:most_common_right + 1]
+            y_fit = y[most_common_left:most_common_right + 1]
 
             if lag_method == "gaussfit":
                 result = perform_gaussian_fit(line_name, continuum, x, y, x_fit, y_fit, max_index, baseline_tolerance,
-                                              left, right)
+                                              most_common_left, most_common_right)
             elif lag_method == "centroid":
-                result = perform_centroid_calculation(line_name, continuum, x, y, x_fit, y_fit, left, right)
+                result = perform_centroid_calculation(line_name, continuum, x, y, x_fit, y_fit, most_common_left,
+                                                      most_common_right)
             else:
                 raise ValueError(f"Ungültige Methode zur Berechnung des Time Lags: {lag_method}")
 
@@ -138,7 +174,7 @@ def get_largest_peak_index(y):
     return peak_indices[np.argmax(y[peak_indices])] if peak_indices.size > 0 else None
 
 
-def fit_window_with_gradient_change(max_index, x, y, threshold=0.055, min_distance=1):
+def fit_window_with_gradient_change(max_index, x, y, threshold=0.06, min_distance=1):
     """
     Bestimmt das Fit-Fenster basierend auf signifikanten positiven Änderungen im Gradienten.
 
@@ -242,6 +278,54 @@ def create_success_result(line_name, continuum, popt, errors, x, y, left, right)
         "fit_function": "a * exp(-((x - x0)^2) / (2 * sigma^2)) + c",
         "fit_success": True,
     }
+
+
+def save_lag_results_to_toml(results, file_path=None):
+    """
+    Speichert die Ergebnisse der ersten Methode in einer TOML-Datei.
+
+    Parameters:
+        results (list): Die Ergebnisse, die von der calc_time_lag_of_line-Methode zurückgegeben wurden.
+        file_path (str): Der Pfad zur TOML-Datei, in die die Ergebnisse gespeichert werden sollen.
+    """
+    if file_path is None:
+        file_path = "results.toml"
+
+    toml_data = dict()
+    for result in results:
+        continuum = result.get("continuum", "N/A")  # Entfernen Sie das Komma, um einen String zu erhalten
+
+        # Konvertiere alle np.float Werte zu normalen float Werten
+        for key, value in result.items():
+            if isinstance(value, (np.float32, np.float64)):
+                result[key] = float(value)
+
+        if result.get("fit_success", False):
+            toml_data[continuum] = {
+                "amplitude": float(result.get("amplitude", "N/A")) if isinstance(result.get("amplitude"), (float, np.float32, np.float64)) else result.get("amplitude", "N/A"),
+                "amplitude_error": float(result.get("amplitude_error", "N/A")) if isinstance(result.get("amplitude_error"), (float, np.float32, np.float64)) else result.get("amplitude_error", "N/A"),
+                "time_lag": float(result.get("time_lag", "N/A")) if isinstance(result.get("time_lag"), (float, np.float32, np.float64)) else result.get("time_lag", "N/A"),
+                "time_lag_error": float(result.get("time_lag_error", "N/A")) if isinstance(result.get("time_lag_error"), (float, np.float32, np.float64)) else result.get("time_lag_error", "N/A"),
+                "std_dev": float(result.get("std_dev", "N/A")) if isinstance(result.get("std_dev"), (float, np.float32, np.float64)) else result.get("std_dev", "N/A"),
+                "std_dev_error": float(result.get("std_dev_error", "N/A")) if isinstance(result.get("std_dev_error"), (float, np.float32, np.float64)) else result.get("std_dev_error", "N/A"),
+                "baseline": float(result.get("baseline", "N/A")) if isinstance(result.get("baseline"), (float, np.float32, np.float64)) else result.get("baseline", "N/A"),
+                "baseline_error": float(result.get("baseline_error", "N/A")) if isinstance(result.get("baseline_error"), (float, np.float32, np.float64)) else result.get("baseline_error", "N/A"),
+                "fit_window_start": float(result.get("fit_window_start", "N/A")) if isinstance(result.get("fit_window_start"), (float, np.float32, np.float64)) else result.get("fit_window_start", "N/A"),
+                "fit_window_end": float(result.get("fit_window_end", "N/A")) if isinstance(result.get("fit_window_end"), (float, np.float32, np.float64)) else result.get("fit_window_end", "N/A"),
+                "fit_function": result.get("fit_function", "N/A"),
+                "fit_success": True,
+            }
+        else:
+            toml_data[continuum] = {
+                "error": result.get("error", "N/A"),
+                "fit_success": False,
+            }
+
+    with open(file_path, "w") as file:
+        toml.dump(toml_data, file)
+
+    print(f"Ergebnisse wurden in {file_path} gespeichert.")
+
 
 
 def create_error_result(line_name, continuum, x, y, error_message):
