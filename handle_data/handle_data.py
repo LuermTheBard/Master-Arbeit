@@ -1,9 +1,9 @@
 import numpy as np
 
 
-def create_1d_correlation_plot_data(galaxy_campaigns_dict):
+def sort_1d_corr_data_for_lines(galaxy_campaigns_dict):
 
-    plot_data_dict = dict()
+    line_sorted_data = dict()
 
     for campaign, continua_dict in galaxy_campaigns_dict.items():
         line_data_dict = dict()
@@ -16,9 +16,9 @@ def create_1d_correlation_plot_data(galaxy_campaigns_dict):
                     else:
                         line_data_dict[line] = [(continua, x_values, data_points)]
 
-        plot_data_dict[campaign] = line_data_dict
+        line_sorted_data[campaign] = line_data_dict
 
-    return plot_data_dict
+    return line_sorted_data
 
 
 def calc_error_of_function(func, params, errors):

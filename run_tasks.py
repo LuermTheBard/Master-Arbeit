@@ -2,7 +2,7 @@ import sys
 import subprocess
 from pathlib import Path
 
-from handle_data.handle_data import create_1d_correlation_plot_data
+from handle_data.handle_data import sort_1d_corr_data_for_lines
 from handle_data.dopplershift import calc_broad_lines_doppler_shift_with_error
 from import_data.import_data import import_1d_correlation_data, load_dopplershift_data_from_toml, \
     import_1d_lightcurve_data, import_fits_data
@@ -32,7 +32,7 @@ def plot_all_1d_corr():
     Plots all 1D correlations.
     """
     one_dim_correlation_data = import_1d_correlation_data()
-    one_dim_correlation_plot_data = create_1d_correlation_plot_data(one_dim_correlation_data)
+    one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     process_1d_correlations(one_dim_correlation_plot_data)
 
 
@@ -46,7 +46,7 @@ def save_all_1d_corr(output_dir=DEFAULT_OUTPUT_DIR):
         output_dir.mkdir(parents=True)
 
     one_dim_correlation_data = import_1d_correlation_data()
-    one_dim_correlation_plot_data = create_1d_correlation_plot_data(one_dim_correlation_data)
+    one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     process_1d_correlations(one_dim_correlation_plot_data, output_dir=output_dir, save_only=True)
 
 
@@ -60,7 +60,7 @@ def compare_and_save_all_1d_corr(output_dir=DEFAULT_OUTPUT_DIR):
         output_dir.mkdir(parents=True)
 
     one_dim_correlation_data = import_1d_correlation_data()
-    one_dim_correlation_plot_data = create_1d_correlation_plot_data(one_dim_correlation_data)
+    one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     compare_plots_across_continua(one_dim_correlation_plot_data, output_dir=output_dir, save_only=True)
 
 
@@ -133,7 +133,7 @@ def plot_line_1d_corr(line_name=None):
         raise ValueError("Please specify a line name in the following form: plot_line_1d_corr::line_name")
 
     one_dim_correlation_data = import_1d_correlation_data()
-    one_dim_correlation_plot_data = create_1d_correlation_plot_data(one_dim_correlation_data)
+    one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     process_1d_correlations(one_dim_correlation_plot_data, line_name=line_name)
 
 
