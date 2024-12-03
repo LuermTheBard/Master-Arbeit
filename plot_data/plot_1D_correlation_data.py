@@ -4,7 +4,7 @@ import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
 
-from handle_data.handle_data import gaussian_with_baseline
+from handle_data.get_time_lag_from_1D_correlation import gaussian_with_baseline
 from settings import DEFAULT_OUTPUT_DIR
 
 matplotlib.use("Qt5Agg")

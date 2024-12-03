@@ -4,8 +4,9 @@ from pathlib import Path
 
 import toml
 
-from handle_data.handle_data import sort_1d_corr_data_for_lines, calc_time_lag_of_line, save_lag_results_to_toml, \
-    calculate_overall_time_lag
+from handle_data.handle_data import sort_1d_corr_data_for_lines
+from handle_data.get_time_lag_from_1D_correlation import calc_time_lag_of_line, calculate_overall_time_lag, \
+    save_lag_results_to_toml
 from handle_data.dopplershift import calc_broad_lines_doppler_shift_with_error
 from import_data.import_data import import_1d_correlation_data, load_dopplershift_data_from_toml, \
     import_1d_lightcurve_data, import_fits_data
