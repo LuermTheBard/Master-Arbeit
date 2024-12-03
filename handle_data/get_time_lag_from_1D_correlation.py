@@ -1,3 +1,4 @@
+import sys
 from collections import Counter
 
 import numpy as np
@@ -39,6 +40,9 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
     most_common_left, most_common_right = get_most_common_fit_window(all_fit_windows)
 
     # Schritt 3: Verwende das häufigste Fenster für alle Continuen
+
+    print(f"Calculate time Lag for line: {line_name}")
+
     for continuum, x, y in continuum_x_y_tuple_list:
         x, y = np.asarray(x).flatten(), np.asarray(y).flatten()
 
@@ -122,6 +126,8 @@ def perform_centroid_calculation(line_name, continuum, x, y, x_fit, y_fit, left,
     if centroid is None:
         return create_error_result(line_name, continuum, x, y, "Centroid konnte nicht berechnet werden.")
 
+    print(f"Calculation of time lag for {line_name}/{continuum} successfull: {centroid} +- {centroid_err}")
+
     return {
         "line_name": line_name,
         "continuum": continuum,
@@ -173,8 +179,8 @@ def perform_gaussian_fit(line_name, continuum, x, y, x_fit, y_fit, max_index, ba
     try:
         popt, pcov = curve_fit(gaussian_with_baseline, x_fit, y_fit, p0=initial_guess, bounds=bounds)
         return create_success_result(line_name, continuum, popt, np.sqrt(np.diag(pcov)), x, y, left, right)
-    except RuntimeError:
-        return create_error_result(line_name, continuum, x, y, "Fit konnte nicht durchgeführt werden.")
+    except RuntimeError as e:
+        return create_error_result(line_name, continuum, x, y, f"Fit konnte nicht durchgeführt werden. Error: {e}")
 
 
 def get_largest_peak_index(y):
@@ -268,6 +274,9 @@ def create_success_result(line_name, continuum, popt, errors, x, y, left, right)
     """Erstellt ein Ergebnis bei erfolgreichem Fit."""
     a, x0, sigma, c = popt
     a_err, x0_err, sigma_err, c_err = errors
+
+    print(f"Calculation of time lag for {line_name}/{continuum} successfull: {x0} +-{x0_err}")
+
     return {
         "line_name": line_name,
         "continuum": continuum,
@@ -371,6 +380,8 @@ def save_lag_results_to_toml(results, file_path="results.toml"):
 
 def create_error_result(line_name, continuum, x, y, error_message):
     """Erstellt ein Ergebnis bei fehlgeschlagenem Fit."""
+
+    print(f"Calculation of {line_name}/{continuum} was not succesfull: {error_message}", file=sys.stderr)
     return {
         "line_name": line_name,
         "continuum": continuum,
