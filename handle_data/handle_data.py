@@ -75,14 +75,8 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
         max_x = x[max_index]
         max_y = y[max_index]
 
-        # Linkes und rechtes Minimum finden
-        left_min = min_indices[min_indices < max_index][-1] if any(min_indices < max_index) else 0
-        right_min = min_indices[min_indices > max_index][0] if any(min_indices > max_index) else len(x) - 1
-
-        # Fenster auf Bereich zwischen linkem und rechtem Minimum setzen
-        fit_mask = (x >= x[left_min]) & (x <= x[right_min])
-        x_fit_data = x[fit_mask]
-        y_fit_data = y[fit_mask]
+        #left_min, right_min, x_fit_data, y_fit_data = fit_window_with_minima(max_index, min_indices, x, y)
+        left_min, right_min, x_fit_data, y_fit_data = fit_window_with_turningpoints(max_index, x, y)
 
         # Baseline bestimmen und Toleranzbereich festlegen
         baseline = np.min(y)
@@ -144,6 +138,31 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
 
     return results
 
+
+def fit_window_with_minima(max_index, min_indices, x, y):
+    # Linkes und rechtes Minimum finden
+    left_min = min_indices[min_indices < max_index][-1] if any(min_indices < max_index) else 0
+    right_min = min_indices[min_indices > max_index][0] if any(min_indices > max_index) else len(x) - 1
+    # Fenster auf Bereich zwischen linkem und rechtem Minimum setzen
+    fit_mask = (x >= x[left_min]) & (x <= x[right_min])
+    x_fit_data = x[fit_mask]
+    y_fit_data = y[fit_mask]
+    return left_min, right_min, x_fit_data, y_fit_data
+
+
+def fit_window_with_turningpoints(max_index, x, y):
+    # Zweite Ableitung berechnen, um Wendepunkte zu finden
+    dy = np.gradient(y, x)  # Erste Ableitung
+    d2y = np.gradient(dy, x)  # Zweite Ableitung
+    # Nullstellen der zweiten Ableitung finden (Wendepunkte)
+    zero_crossings = np.where(np.diff(np.sign(d2y)))[0]
+    left_wendepunkt = zero_crossings[zero_crossings < max_index][-1] if any(zero_crossings < max_index) else 0
+    right_wendepunkt = zero_crossings[zero_crossings > max_index][0] if any(zero_crossings > max_index) else len(x) - 1
+    # Fenster auf Bereich zwischen linkem und rechtem Wendepunkt setzen
+    fit_mask = (x >= x[left_wendepunkt]) & (x <= x[right_wendepunkt])
+    x_fit_data = x[fit_mask]
+    y_fit_data = y[fit_mask]
+    return left_wendepunkt, right_wendepunkt, x_fit_data, y_fit_data
 
 
 def calc_error_of_function(func, params, errors):
