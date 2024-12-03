@@ -2,7 +2,8 @@ import sys
 import subprocess
 from pathlib import Path
 
-from handle_data.handle_data import create_1d_correlation_plot_data, calc_broad_lines_doppler_shift_with_error
+from handle_data.handle_data import create_1d_correlation_plot_data
+from handle_data.dopplershift import calc_broad_lines_doppler_shift_with_error
 from import_data.import_data import import_1d_correlation_data, load_dopplershift_data_from_toml, \
     import_1d_lightcurve_data, import_fits_data
 from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua

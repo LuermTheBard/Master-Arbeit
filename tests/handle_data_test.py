@@ -1,6 +1,7 @@
 import numpy as np
 
-from handle_data.handle_data import calc_error, calc_error_of_function
+from handle_data.handle_data import calc_error_of_function
+from handle_data.dopplershift import calc_error
 
 
 def test_calc_error():
