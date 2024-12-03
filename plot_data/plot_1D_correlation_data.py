@@ -349,7 +349,8 @@ def compare_plots_across_continua(
 def plot_fit_results(campaign, fit_results):
     """
     Erstellt einen Plot der Fit-Daten einschließlich des Fits, markiert den Time Lag
-    und zeigt die Grenzen des Fensters für den Fit an.
+    und zeigt die Grenzen des Fensters für den Fit an, mit Achsen in 1er- und 0.1-Schritten
+    und den x-Werten der Fit-Grenzen in der Legende.
 
     Parameters:
         fit_results (list): Eine Liste von Dictionaries, die die Fit-Daten enthalten.
@@ -382,13 +383,17 @@ def plot_fit_results(campaign, fit_results):
         plt.plot(x_values, y_values, '-', label="Data", markersize=5)
         plt.plot(x_fit, y_fit, '--', label="Gaussian Fit")
         plt.axvline(time_lag, color='red', linestyle='--', label=f"Time Lag (τ) = {time_lag:.2f}")
-        plt.axvline(fit_window_start, color='blue', linestyle='--', label="Fit Window Start")
-        plt.axvline(fit_window_end, color='green', linestyle='--', label="Fit Window End")
+        plt.axvline(fit_window_start, color='blue', linestyle='--', label=f"Fit Window Start (x = {fit_window_start:.1f})")
+        plt.axvline(fit_window_end, color='green', linestyle='--', label=f"Fit Window End (x = {fit_window_end:.1f})")
 
         # Achsenbeschriftungen und Titel
         plt.xlabel("Time Shift (τ)", fontsize=12)
         plt.ylabel("Correlation Coefficient", fontsize=12)
         plt.title(f"{campaign}\n\nFit for {line_name} and {result['continuum']}", fontsize=14)
+
+        # Achseneinteilung
+        plt.xticks(np.arange(np.floor(x_values.min()), np.ceil(x_values.max()) + 1, 1))
+        plt.yticks(np.arange(np.floor(y_values.min()), np.ceil(y_values.max()) + 0.1, 0.1))
 
         # Gitter und Legende
         plt.grid(True)
@@ -396,3 +401,5 @@ def plot_fit_results(campaign, fit_results):
 
         # Plot anzeigen
         plt.show()
+
+

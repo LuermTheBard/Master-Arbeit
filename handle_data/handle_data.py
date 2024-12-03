@@ -86,13 +86,36 @@ def fit_window_with_minima(max_index, x, y):
     return extract_fit_window(left, right, x, y)
 
 
-def fit_window_with_turningpoints(max_index, x, y):
-    """Bestimmt das Fit-Fenster basierend auf Wendepunkten."""
+def fit_window_with_turningpoints(max_index, x, y, min_distance=1):
+    """
+    Bestimmt das Fit-Fenster basierend auf Wendepunkten und stellt sicher,
+    dass Wendepunkte nicht zu nah am Maximum liegen.
+
+    Parameters:
+        max_index (int): Index des Maximums.
+        x (array-like): Array der x-Werte.
+        y (array-like): Array der y-Werte.
+        min_distance (int): Mindestabstand zwischen Maximum und Wendepunkt.
+
+    Returns:
+        tuple: (left, right, x_fit_data, y_fit_data)
+    """
     dy, d2y = np.gradient(y, x), np.gradient(np.gradient(y, x), x)
     zero_crossings = np.where(np.diff(np.sign(d2y)))[0]
-    left = zero_crossings[zero_crossings < max_index][-1] if any(zero_crossings < max_index) else 0
-    right = zero_crossings[zero_crossings > max_index][0] if any(zero_crossings > max_index) else len(x) - 1
+
+    # Linken Wendepunkt auswählen
+    left_candidates = zero_crossings[zero_crossings < max_index]
+    left = left_candidates[-1] if len(left_candidates) > 0 and max_index - left_candidates[-1] >= min_distance else (
+        left_candidates[-2] if len(left_candidates) > 1 else 0)
+
+    # Rechten Wendepunkt auswählen
+    right_candidates = zero_crossings[zero_crossings > max_index]
+    right = right_candidates[0] if len(right_candidates) > 0 and right_candidates[0] - max_index >= min_distance else (
+        right_candidates[1] if len(right_candidates) > 1 else len(x) - 1)
+
+    # Fenster extrahieren
     return extract_fit_window(left, right, x, y)
+
 
 
 def extract_fit_window(left, right, x, y):
