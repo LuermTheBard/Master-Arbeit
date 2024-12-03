@@ -129,7 +129,7 @@ def get_fit_window_function(window_methode):
 
 def perform_centroid_calculation(line_name, continuum, x, y, x_fit, y_fit, left, right):
     """Berechnet den Time Lag basierend auf dem Centroid."""
-    centroid = calculate_centroid(x_fit, y_fit)
+    centroid, centroid_err = calculate_centroid(x_fit, y_fit)
     if centroid is None:
         return create_error_result(line_name, continuum, x, y, "Centroid konnte nicht berechnet werden.")
 
@@ -137,7 +137,7 @@ def perform_centroid_calculation(line_name, continuum, x, y, x_fit, y_fit, left,
         "line_name": line_name,
         "continuum": continuum,
         "time_lag": centroid,
-        "time_lag_error": None,  # Fehlerabschätzung könnte hier implementiert werden
+        "time_lag_error": centroid_err,  # Fehlerabschätzung könnte hier implementiert werden
         "fit_window_start": x[left],
         "fit_window_end": x[right],
         "x_values": x.tolist(),
@@ -148,10 +148,30 @@ def perform_centroid_calculation(line_name, continuum, x, y, x_fit, y_fit, left,
 
 
 def calculate_centroid(x, y):
-    """Berechnet den Centroid eines Peaks."""
+    """
+    Berechnet den Centroid eines Peaks und schätzt den Fehler des Centroids.
+
+    Parameters:
+        x (array-like): Die x-Werte der Daten.
+        y (array-like): Die y-Werte der Daten.
+
+    Returns:
+        centroid (float or None): Der berechnete Centroid des Peaks.
+        centroid_error (float or None): Der geschätzte Fehler des Centroids.
+    """
     weighted_sum = np.sum(x * y)
     total_intensity = np.sum(y)
-    return weighted_sum / total_intensity if total_intensity > 0 else None
+
+    if total_intensity <= 0:
+        return None, None
+
+    centroid = weighted_sum / total_intensity
+
+    # Fehlerberechnung basierend auf der Standardabweichung der gewichteten x-Werte
+    variance = np.sum(y * (x - centroid) ** 2) / total_intensity
+    centroid_error = np.sqrt(variance / len(x))
+
+    return centroid, centroid_error
 
 
 def perform_gaussian_fit(line_name, continuum, x, y, x_fit, y_fit, max_index, baseline_tolerance, left, right):
