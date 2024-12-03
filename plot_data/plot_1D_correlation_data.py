@@ -346,7 +346,7 @@ def compare_plots_across_continua(
         plot_combined(comparison_data, current_line_name, output_dir, save_only, show_only_average=True)
 
 
-def plot_fit_results(campaign, fit_results):
+def plot_fit_results(campaign, fit_results, centroid=None):
     """
     Erstellt einen Plot der Fit-Daten einschließlich des Fits, markiert den Time Lag
     und zeigt die Grenzen des Fensters für den Fit an, mit Achsen in 1er- und 0.1-Schritten
@@ -368,21 +368,26 @@ def plot_fit_results(campaign, fit_results):
         x_values = np.array(result["x_values"])
         y_values = np.array(result["y_values"])
         time_lag = result["time_lag"]
-        amplitude = result["amplitude"]
-        std_dev = result["std_dev"]
-        baseline = result["baseline"]
+
         fit_window_start = result["fit_window_start"]
         fit_window_end = result["fit_window_end"]
 
-        # Erstellen der Fit-Kurve
-        x_fit = np.linspace(x_values.min(), x_values.max(), 500)
-        y_fit = gaussian_with_baseline(x_fit, amplitude, time_lag, std_dev, baseline)
+        if not centroid:
+            amplitude = result["amplitude"]
+            std_dev = result["std_dev"]
+            baseline = result["baseline"]
+
+            # Erstellen der Fit-Kurve
+            x_fit = np.linspace(x_values.min(), x_values.max(), 500)
+            y_fit = gaussian_with_baseline(x_fit, amplitude, time_lag, std_dev, baseline)
 
         # Plot erstellen
         plt.figure(figsize=(10, 6))
         plt.plot(x_values, y_values, '-', label="Data", markersize=5)
-        plt.plot(x_fit, y_fit, '--', label="Gaussian Fit")
+        if not centroid:
+            plt.plot(x_fit, y_fit, '--', label="Gaussian Fit")
         plt.axvline(time_lag, color='red', linestyle='--', label=f"Time Lag (τ) = {time_lag:.2f}")
+
         plt.axvline(fit_window_start, color='blue', linestyle='--', label=f"Fit Window Start (x = {fit_window_start:.1f})")
         plt.axvline(fit_window_end, color='green', linestyle='--', label=f"Fit Window End (x = {fit_window_end:.1f})")
 

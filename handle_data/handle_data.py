@@ -27,21 +27,22 @@ def gaussian_with_baseline(x, a, x0, sigma, c):
     return a * np.exp(-((x - x0) ** 2) / (2 * sigma ** 2)) + c
 
 
-def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_tolerance=0.1, fit_method="turningpoints"):
+def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_tolerance=0.1, window_methode="gradient",
+                          lag_method="gaussfit"):
     """
-    Passt eine Gauß-Funktion mit variabler Baseline an das größte Maximum der gegebenen Daten
-    und berechnet Fit-Parameter, Time Lag und Fehler.
+    Passt eine Gauß-Funktion oder verwendet den Centroid zur Bestimmung des Time Lags.
 
     Parameters:
         line_name (str): Der Name der Linie.
         continuum_x_y_tuple_list (list): Liste von (continuum, x, y)-Tupeln.
         baseline_tolerance (float): Toleranzbereich für die Baseline.
-        fit_method (str): Methode zur Auswahl des Fit-Fensters ("minima" oder "turningpoints").
+        window_methode (str): Methode zur Auswahl des Fit-Fensters ("minima", "turningpoints" oder "gradient").
+        lag_method (str): Methode zur Berechnung des Time Lags ("gaussfit" oder "centroid").
 
     Returns:
         list: Ergebnisse mit Fit-Parametern und zusätzlichen Informationen.
     """
-    fit_window_func = get_fit_window_function(fit_method)
+    fit_window_func = get_fit_window_function(window_methode)
     results = []
 
     for continuum, x, y in continuum_x_y_tuple_list:
@@ -54,7 +55,15 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
 
         try:
             left, right, x_fit, y_fit = fit_window_func(max_index, x, y)
-            result = perform_gaussian_fit(line_name, continuum, x, y, x_fit, y_fit, max_index, baseline_tolerance, left, right)
+
+            if lag_method == "gaussfit":
+                result = perform_gaussian_fit(line_name, continuum, x, y, x_fit, y_fit, max_index, baseline_tolerance,
+                                              left, right)
+            elif lag_method == "centroid":
+                result = perform_centroid_calculation(line_name, continuum, x, y, x_fit, y_fit, left, right)
+            else:
+                raise ValueError(f"Ungültige Methode zur Berechnung des Time Lags: {lag_method}")
+
             results.append(result)
         except ValueError as e:
             results.append(create_error_result(line_name, continuum, x, y, str(e)))
@@ -62,20 +71,107 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
     return results
 
 
-def get_fit_window_function(fit_method):
-    """Wählt die passende Funktion für die Fit-Fenster-Berechnung aus."""
-    if fit_method == "minima":
+def get_fit_window_function(window_methode):
+    """
+    Wählt die passende Funktion für die Fit-Fenster-Berechnung aus.
+
+    Parameters:
+        window_methode (str): Methode zur Auswahl des Fit-Fensters ("minima", "turningpoints", "gradientchange").
+
+    Returns:
+        function: Die passende Funktion zur Fensterberechnung.
+    """
+    if window_methode == "minima":
         return fit_window_with_minima
-    elif fit_method == "turningpoints":
+    elif window_methode == "turningpoints":
         return fit_window_with_turningpoints
+    elif window_methode == "gradient":
+        return fit_window_with_gradient_change
     else:
-        raise ValueError(f"Ungültige Fit-Methode: {fit_method}")
+        raise ValueError(f"Ungültige Fit-Methode: {window_methode}")
+
+
+def perform_centroid_calculation(line_name, continuum, x, y, x_fit, y_fit, left, right):
+    """Berechnet den Time Lag basierend auf dem Centroid."""
+    centroid = calculate_centroid(x_fit, y_fit)
+    if centroid is None:
+        return create_error_result(line_name, continuum, x, y, "Centroid konnte nicht berechnet werden.")
+
+    return {
+        "line_name": line_name,
+        "continuum": continuum,
+        "time_lag": centroid,
+        "time_lag_error": None,  # Fehlerabschätzung könnte hier implementiert werden
+        "fit_window_start": x[left],
+        "fit_window_end": x[right],
+        "x_values": x.tolist(),
+        "y_values": y.tolist(),
+        "fit_function": "Centroid",
+        "fit_success": True,
+    }
+
+
+def calculate_centroid(x, y):
+    """Berechnet den Centroid eines Peaks."""
+    weighted_sum = np.sum(x * y)
+    total_intensity = np.sum(y)
+    return weighted_sum / total_intensity if total_intensity > 0 else None
+
+
+def perform_gaussian_fit(line_name, continuum, x, y, x_fit, y_fit, max_index, baseline_tolerance, left, right):
+    """Führt den Curve-Fit mit einer Gauß-Funktion durch."""
+    baseline = np.min(y)
+    c_min, c_max = baseline - baseline_tolerance, baseline + baseline_tolerance
+    initial_guess = [y[max_index] - baseline, x[max_index], 1.0, baseline]
+    bounds = ([0, x_fit.min(), 0, c_min], [np.inf, x_fit.max(), np.inf, c_max])
+
+    try:
+        popt, pcov = curve_fit(gaussian_with_baseline, x_fit, y_fit, p0=initial_guess, bounds=bounds)
+        return create_success_result(line_name, continuum, popt, np.sqrt(np.diag(pcov)), x, y, left, right)
+    except RuntimeError:
+        return create_error_result(line_name, continuum, x, y, "Fit konnte nicht durchgeführt werden.")
 
 
 def get_largest_peak_index(y):
     """Findet den Index des größten lokalen Maximums."""
     peak_indices, _ = find_peaks(y)
     return peak_indices[np.argmax(y[peak_indices])] if peak_indices.size > 0 else None
+
+
+def fit_window_with_gradient_change(max_index, x, y, threshold=0.055, min_distance=1):
+    """
+    Bestimmt das Fit-Fenster basierend auf signifikanten positiven Änderungen im Gradienten.
+
+    Parameters:
+        max_index (int): Index des Maximums.
+        x (array-like): Array der x-Werte.
+        y (array-like): Array der y-Werte.
+        threshold (float): Schwellenwert für signifikante Änderungen im Gradienten.
+        min_distance (int): Mindestabstand zwischen Maximum und gefundenen Punkten.
+
+    Returns:
+        tuple: (left, right, x_fit_data, y_fit_data)
+    """
+    # Berechnung der ersten Ableitung (Gradient)
+    dy = np.gradient(y, x)
+
+    # Berechnung der Differenzen des Gradienten
+    gradient_change = np.diff(dy)
+
+    # Nur positive Änderungen des Gradienten berücksichtigen
+    positive_changes = np.where(gradient_change > threshold)[0] + 1  # +1, da diff die Länge um 1 reduziert
+
+    # Linken Punkt bestimmen
+    left_candidates = positive_changes[positive_changes < max_index]
+    left = left_candidates[-1] if len(left_candidates) > 0 and max_index - left_candidates[-1] >= min_distance else 0
+
+    # Rechten Punkt bestimmen
+    right_candidates = positive_changes[positive_changes > max_index]
+    right = right_candidates[0] if len(right_candidates) > 0 and right_candidates[
+        0] - max_index >= min_distance else len(x) - 1
+
+    # Fenster extrahieren
+    return extract_fit_window(left, right, x, y)
 
 
 def fit_window_with_minima(max_index, x, y):
@@ -122,20 +218,6 @@ def extract_fit_window(left, right, x, y):
     """Extrahiert das Fit-Fenster zwischen zwei Indizes."""
     fit_mask = (x >= x[left]) & (x <= x[right])
     return left, right, x[fit_mask], y[fit_mask]
-
-
-def perform_gaussian_fit(line_name, continuum, x, y, x_fit, y_fit, max_index, baseline_tolerance, left, right):
-    """Führt den Curve-Fit mit einer Gauß-Funktion durch."""
-    baseline = np.min(y)
-    c_min, c_max = baseline - baseline_tolerance, baseline + baseline_tolerance
-    initial_guess = [y[max_index] - baseline, x[max_index], 1.0, baseline]
-    bounds = ([0, x_fit.min(), 0, c_min], [np.inf, x_fit.max(), np.inf, c_max])
-
-    try:
-        popt, pcov = curve_fit(gaussian_with_baseline, x_fit, y_fit, p0=initial_guess, bounds=bounds)
-        return create_success_result(line_name, continuum, popt, np.sqrt(np.diag(pcov)), x, y, left, right)
-    except RuntimeError:
-        return create_error_result(line_name, continuum, x, y, "Fit konnte nicht durchgeführt werden.")
 
 
 def create_success_result(line_name, continuum, popt, errors, x, y, left, right):

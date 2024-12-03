@@ -143,13 +143,23 @@ def plot_avg_rms_spec():
 
 
 @task
-def calc_and_plot_time_lag():
+def calc_and_plot_time_lag_gauss():
     one_dim_correlation_data = import_1d_correlation_data()
     sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
         for line, data in line_data.items():
-            time_lag_data = calc_time_lag_of_line(line, data, baseline_tolerance=0.1)
+            time_lag_data = calc_time_lag_of_line(line, data, window_methode="gradient", baseline_tolerance=1)
             plot_fit_results(campaign, time_lag_data)
+
+
+@task
+def calc_and_plot_time_lag_centroid():
+    one_dim_correlation_data = import_1d_correlation_data()
+    sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
+    for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
+        for line, data in line_data.items():
+            time_lag_data = calc_time_lag_of_line(line, data, window_methode="gradient", lag_method="centroid")
+            plot_fit_results(campaign, time_lag_data, centroid=True)
 
 
 @task
