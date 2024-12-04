@@ -168,8 +168,9 @@ def calc_and_plot_time_lag_centroid(output_dir=DEFAULT_OUTPUT_DIR):
     sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
         for line, data in line_data.items():
-            time_lag_data = calc_time_lag_of_line(line, data, window_methode="gradient", lag_method="centroid")
+            time_lag_data = calc_time_lag_of_line(line, data, window_methode="minima", lag_method="centroid")
             plot_fit_results(campaign, time_lag_data, centroid=True, output_dir=lag_centroid_dir)
+
 
 @task
 def calc_and_save_plot_time_lag_gauss(output_dir=DEFAULT_OUTPUT_DIR):
@@ -180,7 +181,7 @@ def calc_and_save_plot_time_lag_gauss(output_dir=DEFAULT_OUTPUT_DIR):
     sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
         for line, data in line_data.items():
-            time_lag_data = calc_time_lag_of_line(line, data, window_methode="gradient", baseline_tolerance=1)
+            time_lag_data = calc_time_lag_of_line(line, data, window_methode="minima", baseline_tolerance=1)
             plot_fit_results(campaign, time_lag_data, output_dir=lag_gaus_dir, save_only=True)
 
 
@@ -193,7 +194,7 @@ def calc_and_save_plot_time_lag_centroid(output_dir=DEFAULT_OUTPUT_DIR):
     sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
         for line, data in line_data.items():
-            time_lag_data = calc_time_lag_of_line(line, data, window_methode="gradient", lag_method="centroid")
+            time_lag_data = calc_time_lag_of_line(line, data, window_methode="minima", lag_method="centroid")
             plot_fit_results(campaign, time_lag_data, centroid=True, output_dir=lag_centroid_dir, save_only=True)
 
 
@@ -210,7 +211,7 @@ def calc_and_save_time_lag_gauss(output_dir=DEFAULT_OUTPUT_DIR):
         time_lag_file_path = campaign_dir / f"{campaign}_time_lag.toml"
         line_lag_dict = dict()
         for line, data in line_data.items():
-            time_lag_data = calc_time_lag_of_line(line, data, window_methode="gradient", baseline_tolerance=1)
+            time_lag_data = calc_time_lag_of_line(line, data, window_methode="minima", baseline_tolerance=1)
             file_name = campaign_dir / f"{line}.toml"
             save_lag_results_to_toml(time_lag_data, file_name)
             overall_results, skipped_result = calculate_overall_time_lag(time_lag_data)
@@ -237,7 +238,7 @@ def calc_and_save_time_lag_centroid(output_dir=DEFAULT_OUTPUT_DIR):
         time_lag_file_path = campaign_dir / f"{campaign}_time_lag.toml"
         line_lag_dict = dict()
         for line, data in line_data.items():
-            time_lag_data = calc_time_lag_of_line(line, data, window_methode="gradient", lag_method="centroid")
+            time_lag_data = calc_time_lag_of_line(line, data, window_methode="minima", lag_method="centroid")
             file_name_all = campaign_dir / f"{line}.toml"
             save_lag_results_to_toml(time_lag_data, file_name_all)
             overall_results, skipped_result = calculate_overall_time_lag(time_lag_data)

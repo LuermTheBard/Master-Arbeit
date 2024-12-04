@@ -13,7 +13,7 @@ def gaussian_with_baseline(x, a, x0, sigma, c):
 
 
 def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_tolerance=0.1, window_methode="gradient",
-                          lag_method="gaussfit"):
+                          lag_method="gaussfit", window_choice="individual"):
     """
     Passt eine Gauß-Funktion oder verwendet den Centroid zur Bestimmung des Time Lags.
 
@@ -23,6 +23,7 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
         baseline_tolerance (float): Toleranzbereich für die Baseline.
         window_methode (str): Methode zur Auswahl des Fit-Fensters ("minima", "turningpoints" oder "gradient").
         lag_method (str): Methode zur Berechnung des Time Lags ("gaussfit" oder "centroid").
+        window_choice (str): Wahl, ob das häufigste Fenster ("most_common") oder ein individuelles Fenster ("individual") verwendet wird.
 
     Returns:
         list: Ergebnisse mit Fit-Parametern und zusätzlichen Informationen.
@@ -39,8 +40,7 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
 
     most_common_left, most_common_right = get_most_common_fit_window(all_fit_windows)
 
-    # Schritt 3: Verwende das häufigste Fenster für alle Continuen
-
+    # Schritt 3: Verwende das gewählte Fenster für alle Continuen
     print(f"Calculate time Lag for line: {line_name}")
 
     for continuum, x, y in continuum_x_y_tuple_list:
@@ -51,17 +51,27 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
             continue
 
         try:
-            # Fenster basierend auf häufigsten Werten extrahieren
-            x_fit = x[most_common_left:most_common_right + 1]
-            y_fit = y[most_common_left:most_common_right + 1]
+            if window_choice == "most_common":
+                # Verwende das häufigste Fenster für alle Continuen
+                left, right = most_common_left, most_common_right
+            elif window_choice == "individual":
+                # Berechne das individuelle Fenster für jedes Continuum
+                left, right, x_fit, y_fit = fit_window_func(max_index, x, y)
+            else:
+                raise ValueError(f"Ungültige Fensterwahl: {window_choice}")
+
+            # Fenster extrahieren
+            x_fit = x[left:right + 1]
+            y_fit = y[left:right + 1]
 
             result = calculate_lag(line_name, continuum, x, y, x_fit, y_fit, lag_method, baseline_tolerance,
-                                  most_common_left, most_common_right, max_index)
+                                  left, right, max_index)
             results.append(result)
         except ValueError as e:
             results.append(create_error_result(line_name, continuum, x, y, str(e)))
 
     return results
+
 
 def get_all_fit_windows(continuum_x_y_tuple_list, fit_window_func, results, line_name):
     all_fit_windows = []
@@ -225,7 +235,7 @@ def fit_window_with_gradient_change(max_index, x, y, threshold=0.07, min_distanc
     return extract_fit_window(left, right, x, y)
 
 
-def fit_window_with_minima(max_index, x, y):
+def fit_window_with_minima(max_index, x, y, max_ratio=1.5):
     """Bestimmt das Fit-Fenster basierend auf lokalen Minima."""
     min_indices, _ = find_peaks(-y)
 
@@ -241,7 +251,7 @@ def fit_window_with_minima(max_index, x, y):
     left_distance = max_index - left
     right_distance = right - max_index
 
-    if left_distance > 0 and right_distance > 0 and max(left_distance, right_distance) / min(left_distance, right_distance) > 2.0:
+    if left_distance > 0 and right_distance > 0 and max(left_distance, right_distance) / min(left_distance, right_distance) > max_ratio:
         if left_distance > right_distance:
             # Verwende das nächste Minimum rechts vom ersten Kandidaten
             right = right_candidates[1] if len(right_candidates) > 1 else right
