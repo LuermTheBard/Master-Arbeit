@@ -1,4 +1,5 @@
 import matplotlib
+import numpy as np
 from matplotlib import pyplot as plt
 
 matplotlib.use("Qt5Agg")
@@ -24,6 +25,83 @@ def plot_lightcurve(data, xlabel, ylabel, yerr_name, ax):
     ax.set_ylabel("fluxes (normalized)")
     ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5)
     ax.legend(fontsize=8)
+
+
+def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxes [ergs/s/cm2/A]',
+                                  yerr_name='fluxerrs [ergs/s/cm2/A]', title='Lightcurves'):
+    # Berechne die Anzahl der benötigten Gruppen von 8 Plots
+    total_plots = len(data)
+    num_groups = (total_plots + 7) // 8  # Aufrunden, um sicherzustellen, dass alle Plots abgedeckt sind
+
+    data_items = list(data.items())
+
+    for group_index in range(num_groups):
+        # Daten für die aktuelle Gruppe extrahieren
+        start_index = group_index * 8
+        end_index = min(start_index + 8, total_plots)
+        current_data = data_items[start_index:end_index]
+
+        # Falls weniger als 8 Datenpunkte vorhanden sind, fülle die Liste auf
+        while len(current_data) < 8:
+            current_data.append((f'Empty {len(current_data) + 1}',
+                                 {xlabel: np.array([]), ylabel: np.array([]), yerr_name: np.array([])}))
+
+        # Erstelle die Subplots mit 4 Zeilen und 2 Spalten
+        fig, axes = plt.subplots(4, 2, figsize=(15, 20))
+        fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=16)
+
+        # Iteriere über die Daten und die Subplots
+        for i, (line_name, line_data) in enumerate(current_data):
+            row, col = divmod(i, 2)
+            ax = axes[row, col]
+
+            # Extrahiere die Werte aus der Datenstruktur
+            timestamps = np.array(line_data.get(xlabel, []))
+            fluxes = np.array(line_data.get(ylabel, []))
+            fluxerrs = np.array(line_data.get(yerr_name, []))
+
+            # Plotte die Daten mit Fehlerbalken, falls Daten vorhanden sind
+            if timestamps.size > 0 and fluxes.size > 0:
+                ax.errorbar(timestamps, fluxes, yerr=fluxerrs, fmt='o-', capsize=3, label=f'{line_name}')
+                ax.legend()
+
+            ax.set_title(f'{line_name}')
+            ax.set_xlabel('MJD')
+            ax.set_ylabel('Flux [ergs/s/cm²/Å]')
+            ax.grid(True)
+
+        # Entferne leere Subplots, wenn keine Daten vorhanden sind
+        for i in range(len(current_data), 8):
+            row, col = divmod(i, 2)
+            fig.delaxes(axes[row, col])
+
+        # Entferne vollständige leere Zeilen
+        for row in range(4):
+            if all(not ax.has_data() for ax in axes[row, :]):
+                for col in range(2):
+                    fig.delaxes(axes[row, col])
+
+        # Layout anpassen, damit die Subplots gut dargestellt werden
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+        # Zeige die Figur
+        plt.show()
+
+
+def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_only=False):
+    xlabel = 'timestamps [MJD]'
+    ylabel = 'fluxes [ergs/s/cm2/A]'
+    yerr_name = 'fluxerrs [ergs/s/cm2/A]'
+
+    save_folder = output_dir / "plot_1d_lightcurves"
+    save_folder.mkdir(parents=True, exist_ok=True)
+
+    for campaign, light_curve_data in galaxie_campaigns_dict.items():
+        super_title = f"{campaign} \n\n Lines"
+        plot_1d_lightcurves_in_groups(light_curve_data["lines"], xlabel, ylabel, yerr_name, super_title)
+
+        super_title = f"{campaign} \n\n Continua"
+        plot_1d_lightcurves_in_groups(light_curve_data["continua"], xlabel, ylabel, yerr_name, super_title)
 
 
 def plot_lightcurve_with_offset(data, xlabel, ylabel, yerr_name, ax, y_offset=0.2, y_multiplier=1.0):

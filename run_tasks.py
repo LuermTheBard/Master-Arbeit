@@ -11,7 +11,8 @@ from handle_data.dopplershift import calc_broad_lines_doppler_shift_with_error
 from import_data.import_data import import_1d_correlation_data, load_dopplershift_data_from_toml, \
     import_1d_lightcurve_data, import_fits_data
 from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua, plot_fit_results
-from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_lightcurves_with_offset
+from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_lightcurves_with_offset, \
+    plot_all_1d_lightcurves_in_groups
 from plot_data.plot_fits_data import plot_avg_rms
 from settings import DEFAULT_OUTPUT_DIR
 
@@ -79,6 +80,20 @@ def plot_and_save_1d_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
 
     one_dim_lightcurve_data = import_1d_lightcurve_data()
     plot_1d_lightcurves(one_dim_lightcurve_data, output_dir)
+
+
+@task
+def plot_and_save_1d_8plots_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
+    """
+    save all 1D correlations.
+    """
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir.mkdir(parents=True)
+
+    one_dim_lightcurve_data = import_1d_lightcurve_data()
+    plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir)
+
 
 
 @task
@@ -280,7 +295,7 @@ def calc_dopplershift_correction(file_name=None):
 
 def run_task(commands):
     for command in commands:
-        try:
+        #try:
             # Split command name and additional arguments
             parts = command.split("::")
             name_of_task = parts[0]
@@ -290,10 +305,10 @@ def run_task(commands):
 
             # Call the command with unpacked arguments
             registered_tasks[name_of_task](*task_args)
-        except KeyError as k:
-            print(f"Task '{command}' is not available.")
-        except Exception as e:
-            print(f"An error occurred while running '{command}': {e}")
+        #except KeyError as k:
+            #print(f"Task '{command}' is not available.")
+        #except Exception as e:
+            #print(f"An error occurred while running '{command}': {e}")
 
 
 if __name__ == "__main__":
