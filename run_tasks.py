@@ -155,8 +155,8 @@ def calc_and_plot_time_lag_gauss(output_dir=DEFAULT_OUTPUT_DIR):
     sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
         for line, data in line_data.items():
-            time_lag_data = calc_time_lag_of_line(line, data, window_methode="gradient", baseline_tolerance=1)
-            plot_fit_results(campaign, time_lag_data, output_dir=lag_gaus_dir, save_only=True)
+            time_lag_data = calc_time_lag_of_line(line, data, window_methode="minima", baseline_tolerance=1)
+            plot_fit_results(campaign, time_lag_data, output_dir=lag_gaus_dir)
 
 
 @task
@@ -164,6 +164,30 @@ def calc_and_plot_time_lag_centroid(output_dir=DEFAULT_OUTPUT_DIR):
 
     lag_centroid_dir = output_dir / "time_lag_centroid"
 
+    one_dim_correlation_data = import_1d_correlation_data()
+    sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
+    for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
+        for line, data in line_data.items():
+            time_lag_data = calc_time_lag_of_line(line, data, window_methode="gradient", lag_method="centroid")
+            plot_fit_results(campaign, time_lag_data, centroid=True, output_dir=lag_centroid_dir)
+
+@task
+def calc_and_save_plot_time_lag_gauss(output_dir=DEFAULT_OUTPUT_DIR):
+
+    lag_gaus_dir = output_dir / "time_lag_gauss"
+
+    one_dim_correlation_data = import_1d_correlation_data()
+    sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
+    for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
+        for line, data in line_data.items():
+            time_lag_data = calc_time_lag_of_line(line, data, window_methode="gradient", baseline_tolerance=1)
+            plot_fit_results(campaign, time_lag_data, output_dir=lag_gaus_dir, save_only=True)
+
+
+@task
+def calc_and_save_plot_time_lag_centroid(output_dir=DEFAULT_OUTPUT_DIR):
+
+    lag_centroid_dir = output_dir / "time_lag_centroid"
 
     one_dim_correlation_data = import_1d_correlation_data()
     sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
@@ -177,7 +201,6 @@ def calc_and_plot_time_lag_centroid(output_dir=DEFAULT_OUTPUT_DIR):
 def calc_and_save_time_lag_gauss(output_dir=DEFAULT_OUTPUT_DIR):
 
     lag_gaus_dir = output_dir / "time_lag_gauss"
-
 
     one_dim_correlation_data = import_1d_correlation_data()
     sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
@@ -207,7 +230,6 @@ def calc_and_save_time_lag_centroid(output_dir=DEFAULT_OUTPUT_DIR):
 
     one_dim_correlation_data = import_1d_correlation_data()
     sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
-
 
     for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
         campaign_dir = lag_centroid_dir / campaign

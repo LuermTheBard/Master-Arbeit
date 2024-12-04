@@ -228,9 +228,29 @@ def fit_window_with_gradient_change(max_index, x, y, threshold=0.07, min_distanc
 def fit_window_with_minima(max_index, x, y):
     """Bestimmt das Fit-Fenster basierend auf lokalen Minima."""
     min_indices, _ = find_peaks(-y)
-    left = min_indices[min_indices < max_index][-1] if any(min_indices < max_index) else 0
-    right = min_indices[min_indices > max_index][0] if any(min_indices > max_index) else len(x) - 1
+
+    # Linken Punkt bestimmen
+    left_candidates = min_indices[min_indices < max_index]
+    left = left_candidates[-1] if len(left_candidates) > 0 else 0
+
+    # Rechten Punkt bestimmen
+    right_candidates = min_indices[min_indices > max_index]
+    right = right_candidates[0] if len(right_candidates) > 0 else len(x) - 1
+
+    # Bedingung einbauen, wenn einer der beiden Kandidaten deutlich näher am Peak ist als der andere
+    left_distance = max_index - left
+    right_distance = right - max_index
+
+    if left_distance > 0 and right_distance > 0 and max(left_distance, right_distance) / min(left_distance, right_distance) > 2.0:
+        if left_distance > right_distance:
+            # Verwende das nächste Minimum rechts vom ersten Kandidaten
+            right = right_candidates[1] if len(right_candidates) > 1 else right
+        else:
+            # Verwende das nächste Minimum links vom ersten Kandidaten
+            left = left_candidates[-2] if len(left_candidates) > 1 else left
+
     return extract_fit_window(left, right, x, y)
+
 
 
 def fit_window_with_turningpoints(max_index, x, y, min_distance=1):
