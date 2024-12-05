@@ -4,7 +4,6 @@ import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
 
-from handle_data.get_time_lag_from_1D_correlation import gaussian_with_baseline
 from settings import DEFAULT_OUTPUT_DIR
 
 matplotlib.use("Qt5Agg")
@@ -347,7 +346,7 @@ def compare_plots_across_continua(
         plot_combined(comparison_data, current_line_name, output_dir, save_only, show_only_average=True)
 
 
-def plot_fit_results(campaign, fit_results, centroid=None, output_dir=None, save_only=False):
+def plot_fit_results(campaign, fit_results, output_dir=None, save_only=False):
     """
     Erstellt einen Plot der Fit-Daten einschließlich des Fits, markiert den Time Lag
     und zeigt die Grenzen des Fensters für den Fit an, mit Achsen in 1er- und 0.1-Schritten
@@ -356,8 +355,7 @@ def plot_fit_results(campaign, fit_results, centroid=None, output_dir=None, save
     Parameters:
         fit_results (list): Eine Liste von Dictionaries, die die Fit-Daten enthalten.
                             Jedes Dictionary sollte mindestens die Schlüssel "x_values", "y_values",
-                            "time_lag", "fit_window_start", "fit_window_end", "amplitude",
-                            "std_dev", "baseline" und "fit_success" enthalten.
+                            "time_lag", "fit_window_start", "fit_window_end" und "fit_success" enthalten.
     """
 
     if output_dir is None:
@@ -380,20 +378,9 @@ def plot_fit_results(campaign, fit_results, centroid=None, output_dir=None, save
         fit_window_start = result["fit_window_start"]
         fit_window_end = result["fit_window_end"]
 
-        if not centroid:
-            amplitude = result["amplitude"]
-            std_dev = result["std_dev"]
-            baseline = result["baseline"]
-
-            # Erstellen der Fit-Kurve
-            x_fit = np.linspace(x_values.min(), x_values.max(), 500)
-            y_fit = gaussian_with_baseline(x_fit, amplitude, time_lag, std_dev, baseline)
-
         # Plot erstellen
         plt.figure(figsize=(10, 6))
         plt.plot(x_values, y_values, '-', label="Data", markersize=5)
-        if not centroid:
-            plt.plot(x_fit, y_fit, '--', label="Gaussian Fit")
         plt.axvline(time_lag, color='red', linestyle='--', label=f"Time Lag (τ) = {time_lag:.2f}")
 
         plt.axvline(fit_window_start, color='blue', linestyle='--', label=f"Fit Window Start (x = {fit_window_start:.1f})")

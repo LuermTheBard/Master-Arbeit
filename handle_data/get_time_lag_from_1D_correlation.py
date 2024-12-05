@@ -1,29 +1,18 @@
 import sys
-from collections import Counter
 
 import numpy as np
 import toml
-from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 
 
-def gaussian_with_baseline(x, a, x0, sigma, c):
-    """Berechnet eine Gauß-Funktion mit Baseline."""
-    return a * np.exp(-((x - x0) ** 2) / (2 * sigma ** 2)) + c
-
-
-def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_tolerance=0.1, window_methode="gradient",
-                          lag_method="gaussfit", window_choice="individual"):
+def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list,  window_methode="gradient"):
     """
     Passt eine Gauß-Funktion oder verwendet den Centroid zur Bestimmung des Time Lags.
 
     Parameters:
         line_name (str): Der Name der Linie.
         continuum_x_y_tuple_list (list): Liste von (continuum, x, y)-Tupeln.
-        baseline_tolerance (float): Toleranzbereich für die Baseline.
         window_methode (str): Methode zur Auswahl des Fit-Fensters ("minima", "turningpoints" oder "gradient").
-        lag_method (str): Methode zur Berechnung des Time Lags ("gaussfit" oder "centroid").
-        window_choice (str): Wahl, ob das häufigste Fenster ("most_common") oder ein individuelles Fenster ("individual") verwendet wird.
 
     Returns:
         list: Ergebnisse mit Fit-Parametern und zusätzlichen Informationen.
@@ -31,16 +20,6 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
     fit_window_func = get_fit_window_function(window_methode)
     results = []
 
-    # Schritt 1: Bestimme Fit-Fenster für alle Continuen
-    all_fit_windows = get_all_fit_windows(continuum_x_y_tuple_list, fit_window_func, results, line_name)
-
-    # Schritt 2: Bestimme die häufigsten `left` und `right`-Werte
-    if not all_fit_windows:
-        return results  # Keine gültigen Fenster gefunden, Ergebnisse zurückgeben
-
-    most_common_left, most_common_right = get_most_common_fit_window(all_fit_windows)
-
-    # Schritt 3: Verwende das gewählte Fenster für alle Continuen
     print(f"Calculate time Lag for line: {line_name}")
 
     for continuum, x, y in continuum_x_y_tuple_list:
@@ -51,62 +30,18 @@ def calc_time_lag_of_line(line_name, continuum_x_y_tuple_list, baseline_toleranc
             continue
 
         try:
-            if window_choice == "most_common":
-                # Verwende das häufigste Fenster für alle Continuen
-                left, right = most_common_left, most_common_right
-            elif window_choice == "individual":
-                # Berechne das individuelle Fenster für jedes Continuum
-                left, right, x_fit, y_fit = fit_window_func(max_index, x, y)
-            else:
-                raise ValueError(f"Ungültige Fensterwahl: {window_choice}")
+            left, right, x_fit, y_fit = fit_window_func(max_index, x, y)
 
             # Fenster extrahieren
             x_fit = x[left:right + 1]
             y_fit = y[left:right + 1]
 
-            result = calculate_lag(line_name, continuum, x, y, x_fit, y_fit, lag_method, baseline_tolerance,
-                                  left, right, max_index)
+            result = perform_centroid_calculation(line_name, continuum, x, y, x_fit, y_fit, left, right)
             results.append(result)
         except ValueError as e:
             results.append(create_error_result(line_name, continuum, x, y, str(e)))
 
     return results
-
-
-def get_all_fit_windows(continuum_x_y_tuple_list, fit_window_func, results, line_name):
-    all_fit_windows = []
-    for continuum, x, y in continuum_x_y_tuple_list:
-        x, y = np.asarray(x).flatten(), np.asarray(y).flatten()
-
-        max_index = get_largest_peak_index(y)
-        if max_index is None:
-            results.append(create_error_result(line_name, continuum, x, y, "Keine Maxima gefunden."))
-            continue
-
-        try:
-            left, right, _, _ = fit_window_func(max_index, x, y)
-            all_fit_windows.append((left, right))
-        except ValueError as e:
-            results.append(create_error_result(line_name, continuum, x, y, str(e)))
-    return all_fit_windows
-
-
-def get_most_common_fit_window(all_fit_windows):
-    left_counts = Counter([window[0] for window in all_fit_windows])
-    right_counts = Counter([window[1] for window in all_fit_windows])
-
-    most_common_left = left_counts.most_common(1)[0][0]
-    most_common_right = right_counts.most_common(1)[0][0]
-    return most_common_left, most_common_right
-
-
-def calculate_lag(line_name, continuum, x, y, x_fit, y_fit, lag_method, baseline_tolerance, left, right, max_index):
-    if lag_method == "gaussfit":
-        return perform_gaussian_fit(line_name, continuum, x, y, x_fit, y_fit, max_index, baseline_tolerance, left, right)
-    elif lag_method == "centroid":
-        return perform_centroid_calculation(line_name, continuum, x, y, x_fit, y_fit, left, right)
-    else:
-        raise ValueError(f"Ungültige Methode zur Berechnung des Time Lags: {lag_method}")
 
 
 def get_fit_window_function(window_methode):
@@ -143,7 +78,7 @@ def perform_centroid_calculation(line_name, continuum, x, y, x_fit, y_fit, left,
         "line_name": line_name,
         "continuum": continuum,
         "time_lag": centroid,
-        "time_lag_error": centroid_err,  # Fehlerabschätzung könnte hier implementiert werden
+        "time_lag_error": centroid_err,
         "fit_window_start": x[left],
         "fit_window_end": x[right],
         "x_values": x.tolist(),
@@ -178,20 +113,6 @@ def calculate_centroid(x, y):
     centroid_error = np.sqrt(variance / len(x))
 
     return centroid, centroid_error
-
-
-def perform_gaussian_fit(line_name, continuum, x, y, x_fit, y_fit, max_index, baseline_tolerance, left, right):
-    """Führt den Curve-Fit mit einer Gauß-Funktion durch."""
-    baseline = np.min(y)
-    c_min, c_max = baseline - baseline_tolerance, baseline + baseline_tolerance
-    initial_guess = [y[max_index] - baseline, x[max_index], 1.0, baseline]
-    bounds = ([0, x_fit.min(), 0, c_min], [np.inf, x_fit.max(), np.inf, c_max])
-
-    try:
-        popt, pcov = curve_fit(gaussian_with_baseline, x_fit, y_fit, p0=initial_guess, bounds=bounds)
-        return create_success_result(line_name, continuum, popt, np.sqrt(np.diag(pcov)), x, y, left, right)
-    except RuntimeError as e:
-        return create_error_result(line_name, continuum, x, y, f"Fit konnte nicht durchgeführt werden. Error: {e}")
 
 
 def get_largest_peak_index(y):
@@ -366,33 +287,6 @@ def extract_fit_window(left, right, x, y):
     """Extrahiert das Fit-Fenster zwischen zwei Indizes."""
     fit_mask = (x >= x[left]) & (x <= x[right])
     return left, right, x[fit_mask], y[fit_mask]
-
-
-def create_success_result(line_name, continuum, popt, errors, x, y, left, right):
-    """Erstellt ein Ergebnis bei erfolgreichem Fit."""
-    a, x0, sigma, c = popt
-    a_err, x0_err, sigma_err, c_err = errors
-
-    print(f"Calculation of time lag for {line_name}/{continuum} successfull: {x0} +-{x0_err}")
-
-    return {
-        "line_name": line_name,
-        "continuum": continuum,
-        "amplitude": a,
-        "amplitude_error": a_err,
-        "time_lag": x0,
-        "time_lag_error": x0_err,
-        "std_dev": sigma,
-        "std_dev_error": sigma_err,
-        "baseline": c,
-        "baseline_error": c_err,
-        "fit_window_start": x[left],
-        "fit_window_end": x[right],
-        "x_values": x.tolist(),
-        "y_values": y.tolist(),
-        "fit_function": "a * exp(-((x - x0)^2) / (2 * sigma^2)) + c",
-        "fit_success": True,
-    }
 
 
 def calculate_time_lags_for_continuum(results, continuum_name):

@@ -162,19 +162,6 @@ def plot_avg_rms_spec():
 
 
 @task
-def calc_and_plot_time_lag_gauss(output_dir=DEFAULT_OUTPUT_DIR):
-
-    lag_gaus_dir = output_dir / "time_lag_gauss"
-
-    one_dim_correlation_data = import_1d_correlation_data()
-    sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
-    for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
-        for line, data in line_data.items():
-            time_lag_data = calc_time_lag_of_line(line, data, window_methode="percentage", baseline_tolerance=1)
-            plot_fit_results(campaign, time_lag_data, output_dir=lag_gaus_dir)
-
-
-@task
 def calc_and_plot_time_lag_centroid(output_dir=DEFAULT_OUTPUT_DIR):
 
     lag_centroid_dir = output_dir / "time_lag_centroid"
@@ -183,21 +170,8 @@ def calc_and_plot_time_lag_centroid(output_dir=DEFAULT_OUTPUT_DIR):
     sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
         for line, data in line_data.items():
-            time_lag_data = calc_time_lag_of_line(line, data, window_methode="percentage", lag_method="centroid")
-            plot_fit_results(campaign, time_lag_data, centroid=True, output_dir=lag_centroid_dir)
-
-
-@task
-def calc_and_save_plot_time_lag_gauss(output_dir=DEFAULT_OUTPUT_DIR):
-
-    lag_gaus_dir = output_dir / "time_lag_gauss"
-
-    one_dim_correlation_data = import_1d_correlation_data()
-    sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
-    for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
-        for line, data in line_data.items():
-            time_lag_data = calc_time_lag_of_line(line, data, window_methode="percentage", baseline_tolerance=1)
-            plot_fit_results(campaign, time_lag_data, output_dir=lag_gaus_dir, save_only=True)
+            time_lag_data = calc_time_lag_of_line(line, data, window_methode="percentage")
+            plot_fit_results(campaign, time_lag_data, output_dir=lag_centroid_dir)
 
 
 @task
@@ -209,34 +183,8 @@ def calc_and_save_plot_time_lag_centroid(output_dir=DEFAULT_OUTPUT_DIR):
     sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
         for line, data in line_data.items():
-            time_lag_data = calc_time_lag_of_line(line, data, window_methode="percentage", lag_method="centroid")
-            plot_fit_results(campaign, time_lag_data, centroid=True, output_dir=lag_centroid_dir, save_only=True)
-
-
-@task
-def calc_and_save_time_lag_gauss(output_dir=DEFAULT_OUTPUT_DIR, continuum_name="Cont5100"):
-
-    lag_gaus_dir = output_dir / "time_lag_gauss"
-
-    one_dim_correlation_data = import_1d_correlation_data()
-    sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
-    for campaign, line_data in sorted_one_dim_correlation_plot_data.items():
-        campaign_dir = lag_gaus_dir / campaign
-        campaign_dir.mkdir(parents=True, exist_ok=True)
-        time_lag_file_path = campaign_dir / f"{campaign}_time_lag.toml"
-        line_lag_dict = dict()
-        for line, data in line_data.items():
-            time_lag_data = calc_time_lag_of_line(line, data, window_methode="percentage", baseline_tolerance=1)
-            file_name = campaign_dir / line / f"{line}.toml"
-            save_lag_results_to_toml(time_lag_data, file_name)
-            overall_results, skipped_result = calculate_time_lags_for_continuum(time_lag_data, continuum_name=continuum_name)
-            line_lag_dict[line] = overall_results
-            line_lag_dict["skipped_results"] = skipped_result
-
-        sorted_line_lag_dict = dict(sorted(line_lag_dict.items()))
-
-        with open(time_lag_file_path, "w") as file:
-            toml.dump(sorted_line_lag_dict, file)
+            time_lag_data = calc_time_lag_of_line(line, data, window_methode="percentage")
+            plot_fit_results(campaign, time_lag_data, output_dir=lag_centroid_dir, save_only=True)
 
 
 @task
@@ -253,7 +201,7 @@ def calc_and_save_time_lag_centroid(output_dir=DEFAULT_OUTPUT_DIR, continuum_nam
         time_lag_file_path = campaign_dir / f"{campaign}_{continuum_name}_time_lag.toml"
         line_lag_dict = dict()
         for line, data in line_data.items():
-            time_lag_data = calc_time_lag_of_line(line, data, window_methode="percentage", lag_method="centroid")
+            time_lag_data = calc_time_lag_of_line(line, data, window_methode="percentage")
             file_name = campaign_dir / line / f"{line}.toml"
             save_lag_results_to_toml(time_lag_data, file_name)
             overall_results, skipped_result = calculate_time_lags_for_continuum(time_lag_data, continuum_name=continuum_name)
@@ -295,7 +243,7 @@ def calc_dopplershift_correction(file_name=None):
 
 def run_task(commands):
     for command in commands:
-        #try:
+        try:
             # Split command name and additional arguments
             parts = command.split("::")
             name_of_task = parts[0]
@@ -305,10 +253,10 @@ def run_task(commands):
 
             # Call the command with unpacked arguments
             registered_tasks[name_of_task](*task_args)
-        #except KeyError as k:
-            #print(f"Task '{command}' is not available.")
-        #except Exception as e:
-            #print(f"An error occurred while running '{command}': {e}")
+        except KeyError as k:
+            print(f"Task '{command}' is not available.")
+        except Exception as e:
+            print(f"An error occurred while running '{command}': {e}")
 
 
 if __name__ == "__main__":
