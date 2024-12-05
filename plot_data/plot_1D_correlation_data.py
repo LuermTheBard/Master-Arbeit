@@ -2,6 +2,7 @@ from pathlib import Path
 
 import matplotlib
 import numpy as np
+import toml
 from matplotlib import pyplot as plt
 
 from settings import DEFAULT_OUTPUT_DIR
@@ -410,4 +411,54 @@ def plot_fit_results(campaign, fit_results, output_dir=None, save_only=False):
             plt.show()
             plt.close()
 
+
+def plot_time_lags_from_toml(file_path):
+    # Literaturwerte für H-Alpha bis H-Delta
+    literature_wavelengths = {
+        "HAlpha": 6563,
+        "HBeta": 4861,
+        "HGamma": 4341,
+        "HDelta": 4102
+    }
+
+    # Datei laden
+    data = toml.load(file_path)
+
+    # Extrahieren der relevanten Daten aus der TOML-Datei
+    wavelengths = []
+    time_lags = []
+    time_lag_errors = []
+
+    for line_name, entry in data.items():
+
+        if line_name == "skipped_results":
+            continue
+
+        time_lag = float(entry[0].get("time_lag"))
+        time_lag_error = float(entry[0].get("time_lag_error"))
+
+        if line_name and time_lag is not None and time_lag_error is not None:
+            # Extrahiere die Wellenlänge aus den letzten 4 Zeichen des line_name
+            try:
+                wavelength = int(line_name[-4:])
+            except ValueError:
+                # Verwende Literaturwerte für bekannte Linien
+                wavelength = literature_wavelengths.get(line_name, None)
+
+            if wavelength is not None:
+                wavelengths.append(wavelength)
+                time_lags.append(time_lag)
+                time_lag_errors.append(time_lag_error)
+
+    # Erstellen des Plots
+    plt.figure(figsize=(10, 6))
+    plt.errorbar(wavelengths, time_lags, yerr=time_lag_errors, fmt='o', capsize=5, ecolor='red', markerfacecolor='blue', linestyle='None')
+    plt.xlabel('Wavelength (Angstrom)')
+    plt.ylabel('Time Lags')
+    plt.title('Time Lag vs Wavelength with Errors')
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+
+    # Plot anzeigen
+    plt.show()
 
