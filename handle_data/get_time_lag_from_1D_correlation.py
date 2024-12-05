@@ -109,13 +109,12 @@ def calculate_lag(line_name, continuum, x, y, x_fit, y_fit, lag_method, baseline
         raise ValueError(f"Ungültige Methode zur Berechnung des Time Lags: {lag_method}")
 
 
-
 def get_fit_window_function(window_methode):
     """
     Wählt die passende Funktion für die Fit-Fenster-Berechnung aus.
 
     Parameters:
-        window_methode (str): Methode zur Auswahl des Fit-Fensters ("minima", "turningpoints", "gradientchange").
+        window_methode (str): Methode zur Auswahl des Fit-Fensters ("minima", "turningpoints", "gradientchange", "percentage").
 
     Returns:
         function: Die passende Funktion zur Fensterberechnung.
@@ -126,6 +125,8 @@ def get_fit_window_function(window_methode):
         return fit_window_with_turningpoints
     elif window_methode == "gradient":
         return fit_window_with_gradient_change
+    elif window_methode == "percentage":
+        return fit_window_with_percentage
     else:
         raise ValueError(f"Ungültige Fit-Methode: {window_methode}")
 
@@ -199,6 +200,74 @@ def get_largest_peak_index(y):
     return peak_indices[np.argmax(y[peak_indices])] if peak_indices.size > 0 else None
 
 
+def fit_window_with_percentage(max_index, x, y, percentage=20):
+    y_max = max(y)
+    y_min = min(y)
+    peak_percentage = (y_max - y_min) * percentage / 100
+    y_threshold = y_max - peak_percentage
+
+    # Finde den Index des y-Maximums
+    y_max_index = np.argmax(y)
+
+    # Falls der angegebene max_index anders ist, benutze diesen
+    if y_max_index != max_index:
+        y_max_index = max_index
+
+    # Suche nach links vom Maximum
+    left_index = y_max_index
+    while left_index > 0 and y[left_index] > y_threshold:
+        left_index -= 1
+
+    # Suche nach rechts vom Maximum
+    right_index = y_max_index
+    while right_index < len(y) - 1 and y[right_index] > y_threshold:
+        right_index += 1
+
+    # Sicherstellen, dass es gültige Indizes gibt
+    if left_index < 0:
+        left_index = 0
+    if right_index >= len(x):
+        right_index = len(x) - 1
+
+    # Finde die x-Werte, die links und rechts gefunden wurden
+    left = left_index if left_index >= 0 and y[left_index] <= y_threshold else None
+    right = right_index if right_index < len(y) and y[right_index] <= y_threshold else None
+
+    # Sicherstellen, dass left und right gültige Indizes haben
+    if left is None:
+        left = 0
+    if right is None:
+        right = len(x) - 1
+
+    # Suche nach möglichst gleichen y-Werten für left und right, die links und rechts vom Maximum sind
+    best_left = left
+    best_right = right
+    min_diff = abs(y[left] - y[right])
+
+    # Suche links vom Maximum für den bestmöglichen left Index
+    for i in range(left, y_max_index):
+        if abs(y[i] - y[right]) < min_diff:
+            best_left = i
+            min_diff = abs(y[i] - y[right])
+
+    # Suche rechts vom Maximum für den bestmöglichen right Index
+    for i in range(y_max_index, right + 1):
+        if abs(y[left] - y[i]) < min_diff:
+            best_right = i
+            min_diff = abs(y[left] - y[i])
+
+    # Aktualisiere die endgültigen Indizes
+    left = best_left
+    right = best_right
+
+    # Erhalte die y-Werte für die gefundenen Indizes
+    y_left = y[left]
+    y_right = y[right]
+
+    # Fenster extrahieren
+    return extract_fit_window(left, right, x, y)
+
+
 def fit_window_with_gradient_change(max_index, x, y, threshold=0.07, min_distance=1):
     """
     Bestimmt das Fit-Fenster basierend auf signifikanten positiven Änderungen im Gradienten.
@@ -260,7 +329,6 @@ def fit_window_with_minima(max_index, x, y, max_ratio=1.5):
             left = left_candidates[-2] if len(left_candidates) > 1 else left
 
     return extract_fit_window(left, right, x, y)
-
 
 
 def fit_window_with_turningpoints(max_index, x, y, min_distance=1):
@@ -327,49 +395,36 @@ def create_success_result(line_name, continuum, popt, errors, x, y, left, right)
     }
 
 
-def calculate_overall_time_lag(results):
+def calculate_time_lags_for_continuum(results, continuum_name):
     """
-    Berechnet den Gesamtwert des Time Lags und den zugehörigen Fehler basierend auf den Ergebnissen und speichert diese in einer TOML-Datei.
+    Gibt die Time Lag Ergebnisse für ein bestimmtes Continuum aus den Ergebnissen zurück.
 
     Parameters:
         results (list): Die Ergebnisse, die von der calc_time_lag_of_line-Methode zurückgegeben wurden.
+        continuum_name (str): Der Name des gewünschten Continuums.
 
     Returns:
-        overall_results (dict or None): Der berechnete Gesamtwert des Time Lags und der Fehler, oder None wenn keine gültigen Ergebnisse vorhanden sind.
+        continuum_results (list): Eine Liste mit den Time Lag Ergebnissen für das angegebene Continuum.
         skipped_result (str): Informationen zu übersprungenen Ergebnissen.
     """
-    time_lags = []
-    time_lag_errors = []
+    continuum_results = []
     skipped_result = ""
 
     for result in results:
-        if result.get("fit_success", False):
-            time_lag = result.get("time_lag")
-            time_lag_error = result.get("time_lag_error")
-            if (time_lag is not None and time_lag_error is not None
-                    and not np.isnan(time_lag) and not np.isnan(time_lag_error)):
-                time_lags.append(time_lag)
-                time_lag_errors.append(time_lag_error)
-            else:
-                skipped_result += f"Result of {result.get('continuum', 'Unknown')} and {result.get('line_name', 'Unknown')} was skipped, because of invalid values\n"
+        if result.get("continuum") == continuum_name:
+            if result.get("fit_success", False):
+                time_lag = result.get("time_lag")
+                time_lag_error = result.get("time_lag_error")
+                if time_lag is not None and time_lag_error is not None and not np.isnan(time_lag) and not np.isnan(time_lag_error):
+                    continuum_results.append(result)
+                else:
+                    skipped_result += f"Result of {result.get('continuum', 'Unknown')} and {result.get('line_name', 'Unknown')} was skipped, because of invalid values\n"
 
-    if not time_lags:
-        print("Keine gültigen Time Lag Ergebnisse gefunden.")
+    if not continuum_results:
+        print(f"Keine gültigen Time Lag Ergebnisse für das Continuum '{continuum_name}' gefunden.")
         return None, skipped_result
 
-    # Gesamtwert des Time Lags berechnen (gewichteter Mittelwert)
-    weights = 1 / np.square(time_lag_errors)
-    overall_time_lag = np.sum(weights * time_lags) / np.sum(weights)
-
-    # Fehlerfortpflanzung für den Gesamtwert des Time Lags
-    overall_time_lag_error = np.sqrt(1 / np.sum(weights))
-
-    overall_results = {
-        "avg_time_lag": float(overall_time_lag),
-        "avg_time_lag_error": float(overall_time_lag_error)
-    }
-
-    return overall_results, skipped_result
+    return continuum_results, skipped_result
 
 
 def save_lag_results_to_toml(results, file_path="results.toml"):
