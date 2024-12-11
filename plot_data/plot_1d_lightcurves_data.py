@@ -44,27 +44,6 @@ def normalize_color_values(colorcode_dict):
 
 COLORCODE_CONTINUA_NORMALIZED = normalize_color_values(COLORCODE_CONTINUA)
 
-def plot_lightcurve(data, xlabel, ylabel, yerr_name, ax):
-    """
-    Plots a single lightcurve with normalized flux values.
-    """
-    for key, values in data.items():
-        x = values[xlabel]
-        y = values[ylabel]
-        y_err = values[yerr_name]
-
-        # Normierung der y-Werte
-        max_y = max(y)
-        y = y / max_y
-        y_err = y_err / max_y  # Fehler ebenfalls normieren
-
-        ax.errorbar(x, y, y_err, label=f"{key}", linestyle="--")
-
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel("fluxes (normalized)")
-    ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5)
-    ax.legend(fontsize=8)
-
 
 def mjd_to_date(mjd):
     """Konvertiere MJD in ein Kalenderdatum."""
@@ -98,97 +77,97 @@ def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxe
         output_dir (str or Path): Directory to save the plots.
         color_dict (dict): Optional dictionary with colors for each light curve.
     """
-    # Berechne die Anzahl der benötigten Gruppen von 8 Plots
-    total_plots = len(data)
-    num_groups = (total_plots + 7) // 8  # Aufrunden, um sicherzustellen, dass alle Plots abgedeckt sind
 
-    data_items = list(data.items())
-
-    for group_index in range(num_groups):
-        # Daten für die aktuelle Gruppe extrahieren
-        start_index = group_index * 8
-        end_index = min(start_index + 8, total_plots)
-        current_data = data_items[start_index:end_index]
-
-        # Falls weniger als 8 Datenpunkte vorhanden sind, fülle die Liste auf
-        while len(current_data) < 8:
-            current_data.append((f'Empty {len(current_data) + 1}',
-                                 {xlabel: np.array([]), ylabel: np.array([]), yerr_name: np.array([])}))
-
-        # Erstelle die Figur mit Subplots
+    # Main plotting loop
+    for current_data, group_index in prepare_data(data, xlabel, ylabel, yerr_name):
         fig, axes = plt.subplots(4, 2, figsize=(8, 12), sharex=True, sharey=False)
-        fig.subplots_adjust(hspace=0, wspace=0)  # Setze Abstände zwischen Subplots auf 0
-
-        base_mjd = 57581.66  # Setze die Basis-MJD für die relative Darstellung
+        fig.subplots_adjust(hspace=0, wspace=0)
 
         for i, (line_name, line_data) in enumerate(current_data):
             row, col = divmod(i, 2)
             ax = axes[row, col]
 
-            # Extrahiere die Werte aus der Datenstruktur
             timestamps = np.array(line_data.get(xlabel, []))
             fluxes = np.array(line_data.get(ylabel, []))
             fluxerrs = np.array(line_data.get(yerr_name, []))
-
-            # Wähle die Farbe aus dem color_dict, falls verfügbar, sonst Standardfarbe
             color = color_dict.get(line_name, 'black') if color_dict else 'black'
 
-            # Plotte die Daten mit Fehlerbalken, falls Daten vorhanden sind
-            if timestamps.size > 0 and fluxes.size > 0:
-                ax.errorbar(
-                    timestamps, fluxes, yerr=fluxerrs,
-                    fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color
-                )
-                ax.legend(fontsize=8, loc='upper right')
+            configure_axis(ax, row, col, xlabel, ylabel, base_mjd=57581.66,
+                           color=color, timestamps=timestamps, fluxes=fluxes,
+                           fluxerrs=fluxerrs, line_name=line_name)
 
-            # Achsenbeschriftungen anpassen
-            if col == 0:  # Linke Spalte
-                ax.set_ylabel(r'$F_\lambda \, [10^{-15} \, \mathrm{erg \, cm^{-2} \, s^{-1} \, \AA^{-1}}]$')
-            else:  # Rechte Spalte
-                ax.yaxis.tick_right()  # Verschiebe Ticks nach rechts
-                ax.yaxis.set_label_position("right")  # Verschiebe Label nach rechts
-                ax.set_ylabel(r'$F_\lambda \, [10^{-15} \, \mathrm{erg \, cm^{-2} \, s^{-1} \, \AA^{-1}}]$')
+        finalize_figure(fig, axes, base_mjd=57581.66, title=title, group_index=group_index,
+                        save_only=save_only, output_dir=output_dir)
 
-            # Entferne x-Achsenbeschriftungen für nicht-untere Reihen
-            if row < 3:
-                ax.set_xticklabels([])
 
-            # Gitterlinien und Ticks optimieren
-            ax.xaxis.set_major_locator(MultipleLocator(4))  # Schritte von 4 Tagen auf der x-Achse
-            ax.xaxis.set_major_formatter(FuncFormatter(format_relative_days))  # Nutze Formatter für relative Tage
-            ax.yaxis.set_major_locator(MaxNLocator(nbins=5))  # Automatisch passende Schritte auf der y-Achse
-            ax.grid(True, linestyle='--', linewidth=0.5)
+def prepare_data(data, xlabel, ylabel, yerr_name):
+    """Prepare data and ensure all groups are filled."""
+    total_plots = len(data)
+    num_groups = (total_plots + 7) // 8
+    data_items = list(data.items())
+    for group_index in range(num_groups):
+        start_index = group_index * 8
+        end_index = min(start_index + 8, total_plots)
+        current_data = data_items[start_index:end_index]
 
-            # Füge die zweite Achse oben nur für die obersten Subplots hinzu
-            if row == 0:
-                ax_top = ax.secondary_xaxis('top')
-                ax_top.xaxis.set_major_locator(MultipleLocator(4))  # Schritte von 4 Tagen
-                ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))  # Monats- und Tagesformat
-                ax_top.tick_params(axis='x', rotation=45, labelsize=8)  # Leicht gedrehte Labels
+        # Fill missing plots with empty placeholders
+        while len(current_data) < 8:
+            current_data.append((f'Empty {len(current_data) + 1}',
+                                 {xlabel: np.array([]), ylabel: np.array([]), yerr_name: np.array([])}))
+        yield current_data, group_index
 
-        # Entferne leere Zeilen, falls keine Daten vorhanden sind
-        for row in range(4):
-            if all(not axes[row, col].has_data() for col in range(2)):
-                for col in range(2):
-                    fig.delaxes(axes[row, col])
 
-        # Füge die Basis-MJD an der rechten Seite der x-Achse hinzu
-        fig.text(0.95, 0.04, f"Base: {base_mjd:.2f} MJD", ha='right', fontsize=10)
+def configure_axis(ax, row, col, xlabel, ylabel, base_mjd, color, timestamps, fluxes, fluxerrs, line_name):
+    """Configure individual subplot axes."""
+    if timestamps.size > 0 and fluxes.size > 0:
+        ax.errorbar(timestamps, fluxes, yerr=fluxerrs,
+                    fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color)
+        ax.legend(fontsize=8, loc='upper right')
 
-        # Gemeinsame Beschriftungen für alle Subplots
-        fig.text(0.5, 0.04, 'Relative Days', ha='center', fontsize=12)
+    if col == 0:
+        ax.set_ylabel(ylabel)
+    else:
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position("right")
+        ax.set_ylabel(ylabel)
 
-        # Gruppentitel hinzufügen, wenn benötigt
-        if title:
-            fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
+    if row < 3:
+        ax.set_xticklabels([])
 
-        # Speichern oder Anzeigen der Grafik
-        if save_only and output_dir:
-            save_path = output_dir / f"{title.replace(' ', '_')}_group_{group_index + 1}.pdf"
-            plt.savefig(save_path, bbox_inches='tight')
-            plt.close(fig)
-        else:
-            plt.show()
+    ax.xaxis.set_major_locator(MultipleLocator(4))
+    ax.xaxis.set_major_formatter(FuncFormatter(format_relative_days))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+    ax.grid(True, linestyle='--', linewidth=0.5)
+
+    if row == 0:
+        ax_top = ax.secondary_xaxis('top')
+        ax_top.xaxis.set_major_locator(MultipleLocator(4))
+        ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
+        ax_top.tick_params(axis='x', rotation=45, labelsize=8)
+
+
+def finalize_figure(fig, axes, base_mjd, title, group_index, save_only, output_dir):
+    """Finalize figure layout and save or show."""
+    for row in range(4):
+        if all(not axes[row, col].has_data() for col in range(2)):
+            for col in range(2):
+                fig.delaxes(axes[row, col])
+
+    fig.text(0.95, 0.04, f"Base: {base_mjd:.2f} MJD", ha='right', fontsize=10)
+    fig.text(0.5, 0.04, 'Relative Days', ha='center', fontsize=12)
+
+    if title:
+        fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
+
+    if save_only and output_dir:
+        save_path = output_dir / f"{title.replace(' ', '_')}_group_{group_index + 1}.pdf"
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
+    else:
+        plt.show()
+
+
+
 
 def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_only=False):
     xlabel = 'timestamps [MJD]'
@@ -205,6 +184,27 @@ def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_o
         super_title = f"{campaign} Continua"
         plot_1d_lightcurves_in_groups(light_curve_data["continua"], xlabel, ylabel, yerr_name, super_title, save_only, save_folder, color_dict=COLORCODE_CONTINUA_NORMALIZED)
 
+
+def plot_lightcurve(data, xlabel, ylabel, yerr_name, ax):
+    """
+    Plots a single lightcurve with normalized flux values.
+    """
+    for key, values in data.items():
+        x = values[xlabel]
+        y = values[ylabel]
+        y_err = values[yerr_name]
+
+        # Normierung der y-Werte
+        max_y = max(y)
+        y = y / max_y
+        y_err = y_err / max_y  # Fehler ebenfalls normieren
+
+        ax.errorbar(x, y, y_err, label=f"{key}", linestyle="--")
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("fluxes (normalized)")
+    ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5)
+    ax.legend(fontsize=8)
 
 
 def plot_lightcurve_with_offset(data, xlabel, ylabel, yerr_name, ax, y_offset=0.2, y_multiplier=1.0):
