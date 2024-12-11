@@ -9,6 +9,41 @@ from matplotlib.ticker import MaxNLocator, FuncFormatter, MultipleLocator
 matplotlib.use("Qt5Agg")
 
 
+
+COLORCODE_CONTINUA = {
+    'Cont4010': (100, 0, 128, 255),
+    'Cont4200': (80, 0, 255, 255),
+    'Cont4440': (0, 34, 255, 255),
+    'Cont4765': 'dodgerblue',
+    'Cont5100': 'tab:green',
+    'Cont5600': 'gold',
+    'Cont6045': (255, 180, 0, 255),
+    'Cont6110': (255, 99, 0, 255),
+    'Cont6880': (222, 0, 0, 255),
+    'Cont7390': (190, 0, 0, 255),
+    'Cont8015': (165, 0, 0, 255),
+    'Cont8900': (139, 0, 0, 255)
+}
+
+
+
+def normalize_color_values(colorcode_dict):
+    """
+    Normalisiert RGBA-Tupel im Bereich 0-255 zu RGBA-Tupeln im Bereich 0-1,
+    falls erforderlich.
+    """
+    normalized_dict = {}
+    for key, color in colorcode_dict.items():
+        if isinstance(color, tuple) and len(color) == 4:
+            # Normiere die Farbwerte in den Bereich 0-1
+            normalized_dict[key] = tuple(c / 255.0 for c in color)
+        else:
+            # Wenn es sich um einen gültigen Farbstring handelt, behalte ihn bei
+            normalized_dict[key] = color
+    return normalized_dict
+
+COLORCODE_CONTINUA_NORMALIZED = normalize_color_values(COLORCODE_CONTINUA)
+
 def plot_lightcurve(data, xlabel, ylabel, yerr_name, ax):
     """
     Plots a single lightcurve with normalized flux values.
@@ -48,27 +83,41 @@ def format_relative_days(mjd, pos):
     return f"{int(relative_day)}"  # Zeige nur relative Tage
 
 def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxes [ergs/s/cm2/A]',
-                                  yerr_name='fluxerrs [ergs/s/cm2/A]', title=None, save_only=False, output_dir=None):
-    # Berechne die Anzahl der benötigten Gruppen von 6 Plots
+                                  yerr_name='fluxerrs [ergs/s/cm2/A]', title=None, save_only=False, output_dir=None,
+                                  color_dict=None):
+    """
+    Plot multiple 1D light curves in groups.
+
+    Parameters:
+        data (dict): Dictionary containing the data for the light curves.
+        xlabel (str): Label for the x-axis.
+        ylabel (str): Label for the y-axis.
+        yerr_name (str): Label for the error bars.
+        title (str): Title of the plot.
+        save_only (bool): Whether to save the plots without displaying them.
+        output_dir (str or Path): Directory to save the plots.
+        color_dict (dict): Optional dictionary with colors for each light curve.
+    """
+    # Berechne die Anzahl der benötigten Gruppen von 8 Plots
     total_plots = len(data)
-    num_groups = (total_plots + 5) // 6  # Aufrunden, um sicherzustellen, dass alle Plots abgedeckt sind
+    num_groups = (total_plots + 7) // 8  # Aufrunden, um sicherzustellen, dass alle Plots abgedeckt sind
 
     data_items = list(data.items())
 
     for group_index in range(num_groups):
         # Daten für die aktuelle Gruppe extrahieren
-        start_index = group_index * 6
-        end_index = min(start_index + 6, total_plots)
+        start_index = group_index * 8
+        end_index = min(start_index + 8, total_plots)
         current_data = data_items[start_index:end_index]
 
-        # Falls weniger als 6 Datenpunkte vorhanden sind, fülle die Liste auf
-        while len(current_data) < 6:
+        # Falls weniger als 8 Datenpunkte vorhanden sind, fülle die Liste auf
+        while len(current_data) < 8:
             current_data.append((f'Empty {len(current_data) + 1}',
                                  {xlabel: np.array([]), ylabel: np.array([]), yerr_name: np.array([])}))
 
         # Erstelle die Figur mit Subplots
-        fig, axes = plt.subplots(3, 2, figsize=(8, 12), sharex=True, sharey=False)
-        fig.subplots_adjust(hspace=0.2, wspace=0.1)
+        fig, axes = plt.subplots(4, 2, figsize=(8, 12), sharex=True, sharey=False)
+        fig.subplots_adjust(hspace=0, wspace=0)  # Setze Abstände zwischen Subplots auf 0
 
         base_mjd = 57581.66  # Setze die Basis-MJD für die relative Darstellung
 
@@ -81,11 +130,14 @@ def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxe
             fluxes = np.array(line_data.get(ylabel, []))
             fluxerrs = np.array(line_data.get(yerr_name, []))
 
+            # Wähle die Farbe aus dem color_dict, falls verfügbar, sonst Standardfarbe
+            color = color_dict.get(line_name, 'black') if color_dict else 'black'
+
             # Plotte die Daten mit Fehlerbalken, falls Daten vorhanden sind
             if timestamps.size > 0 and fluxes.size > 0:
                 ax.errorbar(
                     timestamps, fluxes, yerr=fluxerrs,
-                    fmt='.-', capsize=3, markersize=4, label=f'Cont. {line_name}'
+                    fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color
                 )
                 ax.legend(fontsize=8, loc='upper right')
 
@@ -98,7 +150,7 @@ def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxe
                 ax.set_ylabel(r'$F_\lambda \, [10^{-15} \, \mathrm{erg \, cm^{-2} \, s^{-1} \, \AA^{-1}}]$')
 
             # Entferne x-Achsenbeschriftungen für nicht-untere Reihen
-            if row < 2:
+            if row < 3:
                 ax.set_xticklabels([])
 
             # Gitterlinien und Ticks optimieren
@@ -115,7 +167,7 @@ def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxe
                 ax_top.tick_params(axis='x', rotation=45, labelsize=8)  # Leicht gedrehte Labels
 
         # Entferne leere Zeilen, falls keine Daten vorhanden sind
-        for row in range(3):
+        for row in range(4):
             if all(not axes[row, col].has_data() for col in range(2)):
                 for col in range(2):
                     fig.delaxes(axes[row, col])
@@ -151,7 +203,7 @@ def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_o
         plot_1d_lightcurves_in_groups(light_curve_data["lines"], xlabel, ylabel, yerr_name, super_title, save_only, save_folder)
 
         super_title = f"{campaign} Continua"
-        plot_1d_lightcurves_in_groups(light_curve_data["continua"], xlabel, ylabel, yerr_name, super_title, save_only, save_folder)
+        plot_1d_lightcurves_in_groups(light_curve_data["continua"], xlabel, ylabel, yerr_name, super_title, save_only, save_folder, color_dict=COLORCODE_CONTINUA_NORMALIZED)
 
 
 
