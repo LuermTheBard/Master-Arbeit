@@ -1,6 +1,8 @@
 import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.gridspec import GridSpec
+from matplotlib.ticker import MaxNLocator, FuncFormatter, MultipleLocator
 
 matplotlib.use("Qt5Agg")
 
@@ -27,8 +29,14 @@ def plot_lightcurve(data, xlabel, ylabel, yerr_name, ax):
     ax.legend(fontsize=8)
 
 
+def format_relative_days(mjd, pos):
+    """Formatter für relative Tage (mit erstem Wert als Referenz)."""
+    base_mjd = 57581.66  # Startwert (erster MJD)
+    relative_day = mjd - base_mjd
+    return f"{int(relative_day)}"  # Zeige nur relative Tage
+
 def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxes [ergs/s/cm2/A]',
-                                  yerr_name='fluxerrs [ergs/s/cm2/A]', title='Lightcurves', save_only=False, output_dir=None):
+                                  yerr_name='fluxerrs [ergs/s/cm2/A]', title=None, save_only=False, output_dir=None):
     # Berechne die Anzahl der benötigten Gruppen von 6 Plots
     total_plots = len(data)
     num_groups = (total_plots + 5) // 6  # Aufrunden, um sicherzustellen, dass alle Plots abgedeckt sind
@@ -46,11 +54,12 @@ def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxe
             current_data.append((f'Empty {len(current_data) + 1}',
                                  {xlabel: np.array([]), ylabel: np.array([]), yerr_name: np.array([])}))
 
-        # Erstelle die Subplots mit 3 Zeilen und 2 Spalten
-        fig, axes = plt.subplots(3, 2, figsize=(15, 15))
-        fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=16)
+        # Erstelle die Figur mit Subplots
+        fig, axes = plt.subplots(3, 2, figsize=(8, 12), sharex=True, sharey=False)
+        fig.subplots_adjust(hspace=0.2, wspace=0.1)
 
-        # Iteriere über die Daten und die Subplots
+        base_mjd = 57581.66  # Setze die Basis-MJD für die relative Darstellung
+
         for i, (line_name, line_data) in enumerate(current_data):
             row, col = divmod(i, 2)
             ax = axes[row, col]
@@ -62,32 +71,45 @@ def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxe
 
             # Plotte die Daten mit Fehlerbalken, falls Daten vorhanden sind
             if timestamps.size > 0 and fluxes.size > 0:
-                ax.errorbar(timestamps, fluxes, yerr=fluxerrs, fmt='o-', capsize=3, label=f'{line_name}')
-                ax.legend()
+                ax.errorbar(
+                    timestamps, fluxes, yerr=fluxerrs,
+                    fmt='.-', capsize=3, markersize=4, label=f'{line_name}'
+                )
+                ax.legend(fontsize=8, loc='upper right')
 
-            ax.set_title(f'{line_name}')
-            ax.set_xlabel('MJD')
-            ax.set_ylabel('Flux [ergs/s/cm²/Å]')
-            ax.grid(True)
+            # Achsenbeschriftungen nur an den äußeren Subplots
+            if row < 2:  # Entferne x-Achsenbeschriftung für die obere Reihe
+                ax.set_xticklabels([])
+            if col > 0:  # Entferne y-Achsenbeschriftung für die rechte Spalte
+                ax.set_yticklabels([])
+            else:
+                ax.set_ylabel(r'$F_\lambda \, [10^{-15} \, \mathrm{erg \, cm^{-2} \, s^{-1} \, \AA^{-1}}]$')
 
-        # Entferne leere Subplots, wenn keine Daten vorhanden sind
-        for i in range(len(current_data), 6):
-            row, col = divmod(i, 2)
-            fig.delaxes(axes[row, col])
+            # Gitterlinien und Ticks optimieren
+            ax.xaxis.set_major_locator(MultipleLocator(4))  # Schritte von 2 Tagen auf der x-Achse
+            ax.xaxis.set_major_formatter(FuncFormatter(format_relative_days))  # Nutze Formatter für relative Tage
+            ax.yaxis.set_major_locator(MaxNLocator(nbins=5))  # Automatisch passende Schritte auf der y-Achse
+            ax.grid(True, linestyle='--', linewidth=0.5)
 
-        # Entferne vollständige leere Zeilen
         for row in range(3):
             if all(not ax.has_data() for ax in axes[row, :]):
                 for col in range(2):
                     fig.delaxes(axes[row, col])
 
-        # Layout anpassen, damit die Subplots gut dargestellt werden
-        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+        # Füge die Basis-MJD an der rechten Seite der x-Achse hinzu
+        fig.text(0.95, 0.04, f"Base: {base_mjd:.2f} MJD", ha='right', fontsize=10)
 
-        # Speichere oder zeige die Figur
+        # Gemeinsame Beschriftungen für alle Subplots
+        fig.text(0.5, 0.04, xlabel, ha='center', fontsize=12)
+
+        # Gruppentitel hinzufügen, wenn benötigt
+        if title:
+            fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
+
+        # Speichern oder Anzeigen der Grafik
         if save_only and output_dir:
             save_path = output_dir / f"{title.replace(' ', '_')}_group_{group_index + 1}.pdf"
-            plt.savefig(save_path)
+            plt.savefig(save_path, bbox_inches='tight')
             plt.close(fig)
         else:
             plt.show()
