@@ -84,7 +84,7 @@ def plot_and_save_1d_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
 
 
 @task
-def plot_and_save_1d_8plots_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
+def plot_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     """
     save all 1D correlations.
     """
@@ -95,6 +95,18 @@ def plot_and_save_1d_8plots_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
     one_dim_lightcurve_data = import_1d_lightcurve_data()
     plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir)
 
+
+@task
+def save_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
+    """
+    save all 1D correlations.
+    """
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir.mkdir(parents=True)
+
+    one_dim_lightcurve_data = import_1d_lightcurve_data()
+    plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir, save_only=True)
 
 
 @task

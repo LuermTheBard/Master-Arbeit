@@ -28,26 +28,26 @@ def plot_lightcurve(data, xlabel, ylabel, yerr_name, ax):
 
 
 def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxes [ergs/s/cm2/A]',
-                                  yerr_name='fluxerrs [ergs/s/cm2/A]', title='Lightcurves'):
-    # Berechne die Anzahl der benötigten Gruppen von 8 Plots
+                                  yerr_name='fluxerrs [ergs/s/cm2/A]', title='Lightcurves', save_only=False, output_dir=None):
+    # Berechne die Anzahl der benötigten Gruppen von 6 Plots
     total_plots = len(data)
-    num_groups = (total_plots + 7) // 8  # Aufrunden, um sicherzustellen, dass alle Plots abgedeckt sind
+    num_groups = (total_plots + 5) // 6  # Aufrunden, um sicherzustellen, dass alle Plots abgedeckt sind
 
     data_items = list(data.items())
 
     for group_index in range(num_groups):
         # Daten für die aktuelle Gruppe extrahieren
-        start_index = group_index * 8
-        end_index = min(start_index + 8, total_plots)
+        start_index = group_index * 6
+        end_index = min(start_index + 6, total_plots)
         current_data = data_items[start_index:end_index]
 
-        # Falls weniger als 8 Datenpunkte vorhanden sind, fülle die Liste auf
-        while len(current_data) < 8:
+        # Falls weniger als 6 Datenpunkte vorhanden sind, fülle die Liste auf
+        while len(current_data) < 6:
             current_data.append((f'Empty {len(current_data) + 1}',
                                  {xlabel: np.array([]), ylabel: np.array([]), yerr_name: np.array([])}))
 
-        # Erstelle die Subplots mit 4 Zeilen und 2 Spalten
-        fig, axes = plt.subplots(4, 2, figsize=(15, 20))
+        # Erstelle die Subplots mit 3 Zeilen und 2 Spalten
+        fig, axes = plt.subplots(3, 2, figsize=(15, 15))
         fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=16)
 
         # Iteriere über die Daten und die Subplots
@@ -71,12 +71,12 @@ def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxe
             ax.grid(True)
 
         # Entferne leere Subplots, wenn keine Daten vorhanden sind
-        for i in range(len(current_data), 8):
+        for i in range(len(current_data), 6):
             row, col = divmod(i, 2)
             fig.delaxes(axes[row, col])
 
         # Entferne vollständige leere Zeilen
-        for row in range(4):
+        for row in range(3):
             if all(not ax.has_data() for ax in axes[row, :]):
                 for col in range(2):
                     fig.delaxes(axes[row, col])
@@ -84,9 +84,13 @@ def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxe
         # Layout anpassen, damit die Subplots gut dargestellt werden
         plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
-        # Zeige die Figur
-        plt.show()
-
+        # Speichere oder zeige die Figur
+        if save_only and output_dir:
+            save_path = output_dir / f"{title.replace(' ', '_')}_group_{group_index + 1}.pdf"
+            plt.savefig(save_path)
+            plt.close(fig)
+        else:
+            plt.show()
 
 def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_only=False):
     xlabel = 'timestamps [MJD]'
@@ -97,11 +101,12 @@ def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_o
     save_folder.mkdir(parents=True, exist_ok=True)
 
     for campaign, light_curve_data in galaxie_campaigns_dict.items():
-        super_title = f"{campaign} \n\n Lines"
-        plot_1d_lightcurves_in_groups(light_curve_data["lines"], xlabel, ylabel, yerr_name, super_title)
+        super_title = f"{campaign} Lines"
+        plot_1d_lightcurves_in_groups(light_curve_data["lines"], xlabel, ylabel, yerr_name, super_title, save_only, save_folder)
 
-        super_title = f"{campaign} \n\n Continua"
-        plot_1d_lightcurves_in_groups(light_curve_data["continua"], xlabel, ylabel, yerr_name, super_title)
+        super_title = f"{campaign} Continua"
+        plot_1d_lightcurves_in_groups(light_curve_data["continua"], xlabel, ylabel, yerr_name, super_title, save_only, save_folder)
+
 
 
 def plot_lightcurve_with_offset(data, xlabel, ylabel, yerr_name, ax, y_offset=0.2, y_multiplier=1.0):
