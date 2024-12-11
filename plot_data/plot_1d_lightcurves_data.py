@@ -3,7 +3,6 @@ import datetime
 import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import MaxNLocator, FuncFormatter, MultipleLocator
 
 matplotlib.use("Qt5Agg")
@@ -92,7 +91,7 @@ def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxe
             fluxerrs = np.array(line_data.get(yerr_name, []))
             color = color_dict.get(line_name, 'black') if color_dict else 'black'
 
-            configure_axis(ax, row, col, xlabel, ylabel, base_mjd=57581.66,
+            configure_axis(ax, row, col, xlabel,
                            color=color, timestamps=timestamps, fluxes=fluxes,
                            fluxerrs=fluxerrs, line_name=line_name)
 
@@ -117,7 +116,7 @@ def prepare_data(data, xlabel, ylabel, yerr_name):
         yield current_data, group_index
 
 
-def configure_axis(ax, row, col, xlabel, ylabel, base_mjd, color, timestamps, fluxes, fluxerrs, line_name):
+def configure_axis(ax, row, col, ylabel, color, timestamps, fluxes, fluxerrs, line_name):
     """Configure individual subplot axes."""
     if timestamps.size > 0 and fluxes.size > 0:
         ax.errorbar(timestamps, fluxes, yerr=fluxerrs,
@@ -165,8 +164,6 @@ def finalize_figure(fig, axes, base_mjd, title, group_index, save_only, output_d
         plt.close(fig)
     else:
         plt.show()
-
-
 
 
 def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_only=False):
