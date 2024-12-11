@@ -73,7 +73,7 @@ def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxe
             if timestamps.size > 0 and fluxes.size > 0:
                 ax.errorbar(
                     timestamps, fluxes, yerr=fluxerrs,
-                    fmt='.-', capsize=3, markersize=4, label=f'{line_name}'
+                    fmt='.:', capsize=3, markersize=4, label=f'{line_name}'
                 )
                 ax.legend(fontsize=8, loc='upper right')
 
