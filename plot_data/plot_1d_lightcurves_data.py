@@ -89,13 +89,17 @@ def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxe
                 )
                 ax.legend(fontsize=8, loc='upper right')
 
-            # Achsenbeschriftungen nur an den äußeren Subplots
-            if row < 2:  # Entferne x-Achsenbeschriftung für die obere Reihe
-                ax.set_xticklabels([])
-            if col > 0:  # Entferne y-Achsenbeschriftung für die rechte Spalte
-                ax.set_yticklabels([])
-            else:
+            # Achsenbeschriftungen anpassen
+            if col == 0:  # Linke Spalte
                 ax.set_ylabel(r'$F_\lambda \, [10^{-15} \, \mathrm{erg \, cm^{-2} \, s^{-1} \, \AA^{-1}}]$')
+            else:  # Rechte Spalte
+                ax.yaxis.tick_right()  # Verschiebe Ticks nach rechts
+                ax.yaxis.set_label_position("right")  # Verschiebe Label nach rechts
+                ax.set_ylabel(r'$F_\lambda \, [10^{-15} \, \mathrm{erg \, cm^{-2} \, s^{-1} \, \AA^{-1}}]$')
+
+            # Entferne x-Achsenbeschriftungen für nicht-untere Reihen
+            if row < 2:
+                ax.set_xticklabels([])
 
             # Gitterlinien und Ticks optimieren
             ax.xaxis.set_major_locator(MultipleLocator(4))  # Schritte von 4 Tagen auf der x-Achse
@@ -133,7 +137,6 @@ def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxe
             plt.close(fig)
         else:
             plt.show()
-
 
 def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_only=False):
     xlabel = 'timestamps [MJD]'
