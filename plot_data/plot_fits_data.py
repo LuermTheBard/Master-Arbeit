@@ -92,6 +92,7 @@ def plot_two_spectra(
 ):
     """
     Plots two spectra with specific lines and labels placed vertically above the lines.
+    Removes excessive space between the title and the figure.
     """
     # Linienpositionen und Namen
     lines = {
@@ -119,12 +120,12 @@ def plot_two_spectra(
         y1_filtered = y1
         y2_filtered = y2
 
-    fig, axs = plt.subplots(2, 1, figsize=(15, 8), sharex=True)
+    # Adjusted figure size
+    fig, axs = plt.subplots(2, 1, figsize=(10, 12), sharex=True)
 
     # Plot for y1
     axs[0].plot(x_filtered, y1_filtered, label=title1)
     axs[0].set_ylabel(ylabel1)
-    axs[0].set_title(title1)
     if xlim:
         axs[0].set_xlim(xlim)
     if log_scale:
@@ -136,7 +137,6 @@ def plot_two_spectra(
     axs[1].plot(x_filtered, y2_filtered, label=title2, color="orange")
     axs[1].set_xlabel(xlabel)
     axs[1].set_ylabel(ylabel2)
-    axs[1].set_title(title2)
     if xlim:
         axs[1].set_xlim(xlim)
     if log_scale:
@@ -163,8 +163,8 @@ def plot_two_spectra(
             transform=axs[0].get_xaxis_transform(),  # Align with x-axis
         )
 
-    fig.suptitle(super_title, fontsize=16)
-    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.91))  # Adjust layout to make space for labels
+    fig.suptitle(super_title, fontsize=14)
+    fig.tight_layout(rect=[0, 0, 1, 0.95])  # Reduce space between title and figure
 
     if save_path:
         fig.savefig(save_path, dpi=300)
