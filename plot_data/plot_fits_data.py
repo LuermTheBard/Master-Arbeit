@@ -82,11 +82,12 @@ def plot_avg_rms(fits_data, save_path=None, log_scale=False):
         rms_title,
         galaxy_name,
         save_path=save_path,
-        log_scale=log_scale
+        log_scale=log_scale,
+        xlim=(3000, 9000),
     )
 
 
-def plot_two_spectra(x, y1, y2, xlabel, ylabel1, ylabel2, title1, title2, super_title, save_path=None, log_scale=False):
+def plot_two_spectra(x, y1, y2, xlabel, ylabel1, ylabel2, title1, title2, super_title, save_path=None, log_scale=False, xlim=None):
     """
     Plots two spectra with the same x-axis in a single figure with two stacked subplots.
 
@@ -113,26 +114,56 @@ def plot_two_spectra(x, y1, y2, xlabel, ylabel1, ylabel2, title1, title2, super_
         Path to save the plot as a file. If None, the plot will only be displayed.
     - log_scale: bool
         If True, use a logarithmic y-scale for the plots.
+    - xlim: list or None
+        A list [min, max] specifying the limits of the x-axis. If None, the x-axis is not restricted.
     """
     fig, axs = plt.subplots(2, 1, figsize=(15, 8), sharex=True)
 
-    axs[0].plot(x, y1, label=title1)
+    # Filter data based on xlim
+    if xlim:
+        # Konvertiere x (und ggf. andere Daten) in numpy-Arrays, falls sie Listen sind
+        x = np.array(x) if isinstance(x, list) else x
+        y1 = np.array(y1) if isinstance(y1, list) else y1
+        y2 = np.array(y2) if isinstance(y2, list) else y2
+
+        # Filter Daten basierend auf xlim
+        mask = (x >= xlim[0]) & (x <= xlim[1])
+        x_filtered = x[mask]
+        y1_filtered = y1[mask]
+        y2_filtered = y2[mask]
+    else:
+        x_filtered = x
+        y1_filtered = y1
+        y2_filtered = y2
+
+    # Plot the first spectrum
+    axs[0].plot(x_filtered, y1_filtered, label=title1)
     axs[0].set_ylabel(ylabel1)
     axs[0].set_title(title1)
+    if xlim:
+        axs[0].set_xlim(xlim)  # Apply x-axis limits
     if log_scale:
         axs[0].set_yscale("log")
+    else:
+        axs[0].set_ylim(min(y1_filtered) * 0.9, max(y1_filtered) * 1.1)  # Auto-adjust y-axis
     axs[0].grid(visible=True, which='both', linestyle='--', linewidth=0.5)
     axs[0].legend()
 
-    axs[1].plot(x, y2, label=title2, color='orange')
+    # Plot the second spectrum
+    axs[1].plot(x_filtered, y2_filtered, label=title2, color='orange')
     axs[1].set_xlabel(xlabel)
     axs[1].set_ylabel(ylabel2)
     axs[1].set_title(title2)
+    if xlim:
+        axs[1].set_xlim(xlim)  # Apply x-axis limits
     if log_scale:
         axs[1].set_yscale("log")
+    else:
+        axs[1].set_ylim(min(y2_filtered) * 0.9, max(y2_filtered) * 1.1)  # Auto-adjust y-axis
     axs[1].grid(visible=True, which='both', linestyle='--', linewidth=0.5)
     axs[1].legend()
 
+    # Supertitle and layout
     fig.suptitle(super_title, fontsize=16)
     fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.96))
 

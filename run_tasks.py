@@ -170,9 +170,17 @@ def plot_line_1d_corr(line_name=None):
 
 
 @task
-def plot_avg_rms_spec():
+def plot_avg_rms_spec(file_name="avg_rms_spec", output_dir=DEFAULT_OUTPUT_DIR):
+
+    avg_rms_spec_dir = output_dir / "avg_rms_spec"
+
+    avg_rms_spec_dir.mkdir(parents=True, exist_ok=True)
+
+    avg_rms_spec_file = avg_rms_spec_dir / f"{file_name}.pdf"
+
+
     fits_data = import_fits_data()
-    plot_avg_rms(fits_data)
+    plot_avg_rms(fits_data, save_path=avg_rms_spec_file)
 
 
 @task
