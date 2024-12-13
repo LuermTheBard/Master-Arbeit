@@ -87,46 +87,29 @@ def plot_avg_rms(fits_data, save_path=None, log_scale=False):
     )
 
 
-def plot_two_spectra(x, y1, y2, xlabel, ylabel1, ylabel2, title1, title2, super_title, save_path=None, log_scale=False, xlim=None):
+def plot_two_spectra(
+    x, y1, y2, xlabel, ylabel1, ylabel2, title1, title2, super_title, save_path=None, log_scale=False, xlim=None
+):
     """
-    Plots two spectra with the same x-axis in a single figure with two stacked subplots.
-
-    Parameters:
-    - x: array-like
-        Shared x-axis values.
-    - y1: array-like
-        y-values for the first spectrum.
-    - y2: array-like
-        y-values for the second spectrum.
-    - xlabel: str
-        Label for the shared x-axis.
-    - ylabel1: str
-        Label for the y-axis of the first spectrum.
-    - ylabel2: str
-        Label for the y-axis of the second spectrum.
-    - title1: str
-        Title for the first subplot.
-    - title2: str
-        Title for the second subplot.
-    - super_title: str
-        Supertitle for the entire figure.
-    - save_path: str or None
-        Path to save the plot as a file. If None, the plot will only be displayed.
-    - log_scale: bool
-        If True, use a logarithmic y-scale for the plots.
-    - xlim: list or None
-        A list [min, max] specifying the limits of the x-axis. If None, the x-axis is not restricted.
+    Plots two spectra with specific lines and labels placed vertically above the lines.
     """
-    fig, axs = plt.subplots(2, 1, figsize=(15, 8), sharex=True)
+    # Linienpositionen und Namen
+    lines = {
+        "Hα": 6562.82,
+        "Hβ": 4861.33,
+        "Hγ": 4340.47,
+        "Hδ": 4101.74,
+        "He I 5875": 5875.6,
+        "He I 5015": 5015.7,
+        "He II 4685": 4685.7,
+        "O I 8446": 8446.35,
+    }
 
-    # Filter data based on xlim
     if xlim:
-        # Konvertiere x (und ggf. andere Daten) in numpy-Arrays, falls sie Listen sind
         x = np.array(x) if isinstance(x, list) else x
         y1 = np.array(y1) if isinstance(y1, list) else y1
         y2 = np.array(y2) if isinstance(y2, list) else y2
 
-        # Filter Daten basierend auf xlim
         mask = (x >= xlim[0]) & (x <= xlim[1])
         x_filtered = x[mask]
         y1_filtered = y1[mask]
@@ -136,36 +119,52 @@ def plot_two_spectra(x, y1, y2, xlabel, ylabel1, ylabel2, title1, title2, super_
         y1_filtered = y1
         y2_filtered = y2
 
-    # Plot the first spectrum
+    fig, axs = plt.subplots(2, 1, figsize=(15, 8), sharex=True)
+
+    # Plot for y1
     axs[0].plot(x_filtered, y1_filtered, label=title1)
     axs[0].set_ylabel(ylabel1)
     axs[0].set_title(title1)
     if xlim:
-        axs[0].set_xlim(xlim)  # Apply x-axis limits
+        axs[0].set_xlim(xlim)
     if log_scale:
         axs[0].set_yscale("log")
-    else:
-        axs[0].set_ylim(min(y1_filtered) * 0.9, max(y1_filtered) * 1.1)  # Auto-adjust y-axis
-    axs[0].grid(visible=True, which='both', linestyle='--', linewidth=0.5)
+    axs[0].grid(visible=True, which="both", linestyle="--", linewidth=0.5)
     axs[0].legend()
 
-    # Plot the second spectrum
-    axs[1].plot(x_filtered, y2_filtered, label=title2, color='orange')
+    # Plot for y2
+    axs[1].plot(x_filtered, y2_filtered, label=title2, color="orange")
     axs[1].set_xlabel(xlabel)
     axs[1].set_ylabel(ylabel2)
     axs[1].set_title(title2)
     if xlim:
-        axs[1].set_xlim(xlim)  # Apply x-axis limits
+        axs[1].set_xlim(xlim)
     if log_scale:
         axs[1].set_yscale("log")
-    else:
-        axs[1].set_ylim(min(y2_filtered) * 0.9, max(y2_filtered) * 1.1)  # Auto-adjust y-axis
-    axs[1].grid(visible=True, which='both', linestyle='--', linewidth=0.5)
+    axs[1].grid(visible=True, which="both", linestyle="--", linewidth=0.5)
     axs[1].legend()
 
-    # Supertitle and layout
+    # Add vertical lines through both plots
+    for label, pos in lines.items():
+        for ax in axs:
+            ax.axvline(pos, color="gray", linestyle="--", linewidth=0.8)
+
+    # Add vertical labels above the lines
+    for label, pos in lines.items():
+        axs[0].text(
+            x=pos,
+            y=1.05,  # Position slightly above the plot
+            s=label,
+            fontsize=10,
+            color="black",
+            rotation=90,  # Vertical text
+            ha="center",
+            va="bottom",
+            transform=axs[0].get_xaxis_transform(),  # Align with x-axis
+        )
+
     fig.suptitle(super_title, fontsize=16)
-    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.96))
+    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.91))  # Adjust layout to make space for labels
 
     if save_path:
         fig.savefig(save_path, dpi=300)
