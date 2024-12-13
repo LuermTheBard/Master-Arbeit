@@ -2,49 +2,54 @@ import numpy as np
 
 
 def get_continua_with_highest_corr_coef(line_sorted_data):
-    """
-    Bestimmt die Continuen mit den höchsten, zweit- und dritthöchsten Maximalwerten über alle Linien hinweg.
-
-    Args:
-        line_sorted_data (dict): Ein Dictionary, bei dem der Schlüssel die Linie und der Wert
-                                 eine Liste von Tupeln ist (continua_name, x_values, y_values).
-
-    Returns:
-        dict: Dictionary mit den besten Continuen und ihren Maximalwerten:
-              {
-                  "best_continua": (continua_name, max_value),
-                  "second_best_continua": (continua_name, max_value),
-                  "third_best_continua": (continua_name, max_value)
-              }
-    """
-    # Dictionary für die besten Continuen pro Linie
     line_best_continua_dict = dict()
 
     # Schritt 1: Berechnung der maximalen, zweitgrößten und drittgrößten Werte für jede Linie
     for line, cont_data_tuple_list in line_sorted_data.items():
         cont_max_dict = dict()
-        cont_second_max_dict = dict()
-        cont_third_max_dict = dict()
 
         for cont_tuple in cont_data_tuple_list:
             # cont_tuple: (continua_name, x_values, y_values)
-            sorted_values = sorted(cont_tuple[2], reverse=True)
+            cont_max_dict[cont_tuple[0]] = sum(cont_tuple[2])
 
-            cont_max_dict[cont_tuple[0]] = sorted_values[0]
+        # Schritt 2: Sortiere cont_max_dict nach Werten absteigend
+        sorted_continua = sorted(cont_max_dict.items(), key=lambda item: item[1], reverse=True)
 
-            if len(sorted_values) > 1:
-                cont_second_max_dict[cont_tuple[0]] = sorted_values[1]
-            else:
-                cont_second_max_dict[cont_tuple[0]] = None
+        # Schritt 3: Extrahiere die drei höchsten Werte (falls vorhanden)
+        top_three_continua = {
+            "best": sorted_continua[0][0] if len(sorted_continua) > 0 else None,
+            "second_best": sorted_continua[1][0] if len(sorted_continua) > 1 else None,
+            "third_best": sorted_continua[2][0] if len(sorted_continua) > 2 else None
+        }
 
-            if len(sorted_values) > 2:
-                cont_third_max_dict[cont_tuple[0]] = sorted_values[2]
-            else:
-                cont_third_max_dict[cont_tuple[0]] = None
+        # Speichere die Ergebnisse in line_best_continua_dict
+        line_best_continua_dict[line] = top_three_continua
 
-        line_best_continua_dict[line] = (cont_max_dict, cont_second_max_dict, cont_third_max_dict)
+    return line_best_continua_dict
 
-    print()
+
+def get_weighted_best_continua(line_best_continua_dict, weights={"best": 3, "second_best": 2, "third_best": 1}):
+    # Initialisiere ein Wörterbuch zur Gewichtung der continua
+    continua_scores = {}
+
+    # Schritt 1: Berechne die gewichteten Punkte
+    for line, ranks in line_best_continua_dict.items():
+        for rank, continua_name in ranks.items():
+            if continua_name is not None:
+                # Addiere die gewichteten Punkte für jedes continua
+                continua_scores[continua_name] = continua_scores.get(continua_name, 0) + weights[rank]
+
+    # Schritt 2: Sortiere die continua_scores nach den Gesamtpunkten
+    sorted_scores = sorted(continua_scores.items(), key=lambda item: item[1], reverse=True)
+
+    # Schritt 3: Extrahiere die besten drei continua
+    top_three_overall = {
+        "best": sorted_scores[0][0] if len(sorted_scores) > 0 else None,
+        "second_best": sorted_scores[1][0] if len(sorted_scores) > 1 else None,
+        "third_best": sorted_scores[2][0] if len(sorted_scores) > 2 else None
+    }
+
+    return top_three_overall
 
 
 def sort_1d_corr_data_for_lines(galaxy_campaigns_dict):

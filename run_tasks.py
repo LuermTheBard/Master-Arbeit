@@ -4,7 +4,8 @@ from pathlib import Path
 
 import toml
 
-from handle_data.handle_data import sort_1d_corr_data_for_lines, get_continua_with_highest_corr_coef
+from handle_data.handle_data import sort_1d_corr_data_for_lines, get_continua_with_highest_corr_coef, \
+    get_weighted_best_continua
 from handle_data.get_time_lag_from_1D_correlation import calc_time_lag_of_line, calculate_time_lags_for_continuum, \
     save_lag_results_to_toml
 from handle_data.dopplershift import calc_broad_lines_doppler_shift_with_error
@@ -239,7 +240,7 @@ def highest_corr_coef():
 
     campaign_result_dict = dict()
     for campaign, lines_data in sorted_one_dim_correlation_plot_data.items():
-        campaign_result_dict[campaign] = get_continua_with_highest_corr_coef(lines_data)
+        campaign_result_dict[campaign] = get_weighted_best_continua(get_continua_with_highest_corr_coef(lines_data))
 
     print()
 
