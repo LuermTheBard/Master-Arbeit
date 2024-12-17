@@ -6,24 +6,24 @@ import numpy as np
 
 
 All_LINES = {
-    "Hα": {"position": 6562.82, "offset_avg": 0.02, "offset_rms": 0.25, "slanted_avg": True, "slanted_rms": True},
-    "Hβ": {"position": 4861.33, "offset_avg": 0.05, "offset_rms": 0.15, "slanted_avg": False, "slanted_rms": False},
-    "Hγ": {"position": 4340.47, "offset_avg": 0.08, "offset_rms": 0.15, "slanted_avg": False, "slanted_rms": False},
-    "Hδ": {"position": 4101.74, "offset_avg": 0.1, "offset_rms": 0.05, "slanted_avg": False, "slanted_rms": False},
-    "Hε": {"position": 3970.08, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False, "slanted_rms": False},
-    "H8": {"position": 3889.06, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False, "slanted_rms": False},
+    "Hα": {"position": 6562.82, "offset_avg": 0.01, "offset_rms": 0.3, "slanted_avg": True, "slanted_rms": True},
+    "Hβ": {"position": 4861.33, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": True, "slanted_rms": True},
+    "Hγ": {"position": 4340.47, "offset_avg": 0.2, "offset_rms": 0.25, "slanted_avg": True, "slanted_rms": True},
+    "Hδ": {"position": 4101.74, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": True, "slanted_rms": True},
+    "Hε": {"position": 3970.08, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": True, "slanted_rms": True},
+    "H8": {"position": 3889.06, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": True, "slanted_rms": True},
     "[Ne III] 3868": {"position": 3868.76, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False, "slanted_rms": False},
     "H9": {"position": 3835.39, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False, "slanted_rms": False},
     "He I 5875": {"position": 5875.6, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
                   "slanted_rms": False},
-    "He I 5047": {"position": 5047.74, "offset_avg": 0.1, "offset_rms": 0.12, "slanted_avg": False,
+    "He I 5047": {"position": 5047.74, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
                   "slanted_rms": False},
-    "He I 7065": {"position": 7065.2, "offset_avg": 0.3, "offset_rms": 0.12, "slanted_avg": True,
+    "He I 7065": {"position": 7065.2, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": True,
                   "slanted_rms": True},
     "He II 4685": {"position": 4685.7, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
                    "slanted_rms": False},
-    "[O III] 4363": {"position": 4363.21, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
-                   "slanted_rms": False},
+    "[O III] 4363": {"position": 4363.21, "offset_avg": 0.05, "offset_rms": 0.05, "slanted_avg": True,
+                   "slanted_rms": True},
     "[O III] 4958": {"position": 4958.91, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
                    "slanted_rms": False},
     "[O III] 5006": {"position": 5006.84, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
@@ -55,13 +55,13 @@ All_LINES = {
                    "slanted_rms": True},
 
 
-    "O I 8446": {"position": 8446.35, "offset_avg": 0.5, "offset_rms": 0.4, "slanted_avg": True,
+    "O I 8446": {"position": 8446.35, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": True,
                  "slanted_rms": True},
-    "Ca II 8498": {"position": 8498.02, "offset_avg": 0.4, "offset_rms": 0.2, "slanted_avg": True,
+    "Ca II 8498": {"position": 8498.02, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": True,
                  "slanted_rms": True},
-    "Ca II 8542": {"position": 8542.09, "offset_avg": 0.15, "offset_rms": 0.2, "slanted_avg": True,
+    "Ca II 8542": {"position": 8542.09, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": True,
                  "slanted_rms": True},
-    "Ca II 8662": {"position": 8662.14, "offset_avg": 0.15, "offset_rms": 0.2, "slanted_avg": True,
+    "Ca II 8662": {"position": 8662.14, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": True,
                  "slanted_rms": True},
 
 }
@@ -176,7 +176,7 @@ def plot_two_spectra(
         y2_filtered = y2
 
     # Adjusted figure size
-    fig, axs = plt.subplots(2, 1, figsize=(10, 12), sharex=True)
+    fig, axs = plt.subplots(2, 1, figsize=(25, 20), sharex=True)
 
     # Plot for y1
     axs[0].plot(x_filtered, y1_filtered, label=title1)
