@@ -1,3 +1,5 @@
+import math
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -96,14 +98,14 @@ def plot_two_spectra(
     """
     # Linienpositionen und Namen
     lines = {
-        "Hα": 6562.82,
-        "Hβ": 4861.33,
-        "Hγ": 4340.47,
-        "Hδ": 4101.74,
-        "He I 5875": 5875.6,
-        "He I 5015": 5015.7,
-        "He II 4685": 4685.7,
-        "O I 8446": 8446.35,
+        "Hα": {"position": 6562.82, "offset": 0.05},  # 5% Abstand
+        "Hβ": {"position": 4861.33, "offset": 0.08},  # 8% Abstand
+        "Hγ": {"position": 4340.47, "offset": 0.1},  # 10% Abstand
+        "Hδ": {"position": 4101.74, "offset": 0.07},
+        "He I 5875": {"position": 5875.6, "offset": 0.04},
+        "He I 5015": {"position": 5015.7, "offset": 0.05},
+        "He II 4685": {"position": 4685.7, "offset": 0.06},
+        "O I 8446": {"position": 8446.35, "offset": 0.03},
     }
 
     if xlim:
@@ -144,24 +146,40 @@ def plot_two_spectra(
     axs[1].grid(visible=True, which="both", linestyle="--", linewidth=0.5)
     axs[1].legend()
 
-    # Add vertical lines through both plots
     for label, pos in lines.items():
-        for ax in axs:
-            ax.axvline(pos, color="gray", linestyle="--", linewidth=0.8)
+        for i, ax in enumerate(axs):
+            # Wähle das entsprechende Spektrum und Achse
+            y_values = y1 if i == 0 else y2  # y1 für AVG, y2 für RMS
 
-    # Add vertical labels above the lines
-    for label, pos in lines.items():
-        axs[0].text(
-            x=pos,
-            y=1.05,  # Position slightly above the plot
-            s=label,
-            fontsize=10,
-            color="black",
-            rotation=90,  # Vertical text
-            ha="center",
-            va="bottom",
-            transform=axs[0].get_xaxis_transform(),  # Align with x-axis
-        )
+            # Bestimme die Größenordnung der Daten für die aktuelle Achse
+            max_y_value = np.max(y_values)
+            order_of_magnitude = 10 ** math.floor(math.log10(max_y_value))
+
+            # Definiere die konstante Linienlänge (z.B. 10% der Größenordnung)
+            line_length = 0.1 * order_of_magnitude
+
+            # Finde den nächstgelegenen Y-Wert zu pos
+            idx = np.abs(x - pos["position"]).argmin()
+            spectrum_y = y_values[idx]
+
+            # Linienstart und -ende berechnen
+            line_ymin = spectrum_y * (1 + pos["offset"])  # Starte leicht über dem Spektrum
+            line_ymax = line_ymin + line_length
+
+            # Vertikale Linie zeichnen
+            ax.plot([pos["position"], pos["position"]], [line_ymin, line_ymax], color="black", linewidth=1.2)
+
+            # Text über der Linie hinzufügen
+            ax.text(
+                x=pos["position"],
+                y=line_ymax + 0.02 * line_length,  # Leichter Offset oberhalb der Linie
+                s=label,
+                fontsize=10,
+                color="black",
+                rotation=90,
+                ha="center",
+                va="bottom"
+            )
 
     fig.suptitle(super_title, fontsize=14)
     fig.tight_layout(rect=[0, 0, 1, 0.95])  # Reduce space between title and figure
