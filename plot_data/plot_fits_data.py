@@ -98,14 +98,18 @@ def plot_two_spectra(
     """
     # Linienpositionen und Namen
     lines = {
-        "Hα": {"position": 6562.82, "offset_avg": 0.02, "offset_rms": 0.25, "slanted": True},
-        "Hβ": {"position": 4861.33, "offset_avg": 0.05, "offset_rms": 0.15, "slanted": False},
-        "Hγ": {"position": 4340.47, "offset_avg": 0.08, "offset_rms": 0.15, "slanted": False},
-        "Hδ": {"position": 4101.74, "offset_avg": 0.1, "offset_rms": 0.1, "slanted": False},
-        "He I 5875": {"position": 5875.6, "offset_avg": 0.1, "offset_rms": 0.1, "slanted": False},
-        "He I 5015": {"position": 5015.7, "offset_avg": -0.1, "offset_rms": 0.12, "slanted": True},
-        "He II 4685": {"position": 4685.7, "offset_avg": 0.1, "offset_rms": 0.1, "slanted": False},
-        "O I 8446": {"position": 8446.35, "offset_avg": 0.15, "offset_rms": 0.2, "slanted": False},
+        "Hα": {"position": 6562.82, "offset_avg": 0.02, "offset_rms": 0.25, "slanted_avg": True, "slanted_rms": False},
+        "Hβ": {"position": 4861.33, "offset_avg": 0.05, "offset_rms": 0.15, "slanted_avg": False, "slanted_rms": False},
+        "Hγ": {"position": 4340.47, "offset_avg": 0.08, "offset_rms": 0.15, "slanted_avg": False, "slanted_rms": False},
+        "Hδ": {"position": 4101.74, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False, "slanted_rms": False},
+        "He I 5875": {"position": 5875.6, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                      "slanted_rms": False},
+        "He I 5015": {"position": 5015.7, "offset_avg": -0.1, "offset_rms": 0.12, "slanted_avg": True,
+                      "slanted_rms": False},
+        "He II 4685": {"position": 4685.7, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                       "slanted_rms": False},
+        "O I 8446": {"position": 8446.35, "offset_avg": 0.15, "offset_rms": 0.2, "slanted_avg": False,
+                     "slanted_rms": False},
     }
     if xlim:
         x = np.array(x) if isinstance(x, list) else x
@@ -149,16 +153,19 @@ def plot_two_spectra(
         pos = props["position"]
         offset_avg = props["offset_avg"]
         offset_rms = props["offset_rms"]
-        slanted = props.get("slanted", False)
+        slanted_avg = props.get("slanted_avg", False)  # Standardwert: False
+        slanted_rms = props.get("slanted_rms", False)
 
         for i, ax in enumerate(axs):
             # Wähle das entsprechende Spektrum und Offset
             if i == 0:  # AVG-Spektrum
                 y_values = y1
                 offset = offset_avg
+                slanted = slanted_avg
             else:  # RMS-Spektrum
                 y_values = y2
                 offset = offset_rms
+                slanted = slanted_rms
 
             # Bestimme die Größenordnung der Daten für die aktuelle Achse
             max_y_value = np.max(y_values)
@@ -172,23 +179,23 @@ def plot_two_spectra(
             spectrum_y = y_values[idx]
 
             # Linienstart und -ende berechnen
-            line_ymin = spectrum_y * (1 + offset)  # Startet leicht über dem Spektrum
-            line_ymax = line_ymin + line_length  # Konstante Länge
+            line_ymin = spectrum_y * (1 + offset)
+            line_ymax = line_ymin + line_length
 
             # Vertikale Linie zeichnen
             ax.plot([pos, pos], [line_ymin, line_ymax], color="black", linewidth=1.2)
 
             # Text über der Linie hinzufügen
-            rotation_angle = 45 if slanted else 90  # Schräger Winkel oder senkrecht
+            rotation_angle = 45 if slanted else 90
             ax.text(
                 x=pos,
-                y=line_ymax + 0.02 * order_of_magnitude,  # Genau am oberen Ende der Linie
+                y=line_ymax + 0.015 * order_of_magnitude,  # Genau am oberen Ende der Linie
                 s=label,
                 fontsize=10,
                 color="black",
                 rotation=rotation_angle,
-                ha="left" if slanted else "center",  # Horizontal zentriert
-                va="bottom"  # Vertikale Ausrichtung: unter dem Text beginnt die Linie
+                ha="left" if slanted else "center",
+                va="bottom"
             )
 
     fig.suptitle(super_title, fontsize=14)
