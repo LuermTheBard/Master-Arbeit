@@ -98,16 +98,15 @@ def plot_two_spectra(
     """
     # Linienpositionen und Namen
     lines = {
-        "Hα": {"position": 6562.82, "offset_avg": 0.02, "offset_rms": 0.25},
-        "Hβ": {"position": 4861.33, "offset_avg": 0.05, "offset_rms": 0.15},
-        "Hγ": {"position": 4340.47, "offset_avg": 0.08, "offset_rms": 0.15},
-        "Hδ": {"position": 4101.74, "offset_avg": 0.1, "offset_rms": 0.1},
-        "He I 5875": {"position": 5875.6, "offset_avg": 0.1, "offset_rms": 0.1},
-        "He I 5015": {"position": 5015.7, "offset_avg": -0.1, "offset_rms": 0.12},
-        "He II 4685": {"position": 4685.7, "offset_avg": 0.1, "offset_rms": 0.1},
-        "O I 8446": {"position": 8446.35, "offset_avg": 0.15, "offset_rms": 0.2},
+        "Hα": {"position": 6562.82, "offset_avg": 0.02, "offset_rms": 0.25, "slanted": True},
+        "Hβ": {"position": 4861.33, "offset_avg": 0.05, "offset_rms": 0.15, "slanted": False},
+        "Hγ": {"position": 4340.47, "offset_avg": 0.08, "offset_rms": 0.15, "slanted": False},
+        "Hδ": {"position": 4101.74, "offset_avg": 0.1, "offset_rms": 0.1, "slanted": False},
+        "He I 5875": {"position": 5875.6, "offset_avg": 0.1, "offset_rms": 0.1, "slanted": False},
+        "He I 5015": {"position": 5015.7, "offset_avg": -0.1, "offset_rms": 0.12, "slanted": True},
+        "He II 4685": {"position": 4685.7, "offset_avg": 0.1, "offset_rms": 0.1, "slanted": False},
+        "O I 8446": {"position": 8446.35, "offset_avg": 0.15, "offset_rms": 0.2, "slanted": False},
     }
-
     if xlim:
         x = np.array(x) if isinstance(x, list) else x
         y1 = np.array(y1) if isinstance(y1, list) else y1
@@ -150,6 +149,7 @@ def plot_two_spectra(
         pos = props["position"]
         offset_avg = props["offset_avg"]
         offset_rms = props["offset_rms"]
+        slanted = props.get("slanted", False)
 
         for i, ax in enumerate(axs):
             # Wähle das entsprechende Spektrum und Offset
@@ -179,15 +179,16 @@ def plot_two_spectra(
             ax.plot([pos, pos], [line_ymin, line_ymax], color="black", linewidth=1.2)
 
             # Text über der Linie hinzufügen
+            rotation_angle = 45 if slanted else 90  # Schräger Winkel oder senkrecht
             ax.text(
                 x=pos,
-                y=line_ymax + 0.02 * spectrum_y,  # Leichter Offset oberhalb der Linie
+                y=line_ymax + 0.02 * order_of_magnitude,  # Genau am oberen Ende der Linie
                 s=label,
                 fontsize=10,
                 color="black",
-                rotation=90,
-                ha="center",
-                va="bottom"
+                rotation=rotation_angle,
+                ha="left" if slanted else "center",  # Horizontal zentriert
+                va="bottom"  # Vertikale Ausrichtung: unter dem Text beginnt die Linie
             )
 
     fig.suptitle(super_title, fontsize=14)
