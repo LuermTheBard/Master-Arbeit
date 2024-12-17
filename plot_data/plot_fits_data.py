@@ -4,6 +4,69 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+
+All_LINES = {
+    "Hα": {"position": 6562.82, "offset_avg": 0.02, "offset_rms": 0.25, "slanted_avg": True, "slanted_rms": True},
+    "Hβ": {"position": 4861.33, "offset_avg": 0.05, "offset_rms": 0.15, "slanted_avg": False, "slanted_rms": False},
+    "Hγ": {"position": 4340.47, "offset_avg": 0.08, "offset_rms": 0.15, "slanted_avg": False, "slanted_rms": False},
+    "Hδ": {"position": 4101.74, "offset_avg": 0.1, "offset_rms": 0.05, "slanted_avg": False, "slanted_rms": False},
+    "Hε": {"position": 3970.08, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False, "slanted_rms": False},
+    "H8": {"position": 3889.06, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False, "slanted_rms": False},
+    "[Ne III] 3868": {"position": 3868.76, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False, "slanted_rms": False},
+    "H9": {"position": 3835.39, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False, "slanted_rms": False},
+    "He I 5875": {"position": 5875.6, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                  "slanted_rms": False},
+    "He I 5047": {"position": 5047.74, "offset_avg": 0.1, "offset_rms": 0.12, "slanted_avg": False,
+                  "slanted_rms": False},
+    "He I 7065": {"position": 7065.2, "offset_avg": 0.3, "offset_rms": 0.12, "slanted_avg": True,
+                  "slanted_rms": True},
+    "He II 4685": {"position": 4685.7, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                   "slanted_rms": False},
+    "[O III] 4363": {"position": 4363.21, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                   "slanted_rms": False},
+    "[O III] 4958": {"position": 4958.91, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                   "slanted_rms": False},
+    "[O III] 5006": {"position": 5006.84, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                   "slanted_rms": False},
+    "Fe II 5169": {"position": 5169.03, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                   "slanted_rms": False},
+    "Fe II 5197": {"position": 5197.58, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                   "slanted_rms": False},
+    "Fe II 6369": {"position": 6369.46, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                   "slanted_rms": False},
+    #"Fe II 6516": {"position": 6516.08, "offset_avg": 0.1, "offset_rms": 1.3, "slanted_avg": False,
+    #               "slanted_rms": False},
+    "[Fe III] 5270": {"position": 5270.40, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                   "slanted_rms": False},
+    "[Fe XIV] 5302": {"position": 5302.86, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                   "slanted_rms": False},
+    "[Fe VI] 5336": {"position": 5336.18, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                   "slanted_rms": False},
+    "[Fe VII] 5721": {"position": 5721.7, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                   "slanted_rms": False},
+    "[Fe VII] 6087": {"position": 6087, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
+                   "slanted_rms": False},
+
+    "[S II] 6731": {"position": 6730.81, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": True,
+                   "slanted_rms": True},
+    "[N II] 6583": {"position": 6583.46, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": True,
+                   "slanted_rms": True},
+    "[Ar III] 7135": {"position": 7135.79, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": True,
+                   "slanted_rms": True},
+
+
+    "O I 8446": {"position": 8446.35, "offset_avg": 0.5, "offset_rms": 0.4, "slanted_avg": True,
+                 "slanted_rms": True},
+    "Ca II 8498": {"position": 8498.02, "offset_avg": 0.4, "offset_rms": 0.2, "slanted_avg": True,
+                 "slanted_rms": True},
+    "Ca II 8542": {"position": 8542.09, "offset_avg": 0.15, "offset_rms": 0.2, "slanted_avg": True,
+                 "slanted_rms": True},
+    "Ca II 8662": {"position": 8662.14, "offset_avg": 0.15, "offset_rms": 0.2, "slanted_avg": True,
+                 "slanted_rms": True},
+
+}
+
+
 def validate_fits_data(fits_data):
     """
     Validates the structure of the input FITS-like data dictionary.
@@ -83,6 +146,7 @@ def plot_avg_rms(fits_data, save_path=None, log_scale=False):
         avg_title,
         rms_title,
         galaxy_name,
+        lines=All_LINES,
         save_path=save_path,
         log_scale=log_scale,
         xlim=(3000, 9000),
@@ -90,27 +154,13 @@ def plot_avg_rms(fits_data, save_path=None, log_scale=False):
 
 
 def plot_two_spectra(
-    x, y1, y2, xlabel, ylabel1, ylabel2, title1, title2, super_title, save_path=None, log_scale=False, xlim=None
-):
+    x, y1, y2, xlabel, ylabel1, ylabel2, title1, title2, super_title, lines, save_path=None, log_scale=False, xlim=None,
+        ylim=None):
     """
     Plots two spectra with specific lines and labels placed vertically above the lines.
     Removes excessive space between the title and the figure.
     """
-    # Linienpositionen und Namen
-    lines = {
-        "Hα": {"position": 6562.82, "offset_avg": 0.02, "offset_rms": 0.25, "slanted_avg": True, "slanted_rms": False},
-        "Hβ": {"position": 4861.33, "offset_avg": 0.05, "offset_rms": 0.15, "slanted_avg": False, "slanted_rms": False},
-        "Hγ": {"position": 4340.47, "offset_avg": 0.08, "offset_rms": 0.15, "slanted_avg": False, "slanted_rms": False},
-        "Hδ": {"position": 4101.74, "offset_avg": 0.1, "offset_rms": 0.05, "slanted_avg": False, "slanted_rms": False},
-        "He I 5875": {"position": 5875.6, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
-                      "slanted_rms": False},
-        "He I 5015": {"position": 5015.7, "offset_avg": -0.1, "offset_rms": 0.12, "slanted_avg": True,
-                      "slanted_rms": False},
-        "He II 4685": {"position": 4685.7, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
-                       "slanted_rms": False},
-        "O I 8446": {"position": 8446.35, "offset_avg": 0.15, "offset_rms": 0.2, "slanted_avg": False,
-                     "slanted_rms": False},
-    }
+
     if xlim:
         x = np.array(x) if isinstance(x, list) else x
         y1 = np.array(y1) if isinstance(y1, list) else y1
