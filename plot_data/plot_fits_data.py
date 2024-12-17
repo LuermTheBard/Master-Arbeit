@@ -98,14 +98,14 @@ def plot_two_spectra(
     """
     # Linienpositionen und Namen
     lines = {
-        "Hα": {"position": 6562.82, "offset": 0.05},  # 5% Abstand
-        "Hβ": {"position": 4861.33, "offset": 0.08},  # 8% Abstand
-        "Hγ": {"position": 4340.47, "offset": 0.1},  # 10% Abstand
-        "Hδ": {"position": 4101.74, "offset": 0.07},
-        "He I 5875": {"position": 5875.6, "offset": 0.04},
-        "He I 5015": {"position": 5015.7, "offset": 0.05},
-        "He II 4685": {"position": 4685.7, "offset": 0.06},
-        "O I 8446": {"position": 8446.35, "offset": 0.03},
+        "Hα": {"position": 6562.82, "offset_avg": 0.02, "offset_rms": 0.25},
+        "Hβ": {"position": 4861.33, "offset_avg": 0.05, "offset_rms": 0.15},
+        "Hγ": {"position": 4340.47, "offset_avg": 0.08, "offset_rms": 0.15},
+        "Hδ": {"position": 4101.74, "offset_avg": 0.1, "offset_rms": 0.1},
+        "He I 5875": {"position": 5875.6, "offset_avg": 0.1, "offset_rms": 0.1},
+        "He I 5015": {"position": 5015.7, "offset_avg": -0.1, "offset_rms": 0.12},
+        "He II 4685": {"position": 4685.7, "offset_avg": 0.1, "offset_rms": 0.1},
+        "O I 8446": {"position": 8446.35, "offset_avg": 0.15, "offset_rms": 0.2},
     }
 
     if xlim:
@@ -146,10 +146,19 @@ def plot_two_spectra(
     axs[1].grid(visible=True, which="both", linestyle="--", linewidth=0.5)
     axs[1].legend()
 
-    for label, pos in lines.items():
+    for label, props in lines.items():
+        pos = props["position"]
+        offset_avg = props["offset_avg"]
+        offset_rms = props["offset_rms"]
+
         for i, ax in enumerate(axs):
-            # Wähle das entsprechende Spektrum und Achse
-            y_values = y1 if i == 0 else y2  # y1 für AVG, y2 für RMS
+            # Wähle das entsprechende Spektrum und Offset
+            if i == 0:  # AVG-Spektrum
+                y_values = y1
+                offset = offset_avg
+            else:  # RMS-Spektrum
+                y_values = y2
+                offset = offset_rms
 
             # Bestimme die Größenordnung der Daten für die aktuelle Achse
             max_y_value = np.max(y_values)
@@ -159,20 +168,20 @@ def plot_two_spectra(
             line_length = 0.1 * order_of_magnitude
 
             # Finde den nächstgelegenen Y-Wert zu pos
-            idx = np.abs(x - pos["position"]).argmin()
+            idx = np.abs(x - pos).argmin()
             spectrum_y = y_values[idx]
 
             # Linienstart und -ende berechnen
-            line_ymin = spectrum_y * (1 + pos["offset"])  # Starte leicht über dem Spektrum
-            line_ymax = line_ymin + line_length
+            line_ymin = spectrum_y * (1 + offset)  # Startet leicht über dem Spektrum
+            line_ymax = line_ymin + line_length  # Konstante Länge
 
             # Vertikale Linie zeichnen
-            ax.plot([pos["position"], pos["position"]], [line_ymin, line_ymax], color="black", linewidth=1.2)
+            ax.plot([pos, pos], [line_ymin, line_ymax], color="black", linewidth=1.2)
 
             # Text über der Linie hinzufügen
             ax.text(
-                x=pos["position"],
-                y=line_ymax + 0.02 * line_length,  # Leichter Offset oberhalb der Linie
+                x=pos,
+                y=line_ymax + 0.02 * spectrum_y,  # Leichter Offset oberhalb der Linie
                 s=label,
                 fontsize=10,
                 color="black",
