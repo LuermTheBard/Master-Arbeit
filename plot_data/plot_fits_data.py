@@ -16,6 +16,8 @@ All_LINES = {
     "H9": {"position": 3835.39, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False, "slanted_rms": False},
     "He I 5875": {"position": 5875.6, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
                   "slanted_rms": False},
+    "He I 5016": {"position": 5015.67, "offset_avg": 0.3, "offset_rms": 0.1, "slanted_avg": True,
+                  "slanted_rms": False},
     "He I 5047": {"position": 5047.74, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
                   "slanted_rms": False},
     "He I 7065": {"position": 7065.2, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": True,

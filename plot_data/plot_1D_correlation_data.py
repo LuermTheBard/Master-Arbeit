@@ -93,7 +93,7 @@ def process_1d_correlation_data(data_list, line, super_title, output_dir=None, s
         if output_dir:
             save_dir = output_dir /  "plot_1d_correlations"/ super_title
             if not save_dir.exists():
-                save_dir.mkdir()
+                save_dir.mkdir(parents=True, exist_ok=True)
             save_path = f"{save_dir}/{title.replace(' ', '_').replace('/', '_')}.pdf"
 
         process_plot(params, save_path=save_path, save_only=save_only)
