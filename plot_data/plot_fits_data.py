@@ -101,7 +101,7 @@ def plot_two_spectra(
         "Hα": {"position": 6562.82, "offset_avg": 0.02, "offset_rms": 0.25, "slanted_avg": True, "slanted_rms": False},
         "Hβ": {"position": 4861.33, "offset_avg": 0.05, "offset_rms": 0.15, "slanted_avg": False, "slanted_rms": False},
         "Hγ": {"position": 4340.47, "offset_avg": 0.08, "offset_rms": 0.15, "slanted_avg": False, "slanted_rms": False},
-        "Hδ": {"position": 4101.74, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False, "slanted_rms": False},
+        "Hδ": {"position": 4101.74, "offset_avg": 0.1, "offset_rms": 0.05, "slanted_avg": False, "slanted_rms": False},
         "He I 5875": {"position": 5875.6, "offset_avg": 0.1, "offset_rms": 0.1, "slanted_avg": False,
                       "slanted_rms": False},
         "He I 5015": {"position": 5015.7, "offset_avg": -0.1, "offset_rms": 0.12, "slanted_avg": True,
