@@ -178,7 +178,7 @@ def plot_two_spectra(
         y2_filtered = y2
 
     # Adjusted figure size
-    fig, axs = plt.subplots(2, 1, figsize=(25, 20), sharex=True)
+    fig, axs = plt.subplots(2, 1, figsize=(26, 13), sharex=True)
 
     # Plot for y1
     axs[0].plot(x_filtered, y1_filtered, label=title1)
@@ -187,7 +187,7 @@ def plot_two_spectra(
         axs[0].set_xlim(xlim)
     if log_scale:
         axs[0].set_yscale("log")
-    axs[0].grid(visible=True, which="both", linestyle="--", linewidth=0.5)
+    axs[0].grid(visible=True, which="both", linestyle="--", linewidth=0.2)
     axs[0].legend()
 
     # Plot for y2
@@ -198,57 +198,82 @@ def plot_two_spectra(
         axs[1].set_xlim(xlim)
     if log_scale:
         axs[1].set_yscale("log")
-    axs[1].grid(visible=True, which="both", linestyle="--", linewidth=0.5)
+    axs[1].grid(visible=True, which="both", linestyle="--", linewidth=0.2)
     axs[1].legend()
 
     for label, props in lines.items():
         pos = props["position"]
         offset_avg = props["offset_avg"]
-        offset_rms = props["offset_rms"]
-        slanted_avg = props.get("slanted_avg", False)  # Standardwert: False
-        slanted_rms = props.get("slanted_rms", False)
+        slanted_avg = props.get("slanted_avg", False)
 
         for i, ax in enumerate(axs):
             # Wähle das entsprechende Spektrum und Offset
-            if i == 0:  # AVG-Spektrum
-                y_values = y1
-                offset = offset_avg
-                slanted = slanted_avg
-            else:  # RMS-Spektrum
-                y_values = y2
-                offset = offset_rms
-                slanted = slanted_rms
+
+            y_values_avg = y1
+            y_values_rms = y2
 
             # Bestimme die Größenordnung der Daten für die aktuelle Achse
-            max_y_value = np.max(y_values)
-            order_of_magnitude = 10 ** math.floor(math.log10(max_y_value))
+            max_y_value_avg = np.max(y_values_avg)
+            order_of_magnitude_avg = 10 ** math.floor(math.log10(max_y_value_avg))
 
             # Definiere die konstante Linienlänge (z.B. 10% der Größenordnung)
-            line_length = 0.1 * order_of_magnitude
+            line_length_avg = 0.1 * order_of_magnitude_avg
 
             # Finde den nächstgelegenen Y-Wert zu pos
             idx = np.abs(x - pos).argmin()
-            spectrum_y = y_values[idx]
+            spectrum_y = y_values_avg[idx]
 
             # Linienstart und -ende berechnen
-            line_ymin = spectrum_y * (1 + offset)
-            line_ymax = line_ymin + line_length
+            line_ymin_avg = spectrum_y * (1 + offset_avg)
+            line_ymax_avg = line_ymin_avg + line_length_avg
 
-            # Vertikale Linie zeichnen
-            ax.plot([pos, pos], [line_ymin, line_ymax], color="black", linewidth=1.2)
 
-            # Text über der Linie hinzufügen
-            rotation_angle = 45 if slanted else 90
-            ax.text(
-                x=pos,
-                y=line_ymax + 0.015 * order_of_magnitude,  # Genau am oberen Ende der Linie
-                s=label,
-                fontsize=10,
-                color="black",
-                rotation=rotation_angle,
-                ha="left" if slanted else "center",
-                va="bottom"
-            )
+            # Bestimme die Größenordnung der Daten für die aktuelle Achse
+            max_y_value_rms = np.max(y_values_rms)
+            order_of_magnitude_rms = 10 ** math.floor(math.log10(max_y_value_rms))
+
+            # Definiere die konstante Linienlänge (z.B. 10% der Größenordnung)
+            line_length_rms = 0.1 * order_of_magnitude_rms
+
+            # Finde den nächstgelegenen Y-Wert zu pos
+            idx = np.abs(x - pos).argmin()
+            spectrum_y = y_values_avg[idx]
+
+            # Linienstart und -ende berechnen
+            line_ymin_rms = 0
+            line_ymax_rms = 2 * order_of_magnitude_rms
+
+
+
+            if i == 0:  # AVG-Spektrum
+                slanted = slanted_avg
+
+                text_pos = line_ymax_avg + 0.015 * order_of_magnitude_avg
+
+                # Vertikale Linie zeichnen
+                ax.plot([pos, pos], [line_ymin_avg, line_ymax_avg], color="black", linewidth=1.2)
+
+                # Text über der Linie hinzufügen
+                rotation_angle = 45 if slanted else 90
+
+                ax.text(
+                    x=pos,
+                    y=text_pos,  # Genau am oberen Ende der Linie
+                    s=label,
+                    fontsize=10,
+                    color="black",
+                    rotation=rotation_angle,
+                    ha="left" if slanted else "center",
+                    va="bottom"
+                )
+
+            else:
+
+
+                # Vertikale Linie zeichnen
+                ax.plot([pos, pos], [line_ymin_rms, line_ymax_rms], color="red", linestyle="--",linewidth=0.8)
+                ax.set_ylim(0.1* order_of_magnitude_rms, 1.3 * order_of_magnitude_rms)
+
 
     fig.suptitle(super_title, fontsize=14)
     fig.tight_layout(rect=[0, 0, 1, 0.95])  # Reduce space between title and figure
