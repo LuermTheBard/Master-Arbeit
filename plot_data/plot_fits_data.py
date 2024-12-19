@@ -13,13 +13,22 @@ All_LINES = {
     "Hε": {"position": 3970.08, "offset_avg": 0.1, "slanted_avg": True},
     "H8": {"position": 3889.06, "offset_avg": 0.1, "slanted_avg": True},
     #"H9": {"position": 3835.39, "offset_avg": 0.1, "slanted_avg": False},
+
+
+    "[Ne V] 3345": {"position": 3345.82, "offset_avg": 0.01, "slanted_avg": False},
+    "[Ne V] 3425": {"position": 3425.88, "offset_avg": 0.01, "slanted_avg": False},
     "[Ne III] 3868": {"position": 3868.76, "offset_avg": 0.1, "slanted_avg": True},
 
+
+    "He I 3487": {"position": 3487.72, "offset_avg": 0.1, "slanted_avg": True},
+    "He I 4471": {"position": 4471.48, "offset_avg": 0.1, "slanted_avg": False},
     "He I 5875": {"position": 5875.6, "offset_avg": 0.1, "slanted_avg": True},
     "He I 5016": {"position": 5015.67, "offset_avg": 0.3, "slanted_avg": True},
     "He I 5047": {"position": 5047.74, "offset_avg": 0.1, "slanted_avg": True},
     "He I 7065": {"position": 7065.2, "offset_avg": 0.1, "slanted_avg": True},
     "He II 4685": {"position": 4685.7, "offset_avg": 0.1, "slanted_avg": True},
+    "He I 3187": {"position": 3187.74, "offset_avg": 0.2, "slanted_avg": True},
+    "He II 3203": {"position": 3203.1, "offset_avg": 0.1, "slanted_avg": True},
 
     "[O III] 4363": {"position": 4363.21, "offset_avg": 0.05, "slanted_avg": True},
     "[O III] 4958": {"position": 4958.91, "offset_avg": 0.1, "slanted_avg": False},
@@ -36,20 +45,25 @@ All_LINES = {
 
     "Fe II 5169": {"position": 5169.03, "offset_avg": 0.3, "slanted_avg": True},
     "Fe II 5197": {"position": 5197.58, "offset_avg": 0.2, "slanted_avg": True},
-    "Fe II 6369": {"position": 6369.46, "offset_avg": 0.1, "slanted_avg": True},
+    "Fe II 6369": {"position": 6369.46, "offset_avg": 0.1, "slanted_avg": False},
+    "Fe II 6516": {"position": 6516.08, "offset_avg": 0.3, "slanted_avg": False},
     "[Fe III] 5270": {"position": 5270.40, "offset_avg": 0.3, "slanted_avg": True},
     "[Fe XIV] 5302": {"position": 5302.86, "offset_avg": 0.1, "slanted_avg": True},
     "[Fe VI] 5336": {"position": 5336.18, "offset_avg": 0.1, "slanted_avg": True},
     "[Fe VII] 5721": {"position": 5721.7, "offset_avg": 0.1, "slanted_avg": True},
     "[Fe VII] 6087": {"position": 6087, "offset_avg": 0.1, "slanted_avg": True},
+    "[Fe VII] 3586": {"position": 3586.32, "offset_avg": 0.1, "slanted_avg": True},
 
+    "[S II] 6716": {"position": 6716.44, "offset_avg": 0.35, "slanted_avg": True},
     "[S II] 6731": {"position": 6730.81, "offset_avg": 0.1, "slanted_avg": True},
 
     "[N II] 6583": {"position": 6583.46, "offset_avg": 0.1, "slanted_avg": True},
 
     "[Ar III] 7135": {"position": 7135.79, "offset_avg": 0.1, "slanted_avg": True},
 
+    "O III 3132": {"position": 3132.79, "offset_avg": 0.1, "slanted_avg": True},
     "O I 8446": {"position": 8446.35, "offset_avg": 0.1, "slanted_avg": True},
+    "[O I] 6300": {"position": 6300.30, "offset_avg": 0.1, "slanted_avg": False},
 
     "Ca II 8498": {"position": 8498.02, "offset_avg": 0.1, "slanted_avg": True},
     "Ca II 8542": {"position": 8542.09, "offset_avg": 0.1, "slanted_avg": True},
@@ -161,7 +175,7 @@ def plot_avg_rms(fits_data, save_path=None, log_scale=False):
         lines=All_LINES,
         save_path=save_path,
         log_scale=log_scale,
-        xlim=(3000, 9500),
+        xlim=(2900, 10000),
     )
 
 
@@ -269,7 +283,7 @@ def plot_two_spectra(
                 ax.plot([pos, pos], [line_ymin_avg, line_ymax_avg], color="black", linewidth=1.2)
 
                 ax.plot([pos, pos], [0, line_ymin_avg], color="red", linestyle="--", linewidth=0.8)
-                ax.set_ylim(0.1 * order_of_magnitude_avg, 2.1 * order_of_magnitude_avg)
+                ax.set_ylim(0.05 * order_of_magnitude_avg, 2.2 * order_of_magnitude_avg)
 
                 # Text über der Linie hinzufügen
                 rotation_angle = 45 if slanted else 90
@@ -295,7 +309,7 @@ def plot_two_spectra(
 
                 # Vertikale Linie zeichnen
                 ax.plot([pos, pos], [line_ymin_rms, line_ymax_rms], color="red", linestyle="--",linewidth=0.8)
-                ax.set_ylim(0.1* order_of_magnitude_rms, 1.3 * order_of_magnitude_rms)
+                ax.set_ylim(0.05 * order_of_magnitude_rms, 1.3 * order_of_magnitude_rms)
 
 
 
