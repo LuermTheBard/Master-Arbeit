@@ -257,12 +257,12 @@ def finalize_figure_ccfs(fig, axes, base_mjd, title, group_index, save_only, out
 
 
 
-def plot_all_1d_data_in_groups(galaxie_campaigns_dict, output_dir, save_only=False):
+def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_only=False):
     xlabel = 'timestamps [MJD]'
     ylabel = 'fluxes [ergs/s/cm2/A]'
     yerr_name = 'fluxerrs [ergs/s/cm2/A]'
 
-    save_folder = output_dir / "plot_1d_data"
+    save_folder = output_dir / "plot_1d_lightcurves"
     save_folder.mkdir(parents=True, exist_ok=True)
 
     for campaign, data_dict in galaxie_campaigns_dict.items():

@@ -14,7 +14,7 @@ from import_data.import_data import import_1d_correlation_data, load_dopplershif
 from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua, plot_fit_results, \
     plot_time_lags_from_toml
 from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_lightcurves_with_offset, \
-    plot_all_1d_data_in_groups
+    plot_all_1d_lightcurves_in_groups
 from plot_data.plot_fits_data import plot_avg_rms
 from settings import DEFAULT_OUTPUT_DIR
 
@@ -94,7 +94,7 @@ def plot_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
         output_dir.mkdir(parents=True)
 
     one_dim_lightcurve_data = import_1d_lightcurve_data()
-    plot_all_1d_data_in_groups(one_dim_lightcurve_data, output_dir)
+    plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir)
 
 
 @task
@@ -107,7 +107,7 @@ def save_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
         output_dir.mkdir(parents=True)
 
     one_dim_lightcurve_data = import_1d_lightcurve_data()
-    plot_all_1d_data_in_groups(one_dim_lightcurve_data, output_dir, save_only=True)
+    plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir, save_only=True)
 
 
 @task
