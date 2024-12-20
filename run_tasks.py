@@ -188,6 +188,24 @@ def plot_1d_corr_in_groups_for_line(line_name=None, output_dir=DEFAULT_OUTPUT_DI
 
 
 @task
+def save_1d_corr_in_groups_for_line(line_name=None, output_dir=DEFAULT_OUTPUT_DIR):
+    """
+    save all 1D correlations.
+    """
+
+    # Prüfen, ob line_name definiert ist
+    if not line_name:
+        raise ValueError("Please specify a line name in the following form: plot_line_1d_corr::line_name")
+
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir.mkdir(parents=True)
+
+    one_dim_lightcurve_data = import_1d_correlation_data()
+    plot_all_1d_ccfs_in_groups_for_line(one_dim_lightcurve_data, line_name=line_name, output_dir=output_dir, save_only=True)
+
+
+@task
 def plot_avg_rms_spec(file_name="avg_rms_spec", output_dir=DEFAULT_OUTPUT_DIR):
 
     avg_rms_spec_dir = output_dir / "avg_rms_spec"

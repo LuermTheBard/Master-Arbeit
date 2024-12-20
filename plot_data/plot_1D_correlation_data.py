@@ -223,7 +223,7 @@ def plot_combined(comparison_data, current_line_name, output_dir, save_only, sho
         show_average (bool): If True, only the average of the data points will be displayed.
     """
     num_campaigns = len(comparison_data)
-    fig_combined, axs_combined = plt.subplots(1, num_campaigns, figsize=(15, 6), sharey=True)
+    fig_combined, axs_combined = plt.subplots(1, num_campaigns, figsize=(6, 6), sharey=True)
     axs_combined = axs_combined if num_campaigns > 1 else [axs_combined]
 
     for i, (campaign, data_list) in enumerate(comparison_data):
@@ -472,7 +472,7 @@ def plot_all_1d_ccfs_in_groups_for_line(galaxie_campaigns_dict, line_name, outpu
     x_key = "time shift (tau)"
     y_key = line_name
 
-    save_folder = output_dir / "plot_1d_ccfs"
+    save_folder = output_dir / "plot_1d_ccfs" / line_name
     save_folder.mkdir(parents=True, exist_ok=True)
 
     for campaign, data_dict in galaxie_campaigns_dict.items():

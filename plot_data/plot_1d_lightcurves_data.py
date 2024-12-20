@@ -182,7 +182,7 @@ def finalize_figure_lightcurves(fig, axes, title, group_index, save_only, output
         plt.show()
 
 
-def check_for_empty_rows(axes, fig, x_label):
+def check_for_empty_rows(axes, fig, x_label, formating=True):
     base_mjd = 57581.66
     # Löschen leerer Reihen
     for row in range(4):
@@ -198,14 +198,21 @@ def check_for_empty_rows(axes, fig, x_label):
         for row in remaining_rows:
             for col in range(2):
                 if axes[row, col].has_data():  # Stelle sicher, dass die Achse existiert und Daten hat
-                    axes[row, col].xaxis.set_major_locator(MultipleLocator(4))
-                    axes[row, col].xaxis.set_major_formatter(FuncFormatter(format_relative_days))
+                    axes[row, col].xaxis.set_major_locator(MultipleLocator(2)) # Ticks festlegen
+
+                    if formating:
+                        axes[row, col].xaxis.set_major_formatter(FuncFormatter(format_relative_days))  # Formatierung
+                    else:
+                        axes[row, col].xaxis.set_major_formatter(
+                            plt.FuncFormatter(lambda x, pos: f"{x}"))  # Standard-Werte anzeigen
+
+                    axes[row, col].xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
 
                     if row == lowest_row:  # Nur in der untersten Reihe Beschriftungen und Ticks anzeigen
                         axes[row, col].tick_params(axis='x', which='both', direction='inout', labelbottom=True)
     len_remaining_rows = len(remaining_rows)
     text_heigth = 0.04 + (4 - len_remaining_rows) * 0.20
-    fig.text(0.95, text_heigth, f"Base: {base_mjd:.2f} MJD", ha='right', fontsize=10)
+    #fig.text(0.95, text_heigth, f"Base: {base_mjd:.2f} MJD", ha='right', fontsize=10)
     fig.text(0.5, text_heigth, x_label, ha='center', fontsize=12)
 
 
@@ -230,16 +237,19 @@ def configure_axis_ccfs(ax, row, col, ylabel, color, x_values, y_values, yerr_va
     if row < 3:
         ax.set_xticklabels([])
 
-    ax.xaxis.set_major_locator(MultipleLocator(4))
-    ax.xaxis.set_major_formatter(FuncFormatter(format_relative_days))
-    ax.yaxis.set_major_locator(MaxNLocator(nbins=10))
+    ax.yaxis.set_major_locator(MultipleLocator(0.1))
     ax.grid(True, linestyle='--', linewidth=0.5)
+
+    if row == 0:
+        ax_top = ax.secondary_xaxis('top')
+        ax_top.xaxis.set_major_locator(MultipleLocator(2))
+        ax_top.tick_params(axis='x')
 
 
 def finalize_figure_ccfs(fig, axes, title, group_index, save_only, output_dir):
     """Finalize figure layout and save or show."""
 
-    check_for_empty_rows(axes, fig, x_label='Time Lag')
+    check_for_empty_rows(axes, fig, x_label='Time Lag', formating=False)
 
     if title:
         fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
@@ -267,11 +277,11 @@ def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_o
     for campaign, data_dict in galaxie_campaigns_dict.items():
         # Plot for lines
         super_title = f"{campaign} Lines"
-        plot_1d_data_in_groups(data_dict["lines"], x_key, y_key, xlabel, ylabel, yerr_name, super_title, save_only, save_folder)
+        plot_1d_data_in_groups(data_dict["lines"], x_key, y_key, xlabel, ylabel, yerr_name=yerr_name, title=super_title, save_only=save_only, output_dir=save_folder)
 
         # Plot for continua (with custom color dictionary if needed)
         super_title = f"{campaign} Continua"
-        plot_1d_data_in_groups(data_dict["continua"], x_key, y_key, xlabel, ylabel, yerr_name, super_title, save_only, save_folder, color_dict=COLORCODE_CONTINUA_NORMALIZED)
+        plot_1d_data_in_groups(data_dict["continua"], x_key, y_key, xlabel, ylabel, yerr_name=yerr_name, title=super_title, save_only=save_only, output_dir=save_folder, color_dict=COLORCODE_CONTINUA_NORMALIZED)
 
 
 def plot_lightcurve(data, xlabel, ylabel, yerr_name, ax):
