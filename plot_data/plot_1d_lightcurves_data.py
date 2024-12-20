@@ -169,7 +169,7 @@ def configure_axis_lightcurves(ax, row, col, xlabel, ylabel, color, x_values, y_
 def finalize_figure_lightcurves(fig, axes, title, group_index, save_only, output_dir):
     """Finalize figure layout and save or show."""
 
-    check_for_empty_rows(axes, fig)
+    check_for_empty_rows(axes, fig, x_label='Relative Days')
 
     if title:
         fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
@@ -182,7 +182,7 @@ def finalize_figure_lightcurves(fig, axes, title, group_index, save_only, output
         plt.show()
 
 
-def check_for_empty_rows(axes, fig):
+def check_for_empty_rows(axes, fig, x_label):
     base_mjd = 57581.66
     # Löschen leerer Reihen
     for row in range(4):
@@ -206,7 +206,7 @@ def check_for_empty_rows(axes, fig):
     len_remaining_rows = len(remaining_rows)
     text_heigth = 0.04 + (4 - len_remaining_rows) * 0.20
     fig.text(0.95, text_heigth, f"Base: {base_mjd:.2f} MJD", ha='right', fontsize=10)
-    fig.text(0.5, text_heigth, 'Relative Days', ha='center', fontsize=12)
+    fig.text(0.5, text_heigth, x_label, ha='center', fontsize=12)
 
 
 def configure_axis_ccfs(ax, row, col, xlabel, ylabel, color, x_values, y_values, yerr_values, line_name):
