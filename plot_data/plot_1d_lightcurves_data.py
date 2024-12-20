@@ -60,67 +60,74 @@ def format_relative_days(mjd, pos):
     relative_day = mjd - base_mjd
     return f"{int(relative_day)}"  # Zeige nur relative Tage
 
-def plot_1d_lightcurves_in_groups(data, xlabel='timestamps [MJD]', ylabel='fluxes [ergs/s/cm2/A]',
-                                  yerr_name='fluxerrs [ergs/s/cm2/A]', title=None, save_only=False, output_dir=None,
-                                  color_dict=None):
+
+def plot_1d_data_in_groups(data, xlabel='X-axis', ylabel='Y-axis',
+                           yerr_name=None, title=None, save_only=False,
+                           output_dir=None, color_dict=None, rows=4, cols=2):
     """
-    Plot multiple 1D light curves in groups.
+    Plot multiple 1D data sets in groups.
 
     Parameters:
-        data (dict): Dictionary containing the data for the light curves.
+        data (dict): Dictionary containing the data for the plots.
         xlabel (str): Label for the x-axis.
         ylabel (str): Label for the y-axis.
-        yerr_name (str): Label for the error bars.
+        yerr_name (str): Optional name for the error bars.
         title (str): Title of the plot.
         save_only (bool): Whether to save the plots without displaying them.
         output_dir (str or Path): Directory to save the plots.
-        color_dict (dict): Optional dictionary with colors for each light curve.
+        color_dict (dict): Optional dictionary with colors for each data series.
+        rows (int): Number of rows in the subplot grid.
+        cols (int): Number of columns in the subplot grid.
     """
 
     # Main plotting loop
-    for current_data, group_index in prepare_data(data, xlabel, ylabel, yerr_name):
-        fig, axes = plt.subplots(4, 2, figsize=(8, 12), sharex=True, sharey=False)
+    for current_data, group_index in prepare_data(data, xlabel, ylabel, yerr_name, rows, cols):
+        fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=True, sharey=False)
         fig.subplots_adjust(hspace=0, wspace=0)
 
         for i, (line_name, line_data) in enumerate(current_data):
-            row, col = divmod(i, 2)
+            row, col = divmod(i, cols)
             ax = axes[row, col]
 
-            timestamps = np.array(line_data.get(xlabel, []))
-            fluxes = np.array(line_data.get(ylabel, []))
-            fluxerrs = np.array(line_data.get(yerr_name, []))
+            x_values = np.array(line_data.get(xlabel, []))
+            y_values = np.array(line_data.get(ylabel, []))
+            yerr_values = np.array(line_data.get(yerr_name, [])) if yerr_name else None
             color = color_dict.get(line_name, 'black') if color_dict else 'black'
 
-            configure_axis(ax, row, col, xlabel,
-                           color=color, timestamps=timestamps, fluxes=fluxes,
-                           fluxerrs=fluxerrs, line_name=line_name)
+            configure_axis(ax, row, col, xlabel, ylabel, color, x_values, y_values, yerr_values, line_name)
 
         finalize_figure(fig, axes, base_mjd=57581.66, title=title, group_index=group_index,
                         save_only=save_only, output_dir=output_dir)
 
 
-def prepare_data(data, xlabel, ylabel, yerr_name):
+def prepare_data(data, xlabel, ylabel, yerr_name, rows, cols):
     """Prepare data and ensure all groups are filled."""
     total_plots = len(data)
-    num_groups = (total_plots + 7) // 8
+    num_groups = (total_plots + (rows * cols) - 1) // (rows * cols)  # Calculate groups based on grid size
     data_items = list(data.items())
+
     for group_index in range(num_groups):
-        start_index = group_index * 8
-        end_index = min(start_index + 8, total_plots)
+        start_index = group_index * (rows * cols)
+        end_index = min(start_index + (rows * cols), total_plots)
         current_data = data_items[start_index:end_index]
 
         # Fill missing plots with empty placeholders
-        while len(current_data) < 8:
+        while len(current_data) < (rows * cols):
             current_data.append((f'Empty {len(current_data) + 1}',
-                                 {xlabel: np.array([]), ylabel: np.array([]), yerr_name: np.array([])}))
+                                 {xlabel: np.array([]), ylabel: np.array([]),
+                                  yerr_name: np.array([]) if yerr_name else np.array([])}))
         yield current_data, group_index
 
 
-def configure_axis(ax, row, col, ylabel, color, timestamps, fluxes, fluxerrs, line_name):
+def configure_axis(ax, row, col, xlabel, ylabel, color, x_values, y_values, yerr_values, line_name):
     """Configure individual subplot axes."""
-    if timestamps.size > 0 and fluxes.size > 0:
-        ax.errorbar(timestamps, fluxes, yerr=fluxerrs,
-                    fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color)
+    if x_values.size > 0 and y_values.size > 0:
+        if yerr_values is not None:
+            ax.errorbar(x_values, y_values, yerr=yerr_values,
+                        fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color)
+        else:
+            ax.plot(x_values, y_values, label=f'{line_name}', color=color)
+
         ax.legend(fontsize=8, loc='upper right')
 
     if col == 0:
@@ -166,20 +173,22 @@ def finalize_figure(fig, axes, base_mjd, title, group_index, save_only, output_d
         plt.show()
 
 
-def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_only=False):
+def plot_all_1d_data_in_groups(galaxie_campaigns_dict, output_dir, save_only=False):
     xlabel = 'timestamps [MJD]'
     ylabel = 'fluxes [ergs/s/cm2/A]'
     yerr_name = 'fluxerrs [ergs/s/cm2/A]'
 
-    save_folder = output_dir / "plot_1d_lightcurves"
+    save_folder = output_dir / "plot_1d_data"
     save_folder.mkdir(parents=True, exist_ok=True)
 
-    for campaign, light_curve_data in galaxie_campaigns_dict.items():
+    for campaign, data_dict in galaxie_campaigns_dict.items():
+        # Plot for lines
         super_title = f"{campaign} Lines"
-        plot_1d_lightcurves_in_groups(light_curve_data["lines"], xlabel, ylabel, yerr_name, super_title, save_only, save_folder)
+        plot_1d_data_in_groups(data_dict["lines"], xlabel, ylabel, yerr_name, super_title, save_only, save_folder)
 
+        # Plot for continua (with custom color dictionary if needed)
         super_title = f"{campaign} Continua"
-        plot_1d_lightcurves_in_groups(light_curve_data["continua"], xlabel, ylabel, yerr_name, super_title, save_only, save_folder, color_dict=COLORCODE_CONTINUA_NORMALIZED)
+        plot_1d_data_in_groups(data_dict["continua"], xlabel, ylabel, yerr_name, super_title, save_only, save_folder, color_dict=COLORCODE_CONTINUA_NORMALIZED)
 
 
 def plot_lightcurve(data, xlabel, ylabel, yerr_name, ax):
