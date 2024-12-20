@@ -12,7 +12,7 @@ from handle_data.dopplershift import calc_broad_lines_doppler_shift_with_error
 from import_data.import_data import import_1d_correlation_data, load_dopplershift_data_from_toml, \
     import_1d_lightcurve_data, import_fits_data
 from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua, plot_fit_results, \
-    plot_time_lags_from_toml
+    plot_time_lags_from_toml, plot_all_1d_ccfs_in_groups_for_line
 from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_lightcurves_with_offset, \
     plot_all_1d_lightcurves_in_groups
 from plot_data.plot_fits_data import plot_avg_rms
@@ -167,6 +167,24 @@ def plot_line_1d_corr(line_name=None):
     one_dim_correlation_data = import_1d_correlation_data()
     one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     process_1d_correlations(one_dim_correlation_plot_data, line_name=line_name)
+
+
+@task
+def plot_1d_corr_in_groups_for_line(line_name=None, output_dir=DEFAULT_OUTPUT_DIR):
+    """
+    save all 1D correlations.
+    """
+
+    # Prüfen, ob line_name definiert ist
+    if not line_name:
+        raise ValueError("Please specify a line name in the following form: plot_line_1d_corr::line_name")
+
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir.mkdir(parents=True)
+
+    one_dim_lightcurve_data = import_1d_correlation_data()
+    plot_all_1d_ccfs_in_groups_for_line(one_dim_lightcurve_data, line_name=line_name, output_dir=output_dir)
 
 
 @task

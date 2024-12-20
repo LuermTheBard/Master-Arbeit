@@ -5,6 +5,7 @@ import numpy as np
 import toml
 from matplotlib import pyplot as plt
 
+from plot_data.plot_1d_lightcurves_data import plot_1d_data_in_groups
 from settings import DEFAULT_OUTPUT_DIR
 
 matplotlib.use("Qt5Agg")
@@ -461,4 +462,20 @@ def plot_time_lags_from_toml(file_path):
 
     # Plot anzeigen
     plt.show()
+
+
+def plot_all_1d_ccfs_in_groups_for_line(galaxie_campaigns_dict, line_name, output_dir, save_only=False):
+
+    xlabel = "time shift (tau)"
+    ylabel = "Correlation Coefficient"
+
+    x_key = "time shift (tau)"
+    y_key = line_name
+
+    save_folder = output_dir / "plot_1d_ccfs"
+    save_folder.mkdir(parents=True, exist_ok=True)
+
+    for campaign, data_dict in galaxie_campaigns_dict.items():
+        plot_1d_data_in_groups(data_dict, x_key, y_key, xlabel, ylabel, title=f"CCFs of {line_name}", save_only=save_only, output_dir=save_folder, shared_y=True, data_type="ccfs")
+
 

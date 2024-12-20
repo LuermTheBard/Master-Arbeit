@@ -64,13 +64,13 @@ def format_relative_days(mjd, pos):
 def get_type_methodes(data_type):
     if data_type == 'lightcurves':
         return configure_axis_lightcurves, finalize_figure_lightcurves
-    elif data_type == 'CCFs':
+    elif data_type == 'ccfs':
         return configure_axis_ccfs, finalize_figure_ccfs
     else:
-        raise ValueError(f"Wrong datatype. Expected 'lightcurves' or 'CCFs', got '{data_type}'.")
+        raise ValueError(f"Wrong datatype. Expected 'lightcurves' or 'ccfs', got '{data_type}'.")
 
 
-def plot_1d_data_in_groups(data, xlabel='X-axis', ylabel='Y-axis',
+def plot_1d_data_in_groups(data, x_key, y_key, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
                            yerr_name=None, title=None, save_only=False,
                            output_dir=None, color_dict=None, rows=4, cols=2, data_type='lightcurves'):
     """
@@ -93,21 +93,21 @@ def plot_1d_data_in_groups(data, xlabel='X-axis', ylabel='Y-axis',
     configure_axis, finalize_figure = get_type_methodes(data_type)
 
     # Main plotting loop
-    for current_data, group_index in prepare_data(data, xlabel, ylabel, yerr_name, rows, cols):
-        fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=True, sharey=False)
+    for current_data, group_index in prepare_data(data, x_key, y_key, yerr_name, rows, cols):
+        fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=True, sharey=shared_y)
         fig.subplots_adjust(hspace=0, wspace=0)
 
         for i, (line_name, line_data) in enumerate(current_data):
             row, col = divmod(i, cols)
             ax = axes[row, col]
 
-            x_values = np.array(line_data.get(xlabel, []))
-            y_values = np.array(line_data.get(ylabel, []))
+            x_values = np.array(line_data.get(x_key, []))
+            y_values = np.array(line_data.get(y_key, []))
             yerr_values = np.array(line_data.get(yerr_name, [])) if yerr_name else None
             color = color_dict.get(line_name, 'black') if color_dict else 'black'
 
             # Call the correct configure_axis based on data_type
-            configure_axis(ax, row, col, xlabel, ylabel, color, x_values, y_values, yerr_values, line_name)
+            configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name)
 
         # Call the correct finalize_figure based on data_type
         finalize_figure(fig, axes, title=title, group_index=group_index,
@@ -133,7 +133,7 @@ def prepare_data(data, xlabel, ylabel, yerr_name, rows, cols):
         yield current_data, group_index
 
 
-def configure_axis_lightcurves(ax, row, col, xlabel, ylabel, color, x_values, y_values, yerr_values, line_name):
+def configure_axis_lightcurves(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name):
     """Configure individual subplot axes."""
     if x_values.size > 0 and y_values.size > 0:
         if yerr_values is not None:
@@ -209,7 +209,7 @@ def check_for_empty_rows(axes, fig, x_label):
     fig.text(0.5, text_heigth, x_label, ha='center', fontsize=12)
 
 
-def configure_axis_ccfs(ax, row, col, xlabel, ylabel, color, x_values, y_values, yerr_values, line_name):
+def configure_axis_ccfs(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name):
     """Configure individual subplot axes."""
     if x_values.size > 0 and y_values.size > 0:
         if yerr_values is not None:
@@ -231,19 +231,15 @@ def configure_axis_ccfs(ax, row, col, xlabel, ylabel, color, x_values, y_values,
         ax.set_xticklabels([])
 
     ax.xaxis.set_major_locator(MultipleLocator(4))
-    ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+    ax.xaxis.set_major_formatter(FuncFormatter(format_relative_days))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=10))
     ax.grid(True, linestyle='--', linewidth=0.5)
 
 
-
-def finalize_figure_ccfs(fig, axes, base_mjd, title, group_index, save_only, output_dir):
+def finalize_figure_ccfs(fig, axes, title, group_index, save_only, output_dir):
     """Finalize figure layout and save or show."""
-    for row in range(4):
-        if all(not axes[row, col].has_data() for col in range(2)):
-            for col in range(2):
-                fig.delaxes(axes[row, col])
 
-    fig.text(0.5, 0.04, 'Time Lag', ha='center', fontsize=12)
+    check_for_empty_rows(axes, fig, x_label='Time Lag')
 
     if title:
         fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
@@ -262,17 +258,20 @@ def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_o
     ylabel = 'fluxes [ergs/s/cm2/A]'
     yerr_name = 'fluxerrs [ergs/s/cm2/A]'
 
+    x_key = xlabel
+    y_key = ylabel
+
     save_folder = output_dir / "plot_1d_lightcurves"
     save_folder.mkdir(parents=True, exist_ok=True)
 
     for campaign, data_dict in galaxie_campaigns_dict.items():
         # Plot for lines
         super_title = f"{campaign} Lines"
-        plot_1d_data_in_groups(data_dict["lines"], xlabel, ylabel, yerr_name, super_title, save_only, save_folder)
+        plot_1d_data_in_groups(data_dict["lines"], x_key, y_key, xlabel, ylabel, yerr_name, super_title, save_only, save_folder)
 
         # Plot for continua (with custom color dictionary if needed)
         super_title = f"{campaign} Continua"
-        plot_1d_data_in_groups(data_dict["continua"], xlabel, ylabel, yerr_name, super_title, save_only, save_folder, color_dict=COLORCODE_CONTINUA_NORMALIZED)
+        plot_1d_data_in_groups(data_dict["continua"], x_key, y_key, xlabel, ylabel, yerr_name, super_title, save_only, save_folder, color_dict=COLORCODE_CONTINUA_NORMALIZED)
 
 
 def plot_lightcurve(data, xlabel, ylabel, yerr_name, ax):
