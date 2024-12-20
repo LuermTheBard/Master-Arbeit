@@ -61,9 +61,18 @@ def format_relative_days(mjd, pos):
     return f"{int(relative_day)}"  # Zeige nur relative Tage
 
 
+def get_type_methodes(data_type):
+    if data_type == 'lightcurves':
+        return configure_axis_lightcurves, finalize_figure_lightcurves
+    elif data_type == 'CCFs':
+        return configure_axis_ccfs, finalize_figure_ccfs
+    else:
+        raise ValueError(f"Wrong datatype. Expected 'lightcurves' or 'CCFs', got '{data_type}'.")
+
+
 def plot_1d_data_in_groups(data, xlabel='X-axis', ylabel='Y-axis',
                            yerr_name=None, title=None, save_only=False,
-                           output_dir=None, color_dict=None, rows=4, cols=2):
+                           output_dir=None, color_dict=None, rows=4, cols=2, data_type='lightcurves'):
     """
     Plot multiple 1D data sets in groups.
 
@@ -80,6 +89,9 @@ def plot_1d_data_in_groups(data, xlabel='X-axis', ylabel='Y-axis',
         cols (int): Number of columns in the subplot grid.
     """
 
+    # Get the appropriate methods based on the data type
+    configure_axis, finalize_figure = get_type_methodes(data_type)
+
     # Main plotting loop
     for current_data, group_index in prepare_data(data, xlabel, ylabel, yerr_name, rows, cols):
         fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=True, sharey=False)
@@ -94,9 +106,11 @@ def plot_1d_data_in_groups(data, xlabel='X-axis', ylabel='Y-axis',
             yerr_values = np.array(line_data.get(yerr_name, [])) if yerr_name else None
             color = color_dict.get(line_name, 'black') if color_dict else 'black'
 
+            # Call the correct configure_axis based on data_type
             configure_axis(ax, row, col, xlabel, ylabel, color, x_values, y_values, yerr_values, line_name)
 
-        finalize_figure(fig, axes, base_mjd=57581.66, title=title, group_index=group_index,
+        # Call the correct finalize_figure based on data_type
+        finalize_figure(fig, axes, title=title, group_index=group_index,
                         save_only=save_only, output_dir=output_dir)
 
 
@@ -119,7 +133,7 @@ def prepare_data(data, xlabel, ylabel, yerr_name, rows, cols):
         yield current_data, group_index
 
 
-def configure_axis(ax, row, col, xlabel, ylabel, color, x_values, y_values, yerr_values, line_name):
+def configure_axis_lightcurves(ax, row, col, xlabel, ylabel, color, x_values, y_values, yerr_values, line_name):
     """Configure individual subplot axes."""
     if x_values.size > 0 and y_values.size > 0:
         if yerr_values is not None:
@@ -152,15 +166,10 @@ def configure_axis(ax, row, col, xlabel, ylabel, color, x_values, y_values, yerr
         ax_top.tick_params(axis='x', rotation=45, labelsize=8)
 
 
-def finalize_figure(fig, axes, base_mjd, title, group_index, save_only, output_dir):
+def finalize_figure_lightcurves(fig, axes, title, group_index, save_only, output_dir):
     """Finalize figure layout and save or show."""
-    for row in range(4):
-        if all(not axes[row, col].has_data() for col in range(2)):
-            for col in range(2):
-                fig.delaxes(axes[row, col])
 
-    fig.text(0.95, 0.04, f"Base: {base_mjd:.2f} MJD", ha='right', fontsize=10)
-    fig.text(0.5, 0.04, 'Relative Days', ha='center', fontsize=12)
+    check_for_empty_rows(axes, fig)
 
     if title:
         fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
@@ -171,6 +180,81 @@ def finalize_figure(fig, axes, base_mjd, title, group_index, save_only, output_d
         plt.close(fig)
     else:
         plt.show()
+
+
+def check_for_empty_rows(axes, fig):
+    base_mjd = 57581.66
+    # Löschen leerer Reihen
+    for row in range(4):
+        if all(not axes[row, col].has_data() for col in range(2)):
+            for col in range(2):
+                fig.delaxes(axes[row, col])
+    # Ermittlung der untersten verbleibenden Reihe
+    remaining_rows = [row for row in range(4) if any(axes[row, col].has_data() for col in range(2))]
+    if remaining_rows:  # Überprüfen, ob noch Reihen existieren
+        lowest_row = max(remaining_rows)
+
+        # X-Achsenbeschriftungen und Ticks setzen
+        for row in remaining_rows:
+            for col in range(2):
+                if axes[row, col].has_data():  # Stelle sicher, dass die Achse existiert und Daten hat
+                    axes[row, col].xaxis.set_major_locator(MultipleLocator(4))
+                    axes[row, col].xaxis.set_major_formatter(FuncFormatter(format_relative_days))
+
+                    if row == lowest_row:  # Nur in der untersten Reihe Beschriftungen und Ticks anzeigen
+                        axes[row, col].tick_params(axis='x', which='both', direction='inout', labelbottom=True)
+    len_remaining_rows = len(remaining_rows)
+    text_heigth = 0.04 + (4 - len_remaining_rows) * 0.20
+    fig.text(0.95, text_heigth, f"Base: {base_mjd:.2f} MJD", ha='right', fontsize=10)
+    fig.text(0.5, text_heigth, 'Relative Days', ha='center', fontsize=12)
+
+
+def configure_axis_ccfs(ax, row, col, xlabel, ylabel, color, x_values, y_values, yerr_values, line_name):
+    """Configure individual subplot axes."""
+    if x_values.size > 0 and y_values.size > 0:
+        if yerr_values is not None:
+            ax.errorbar(x_values, y_values, yerr=yerr_values,
+                        fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color)
+        else:
+            ax.plot(x_values, y_values, label=f'{line_name}', color=color)
+
+        ax.legend(fontsize=8, loc='upper right')
+
+    if col == 0:
+        ax.set_ylabel(ylabel)
+    else:
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position("right")
+        ax.set_ylabel(ylabel)
+
+    if row < 3:
+        ax.set_xticklabels([])
+
+    ax.xaxis.set_major_locator(MultipleLocator(4))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+    ax.grid(True, linestyle='--', linewidth=0.5)
+
+
+
+def finalize_figure_ccfs(fig, axes, base_mjd, title, group_index, save_only, output_dir):
+    """Finalize figure layout and save or show."""
+    for row in range(4):
+        if all(not axes[row, col].has_data() for col in range(2)):
+            for col in range(2):
+                fig.delaxes(axes[row, col])
+
+    fig.text(0.5, 0.04, 'Time Lag', ha='center', fontsize=12)
+
+    if title:
+        fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
+
+    if save_only and output_dir:
+        save_path = output_dir / f"{title.replace(' ', '_')}_group_{group_index + 1}.pdf"
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
+    else:
+        plt.show()
+
 
 
 def plot_all_1d_data_in_groups(galaxie_campaigns_dict, output_dir, save_only=False):
