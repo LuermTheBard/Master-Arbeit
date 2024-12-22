@@ -46,7 +46,7 @@ def format_month_day(mjd, pos):
     return date.strftime('%b %d')
 
 
-def format_relative_days(mjd, pos):
+def format_relative_days(mjd):
     """
     Formatter für die X-Achse, der die relativen Tage (gegenüber einem Basismjd) anzeigt.
 
@@ -64,7 +64,7 @@ def format_relative_days(mjd, pos):
     """
     base_mjd = 57581.66  # Startwert (erster MJD)
     relative_day = mjd - base_mjd
-    return f"{int(relative_day)}"
+    return relative_day
 
 
 # -----------------------------------------------------------------------------
@@ -106,10 +106,7 @@ def check_for_empty_rows(axes, fig, x_label, formating=True):
                 if axes[row, col].has_data():  # Stelle sicher, dass die Achse existiert und Daten hat
                     axes[row, col].xaxis.set_major_locator(MultipleLocator(2))  # Ticks festlegen
 
-                    if formating:
-                        axes[row, col].xaxis.set_major_formatter(FuncFormatter(format_relative_days))
-                    else:
-                        axes[row, col].xaxis.set_major_formatter(
+                    axes[row, col].xaxis.set_major_formatter(
                             plt.FuncFormatter(lambda x, pos: f"{x}")
                         )
 
@@ -312,7 +309,7 @@ def configure_axis_lightcurves(ax, row, col, ylabel, color, x_values, y_values, 
     """
     if x_values.size > 0 and y_values.size > 0:
         if yerr_values is not None:
-            ax.errorbar(x_values, y_values, yerr=yerr_values,
+            ax.errorbar(format_relative_days(x_values), y_values, yerr=yerr_values,
                         fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color)
         else:
             ax.plot(x_values, y_values, label=f'{line_name}', color=color)
@@ -330,7 +327,6 @@ def configure_axis_lightcurves(ax, row, col, ylabel, color, x_values, y_values, 
         ax.set_xticklabels([])
 
     ax.xaxis.set_major_locator(MultipleLocator(4))
-    ax.xaxis.set_major_formatter(FuncFormatter(format_relative_days))
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
     ax.grid(True, linestyle='--', linewidth=0.5)
 
