@@ -71,7 +71,7 @@ def format_relative_days(mjd):
 # FORMAT- & LAYOUT-HELFERFUNKTIONEN
 # -----------------------------------------------------------------------------
 
-def check_for_empty_rows(axes, fig, x_label, formating=True):
+def check_for_empty_rows(axes, fig, x_label):
     """
     Prüft, ob in der Figure leere Subplot-Zeilen existieren, und entfernt diese gegebenenfalls.
     Außerdem wird die X-Achsenbeschriftung und -Formatierung für die verbleibenden Reihen gesetzt.
@@ -176,32 +176,83 @@ def prepare_data(data, xlabel, ylabel, yerr_name, rows, cols):
 # DATENTYP-SPEZIFISCHE FUNKTIONSAUSWAHL
 # -----------------------------------------------------------------------------
 
-def get_type_methodes(data_type):
+
+def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name, data_type):
     """
-    Gibt passende Funktionen zur Achsenkonfiguration und zur Finalisierung der Figure
-    abhängig vom übergebenen Datentyp (z.B. 'lightcurves' oder 'ccfs') zurück.
+    Konfiguriert die Achse basierend auf dem Datentyp.
 
     Parameter:
     -----------
+    ax : matplotlib.axes.Axes
+        Die jeweilige Achse, auf der geplottet wird.
+    row : int
+        Zeilenindex des Subplots.
+    col : int
+        Spaltenindex des Subplots.
+    ylabel : str
+        Beschriftung der Y-Achse.
+    color : str
+        Linienfarbe.
+    x_values : np.ndarray
+        X-Daten für den Plot.
+    y_values : np.ndarray
+        Y-Daten für den Plot.
+    yerr_values : np.ndarray or None
+        Fehlerbalkendaten, falls vorhanden.
+    line_name : str
+        Name / Label für die Datenlinie.
     data_type : str
-        Erwartet entweder 'lightcurves' oder 'ccfs'.
+        Typ der Daten, entweder 'lightcurves' oder 'ccfs'.
 
     Returns:
     -----------
-    tuple
-        Ein 2-Tupel mit (configure_axis_function, finalize_figure_function).
-
-    Raises:
-    -----------
-    ValueError
-        Falls ein unbekannter Datentyp übergeben wird.
+    None
     """
-    if data_type == 'lightcurves':
-        return configure_axis_lightcurves, finalize_figure_lightcurves
-    elif data_type == 'ccfs':
-        return configure_axis_ccfs, finalize_figure_ccfs
+    if x_values.size > 0 and y_values.size > 0:
+        if yerr_values is not None:
+            ax.errorbar(
+                x_values if data_type == 'ccfs' else format_relative_days(x_values),
+                y_values,
+                yerr=yerr_values,
+                fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color
+            )
+        else:
+            ax.plot(
+                x_values if data_type == 'ccfs' else format_relative_days(x_values),
+                y_values, label=f'{line_name}', color=color
+            )
+
+        ax.legend(fontsize=8, loc='upper right')
+
+    if col == 0:
+        ax.set_ylabel(ylabel)
     else:
-        raise ValueError(f"Wrong datatype. Expected 'lightcurves' or 'ccfs', got '{data_type}'.")
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position("right")
+        ax.set_ylabel(ylabel)
+
+    if row < 3:
+        ax.set_xticklabels([])
+
+    if data_type == 'lightcurves':
+        ax.xaxis.set_major_locator(MultipleLocator(4))
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+        ax.grid(True, linestyle='--', linewidth=0.5)
+
+        if row == 0:
+            ax_top = ax.secondary_xaxis('top')
+            ax_top.xaxis.set_major_locator(MultipleLocator(4))
+            ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
+            ax_top.tick_params(axis='x', rotation=45, labelsize=8)
+
+    elif data_type == 'ccfs':
+        ax.yaxis.set_major_locator(MultipleLocator(0.1))
+        ax.grid(True, linestyle='--', linewidth=0.5)
+
+        if row == 0:
+            ax_top = ax.secondary_xaxis('top')
+            ax_top.xaxis.set_major_locator(MultipleLocator(2))
+            ax_top.tick_params(axis='x')
 
 
 # -----------------------------------------------------------------------------
@@ -249,8 +300,6 @@ def plot_1d_data_in_groups(data, x_key, y_key, xlabel='X-axis', ylabel='Y-axis',
     -----------
     None
     """
-    # Rufe die passenden Methoden für den gewählten Datentyp ab
-    configure_axis, finalize_figure = get_type_methodes(data_type)
 
     # Haupt-Schleife zur Erstellung der Subplots in Gruppen
     for current_data, group_index in prepare_data(data, x_key, y_key, yerr_name, rows, cols):
@@ -267,79 +316,16 @@ def plot_1d_data_in_groups(data, x_key, y_key, xlabel='X-axis', ylabel='Y-axis',
             color = color_dict.get(line_name, 'black') if color_dict else 'black'
 
             # Aufruf der Konfigurationsmethode (abhängig vom Datentyp)
-            configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name)
+            configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name, data_type)
 
         # Aufruf der Abschlussmethode (abhängig vom Datentyp)
-        finalize_figure(fig, axes, title=title, group_index=group_index,
+        finalize_figure(fig, axes, x_label=xlabel, title=title, group_index=group_index,
                         save_only=save_only, output_dir=output_dir)
 
 
-# -----------------------------------------------------------------------------
-# LIGHTCURVE-SPEZIFISCHE FUNKTIONEN
-# -----------------------------------------------------------------------------
-
-def configure_axis_lightcurves(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name):
+def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_label):
     """
-    Konfiguriert die Achse für 'lightcurves'-Daten.
-
-    Parameter:
-    -----------
-    ax : matplotlib.axes.Axes
-        Die jeweilige Achse, auf der geplottet wird.
-    row : int
-        Zeilenindex des Subplots.
-    col : int
-        Spaltenindex des Subplots.
-    ylabel : str
-        Beschriftung der Y-Achse.
-    color : str
-        Linienfarbe.
-    x_values : np.ndarray
-        X-Daten für den Plot.
-    y_values : np.ndarray
-        Y-Daten für den Plot.
-    yerr_values : np.ndarray or None
-        Fehlerbalkendaten, falls vorhanden.
-    line_name : str
-        Name / Label für die Datenlinie.
-
-    Returns:
-    -----------
-    None
-    """
-    if x_values.size > 0 and y_values.size > 0:
-        if yerr_values is not None:
-            ax.errorbar(format_relative_days(x_values), y_values, yerr=yerr_values,
-                        fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color)
-        else:
-            ax.plot(x_values, y_values, label=f'{line_name}', color=color)
-
-        ax.legend(fontsize=8, loc='upper right')
-
-    if col == 0:
-        ax.set_ylabel(ylabel)
-    else:
-        ax.yaxis.tick_right()
-        ax.yaxis.set_label_position("right")
-        ax.set_ylabel(ylabel)
-
-    if row < 3:
-        ax.set_xticklabels([])
-
-    ax.xaxis.set_major_locator(MultipleLocator(4))
-    ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-    ax.grid(True, linestyle='--', linewidth=0.5)
-
-    if row == 0:
-        ax_top = ax.secondary_xaxis('top')
-        ax_top.xaxis.set_major_locator(MultipleLocator(4))
-        ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
-        ax_top.tick_params(axis='x', rotation=45, labelsize=8)
-
-
-def finalize_figure_lightcurves(fig, axes, title, group_index, save_only, output_dir):
-    """
-    Finalisiert das Layout der Figure für 'lightcurves'-Plots und speichert bzw. zeigt sie an.
+    Finalisiert das Layout der Figure und speichert bzw. zeigt sie an.
 
     Parameter:
     -----------
@@ -355,109 +341,16 @@ def finalize_figure_lightcurves(fig, axes, title, group_index, save_only, output
         Ob die Abbildung nur gespeichert werden soll (ohne plt.show()).
     output_dir : str or Path
         Pfad zum Speicherort.
+    x_label : str
+        Beschriftung für die X-Achse.
+    formating : bool, optional
+        Ob spezielles Formatieren aktiviert werden soll (Standard: True).
 
     Returns:
     -----------
     None
     """
-    check_for_empty_rows(axes, fig, x_label='Relative Days')
-
-    if title:
-        fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
-
-    if save_only and output_dir:
-        save_path = output_dir / f"{title.replace(' ', '_')}_group_{group_index + 1}.pdf"
-        plt.savefig(save_path, bbox_inches='tight')
-        plt.close(fig)
-    else:
-        plt.show()
-
-
-# -----------------------------------------------------------------------------
-# CCF-SPEZIFISCHE FUNKTIONEN
-# -----------------------------------------------------------------------------
-
-def configure_axis_ccfs(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name):
-    """
-    Konfiguriert die Achse für 'ccfs'-Daten.
-
-    Parameter:
-    -----------
-    ax : matplotlib.axes.Axes
-        Die jeweilige Achse, auf der geplottet wird.
-    row : int
-        Zeilenindex des Subplots.
-    col : int
-        Spaltenindex des Subplots.
-    ylabel : str
-        Beschriftung der Y-Achse.
-    color : str
-        Linienfarbe.
-    x_values : np.ndarray
-        X-Daten für den Plot.
-    y_values : np.ndarray
-        Y-Daten für den Plot.
-    yerr_values : np.ndarray or None
-        Fehlerbalkendaten, falls vorhanden.
-    line_name : str
-        Name / Label für die Datenlinie.
-
-    Returns:
-    -----------
-    None
-    """
-    if x_values.size > 0 and y_values.size > 0:
-        if yerr_values is not None:
-            ax.errorbar(x_values, y_values, yerr=yerr_values,
-                        fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color)
-        else:
-            ax.plot(x_values, y_values, label=f'{line_name}', color=color)
-
-        ax.legend(fontsize=8, loc='upper right')
-
-    if col == 0:
-        ax.set_ylabel(ylabel)
-    else:
-        ax.yaxis.tick_right()
-        ax.yaxis.set_label_position("right")
-        ax.set_ylabel(ylabel)
-
-    if row < 3:
-        ax.set_xticklabels([])
-
-    ax.yaxis.set_major_locator(MultipleLocator(0.1))
-    ax.grid(True, linestyle='--', linewidth=0.5)
-
-    if row == 0:
-        ax_top = ax.secondary_xaxis('top')
-        ax_top.xaxis.set_major_locator(MultipleLocator(2))
-        ax_top.tick_params(axis='x')
-
-
-def finalize_figure_ccfs(fig, axes, title, group_index, save_only, output_dir):
-    """
-    Finalisiert das Layout der Figure für 'ccfs'-Plots und speichert bzw. zeigt sie an.
-
-    Parameter:
-    -----------
-    fig : matplotlib.figure.Figure
-        Die Figure, die finalisiert werden soll.
-    axes : numpy.ndarray
-        Array von Matplotlib-Achsenobjekten.
-    title : str
-        Titel der Abbildung.
-    group_index : int
-        Index der aktuellen Gruppe (0-basiert).
-    save_only : bool
-        Ob die Abbildung nur gespeichert werden soll (ohne plt.show()).
-    output_dir : str or Path
-        Pfad zum Speicherort.
-
-    Returns:
-    -----------
-    None
-    """
-    check_for_empty_rows(axes, fig, x_label='Time Lag', formating=False)
+    check_for_empty_rows(axes, fig, x_label=x_label)
 
     if title:
         fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
