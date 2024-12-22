@@ -3,8 +3,6 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-
 All_LINES = {
     "Hα": {"position": 6562.82, "offset_avg": 0.01, "slanted_avg": True},
     "Hβ": {"position": 4861.33, "offset_avg": 0.1, "slanted_avg": True},
@@ -12,13 +10,11 @@ All_LINES = {
     "Hδ": {"position": 4101.74, "offset_avg": 0.1, "slanted_avg": True},
     "Hε": {"position": 3970.08, "offset_avg": 0.1, "slanted_avg": True},
     "H8": {"position": 3889.06, "offset_avg": 0.1, "slanted_avg": True},
-    #"H9": {"position": 3835.39, "offset_avg": 0.1, "slanted_avg": False},
-
+    # "H9": {"position": 3835.39, "offset_avg": 0.1, "slanted_avg": False},
 
     "[Ne V] 3345": {"position": 3345.82, "offset_avg": 0.01, "slanted_avg": False},
     "[Ne V] 3425": {"position": 3425.88, "offset_avg": 0.01, "slanted_avg": False},
     "[Ne III] 3868": {"position": 3868.76, "offset_avg": 0.1, "slanted_avg": True},
-
 
     "He I 3487": {"position": 3487.72, "offset_avg": 0.1, "slanted_avg": True},
     "He I 4471": {"position": 4471.48, "offset_avg": 0.1, "slanted_avg": False},
@@ -34,14 +30,13 @@ All_LINES = {
     "[O III] 4958": {"position": 4958.91, "offset_avg": 0.1, "slanted_avg": False},
     "[O III] 5006": {"position": 5006.84, "offset_avg": 0.1, "slanted_avg": True},
 
-
-    #"Fe II 4489": {"position": 4489.18, "offset_avg": 0.3, "slanted_avg": True},
-    #"Fe II 4491": {"position": 4491.41, "offset_avg": 0.2, "slanted_avg": True},
-    #"Fe II 4522": {"position": 4522.63, "offset_avg": 0.1, "slanted_avg": True},
-    #"Fe II 4555": {"position": 4555.89, "offset_avg": 0.1, "slanted_avg": True},
-    #"Fe II 4582": {"position": 4582.84, "offset_avg": 0.2, "slanted_avg": True},
-    #"Fe II 4583": {"position": 4583.83, "offset_avg": 0.1, "slanted_avg": True},
-    #"Fe II 4629": {"position": 4629.33, "offset_avg": 0.1, "slanted_avg": True},
+    # "Fe II 4489": {"position": 4489.18, "offset_avg": 0.3, "slanted_avg": True},
+    # "Fe II 4491": {"position": 4491.41, "offset_avg": 0.2, "slanted_avg": True},
+    # "Fe II 4522": {"position": 4522.63, "offset_avg": 0.1, "slanted_avg": True},
+    # "Fe II 4555": {"position": 4555.89, "offset_avg": 0.1, "slanted_avg": True},
+    # "Fe II 4582": {"position": 4582.84, "offset_avg": 0.2, "slanted_avg": True},
+    # "Fe II 4583": {"position": 4583.83, "offset_avg": 0.1, "slanted_avg": True},
+    # "Fe II 4629": {"position": 4629.33, "offset_avg": 0.1, "slanted_avg": True},
 
     "Fe II 5169": {"position": 5169.03, "offset_avg": 0.3, "slanted_avg": True},
     "Fe II 5197": {"position": 5197.58, "offset_avg": 0.2, "slanted_avg": True},
@@ -70,27 +65,25 @@ All_LINES = {
     "Ca II 8662": {"position": 8662.14, "offset_avg": 0.1, "slanted_avg": True},
 }
 
-All_LINE_GROUPS= {
+All_LINE_GROUPS = {
     "Fe II": {"position": [4489,
                            4629.33],
               "offset": 0.2},
 
     "Balmer": {"position": [3683.83,
-                       3691.55,
-                       3697.15,
-                       3703.85,
-                       3711.97,
-                       3721.94,
-                       3734.36,
-                       3750.15,
-                       3770.6,
-                       3797.90,
-                       3835.39],
-          "offset": 0.1},
+                            3691.55,
+                            3697.15,
+                            3703.85,
+                            3711.97,
+                            3721.94,
+                            3734.36,
+                            3750.15,
+                            3770.6,
+                            3797.90,
+                            3835.39],
+               "offset": 0.1},
 
 }
-
-
 
 
 def validate_fits_data(fits_data):
@@ -180,7 +173,8 @@ def plot_avg_rms(fits_data, save_path=None, log_scale=False):
 
 
 def plot_two_spectra(
-    x, y1, y2, xlabel, ylabel1, ylabel2, title1, title2, super_title, lines, save_path=None, log_scale=False, xlim=None,
+        x, y1, y2, xlabel, ylabel1, ylabel2, title1, title2, super_title, lines, save_path=None, log_scale=False,
+        xlim=None,
         ylim=None):
     """
     Plots two spectra with specific lines and labels placed vertically above the lines.
@@ -256,7 +250,6 @@ def plot_two_spectra(
             line_ymin_avg = spectrum_y * (1 + offset_avg)
             line_ymax_avg = line_ymin_avg + line_length_avg
 
-
             # Bestimme die Größenordnung der Daten für die aktuelle Achse
             max_y_value_rms = np.max(y_values_rms)
             order_of_magnitude_rms = 10 ** math.floor(math.log10(max_y_value_rms))
@@ -271,8 +264,6 @@ def plot_two_spectra(
             # Linienstart und -ende berechnen
             line_ymin_rms = 0
             line_ymax_rms = 2 * order_of_magnitude_rms
-
-
 
             if i == 0:  # AVG-Spektrum
                 slanted = slanted_avg
@@ -306,12 +297,9 @@ def plot_two_spectra(
 
             else:
 
-
                 # Vertikale Linie zeichnen
-                ax.plot([pos, pos], [line_ymin_rms, line_ymax_rms], color="red", linestyle="--",linewidth=0.8)
+                ax.plot([pos, pos], [line_ymin_rms, line_ymax_rms], color="red", linestyle="--", linewidth=0.8)
                 ax.set_ylim(0.05 * order_of_magnitude_rms, 1.3 * order_of_magnitude_rms)
-
-
 
     fig.suptitle(super_title, fontsize=14)
 
@@ -345,14 +333,13 @@ def plot_line_group(ax_obj, positions, x, y_values_avg, group, offset=0.1, all_l
     if all_lines:
 
         for pos in positions:
-
             # Vertikale Linien zeichnen
             ax_obj.vlines(x=pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=1.2)
     else:
         ax_obj.vlines(x=min_pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=1.2)
         ax_obj.vlines(x=max_pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=1.2)
 
-    ax_obj.text(x=((max_pos-min_pos)/2)+min_pos,
+    ax_obj.text(x=((max_pos - min_pos) / 2) + min_pos,
                 y=line_ymax_avg + 0.01 * order_of_magnitude_avg,
                 s=group,
                 ha='center',

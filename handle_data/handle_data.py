@@ -28,8 +28,10 @@ def get_continua_with_highest_corr_coef(line_sorted_data):
     return line_best_continua_dict
 
 
-def get_weighted_best_continua(line_best_continua_dict, weights={"best": 3, "second_best": 2, "third_best": 1}):
+def get_weighted_best_continua(line_best_continua_dict, weights=None):
     # Initialisiere ein Wörterbuch zur Gewichtung der continua
+    if weights is None:
+        weights = {"best": 3, "second_best": 2, "third_best": 1}
     continua_scores = {}
 
     # Schritt 1: Berechne die gewichteten Punkte

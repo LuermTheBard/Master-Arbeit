@@ -92,7 +92,7 @@ def process_1d_correlation_data(data_list, line, super_title, output_dir=None, s
 
         save_path = None
         if output_dir:
-            save_dir = output_dir /  "plot_1d_correlations"/ super_title
+            save_dir = output_dir / "plot_1d_correlations" / super_title
             if not save_dir.exists():
                 save_dir.mkdir(parents=True, exist_ok=True)
             save_path = f"{save_dir}/{title.replace(' ', '_').replace('/', '_')}.pdf"
@@ -355,6 +355,9 @@ def plot_fit_results(campaign, fit_results, output_dir=None, save_only=False):
     und den x-Werten der Fit-Grenzen in der Legende.
 
     Parameters:
+        save_only:
+        output_dir:
+        campaign:
         fit_results (list): Eine Liste von Dictionaries, die die Fit-Daten enthalten.
                             Jedes Dictionary sollte mindestens die Schlüssel "x_values", "y_values",
                             "time_lag", "fit_window_start", "fit_window_end" und "fit_success" enthalten.
@@ -385,7 +388,8 @@ def plot_fit_results(campaign, fit_results, output_dir=None, save_only=False):
         plt.plot(x_values, y_values, '-', label="Data", markersize=5)
         plt.axvline(time_lag, color='red', linestyle='--', label=f"Time Lag (τ) = {time_lag:.2f}")
 
-        plt.axvline(fit_window_start, color='blue', linestyle='--', label=f"Fit Window Start (x = {fit_window_start:.1f})")
+        plt.axvline(fit_window_start, color='blue', linestyle='--',
+                    label=f"Fit Window Start (x = {fit_window_start:.1f})")
         plt.axvline(fit_window_end, color='green', linestyle='--', label=f"Fit Window End (x = {fit_window_end:.1f})")
 
         # Achsenbeschriftungen und Titel
@@ -453,7 +457,8 @@ def plot_time_lags_from_toml(file_path):
 
     # Erstellen des Plots
     plt.figure(figsize=(10, 6))
-    plt.errorbar(wavelengths, time_lags, yerr=time_lag_errors, fmt='o', capsize=5, ecolor='red', markerfacecolor='blue', linestyle='None')
+    plt.errorbar(wavelengths, time_lags, yerr=time_lag_errors, fmt='o', capsize=5, ecolor='red', markerfacecolor='blue',
+                 linestyle='None')
     plt.xlabel('Wavelength (Angstrom)')
     plt.ylabel('Time Lags')
     plt.title('Time Lag vs Wavelength with Errors')
@@ -465,7 +470,6 @@ def plot_time_lags_from_toml(file_path):
 
 
 def plot_all_1d_ccfs_in_groups_for_line(galaxie_campaigns_dict, line_name, output_dir, save_only=False):
-
     xlabel = "time shift (tau)"
     ylabel = "Correlation Coefficient"
 
@@ -476,6 +480,5 @@ def plot_all_1d_ccfs_in_groups_for_line(galaxie_campaigns_dict, line_name, outpu
     save_folder.mkdir(parents=True, exist_ok=True)
 
     for campaign, data_dict in galaxie_campaigns_dict.items():
-        plot_1d_data_in_groups(data_dict, x_key, y_key, xlabel, ylabel, title=f"CCFs of {line_name}", save_only=save_only, output_dir=save_folder, shared_y=True, data_type="ccfs")
-
-
+        plot_1d_data_in_groups(data_dict, x_key, y_key, xlabel, ylabel, title=f"CCFs of {line_name}",
+                               save_only=save_only, output_dir=save_folder, shared_y=True, data_type="ccfs")

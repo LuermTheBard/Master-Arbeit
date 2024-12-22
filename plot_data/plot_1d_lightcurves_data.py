@@ -7,8 +7,6 @@ from matplotlib.ticker import MaxNLocator, FuncFormatter, MultipleLocator
 
 matplotlib.use("Qt5Agg")
 
-
-
 COLORCODE_CONTINUA = {
     'Cont4010': (100, 0, 128, 255),
     'Cont4200': (80, 0, 255, 255),
@@ -23,7 +21,6 @@ COLORCODE_CONTINUA = {
     'Cont8015': (165, 0, 0, 255),
     'Cont8900': (139, 0, 0, 255)
 }
-
 
 
 def normalize_color_values(colorcode_dict):
@@ -41,6 +38,7 @@ def normalize_color_values(colorcode_dict):
             normalized_dict[key] = color
     return normalized_dict
 
+
 COLORCODE_CONTINUA_NORMALIZED = normalize_color_values(COLORCODE_CONTINUA)
 
 
@@ -49,10 +47,12 @@ def mjd_to_date(mjd):
     mjd_start_date = datetime.datetime(1858, 11, 17)  # MJD Startdatum
     return mjd_start_date + datetime.timedelta(days=mjd)
 
+
 def format_month_day(mjd, pos):
     """Formatter für die obere Achse, der MJD in Monats- und Tagesformat umwandelt."""
     date = mjd_to_date(mjd)
     return date.strftime('%b %d')  # Format: 'Aug 01', 'Sep 15', ...
+
 
 def format_relative_days(mjd, pos):
     """Formatter für relative Tage (mit erstem Wert als Referenz)."""
@@ -77,6 +77,10 @@ def plot_1d_data_in_groups(data, x_key, y_key, xlabel='X-axis', ylabel='Y-axis',
     Plot multiple 1D data sets in groups.
 
     Parameters:
+        data_type:
+        shared_y:
+        y_key:
+        x_key:
         data (dict): Dictionary containing the data for the plots.
         xlabel (str): Label for the x-axis.
         ylabel (str): Label for the y-axis.
@@ -198,7 +202,7 @@ def check_for_empty_rows(axes, fig, x_label, formating=True):
         for row in remaining_rows:
             for col in range(2):
                 if axes[row, col].has_data():  # Stelle sicher, dass die Achse existiert und Daten hat
-                    axes[row, col].xaxis.set_major_locator(MultipleLocator(2)) # Ticks festlegen
+                    axes[row, col].xaxis.set_major_locator(MultipleLocator(2))  # Ticks festlegen
 
                     if formating:
                         axes[row, col].xaxis.set_major_formatter(FuncFormatter(format_relative_days))  # Formatierung
@@ -212,7 +216,7 @@ def check_for_empty_rows(axes, fig, x_label, formating=True):
                         axes[row, col].tick_params(axis='x', which='both', direction='inout', labelbottom=True)
     len_remaining_rows = len(remaining_rows)
     text_heigth = 0.04 + (4 - len_remaining_rows) * 0.20
-    #fig.text(0.95, text_heigth, f"Base: {base_mjd:.2f} MJD", ha='right', fontsize=10)
+    fig.text(0.95, text_heigth, f"Base: {base_mjd:.2f} MJD", ha='right', fontsize=10)
     fig.text(0.5, text_heigth, x_label, ha='center', fontsize=12)
 
 
@@ -262,7 +266,6 @@ def finalize_figure_ccfs(fig, axes, title, group_index, save_only, output_dir):
         plt.show()
 
 
-
 def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_only=False):
     xlabel = 'timestamps [MJD]'
     ylabel = 'fluxes [ergs/s/cm2/A]'
@@ -277,11 +280,14 @@ def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_o
     for campaign, data_dict in galaxie_campaigns_dict.items():
         # Plot for lines
         super_title = f"{campaign} Lines"
-        plot_1d_data_in_groups(data_dict["lines"], x_key, y_key, xlabel, ylabel, yerr_name=yerr_name, title=super_title, save_only=save_only, output_dir=save_folder)
+        plot_1d_data_in_groups(data_dict["lines"], x_key, y_key, xlabel, ylabel, yerr_name=yerr_name, title=super_title,
+                               save_only=save_only, output_dir=save_folder)
 
         # Plot for continua (with custom color dictionary if needed)
         super_title = f"{campaign} Continua"
-        plot_1d_data_in_groups(data_dict["continua"], x_key, y_key, xlabel, ylabel, yerr_name=yerr_name, title=super_title, save_only=save_only, output_dir=save_folder, color_dict=COLORCODE_CONTINUA_NORMALIZED)
+        plot_1d_data_in_groups(data_dict["continua"], x_key, y_key, xlabel, ylabel, yerr_name=yerr_name,
+                               title=super_title, save_only=save_only, output_dir=save_folder,
+                               color_dict=COLORCODE_CONTINUA_NORMALIZED)
 
 
 def plot_lightcurve(data, xlabel, ylabel, yerr_name, ax):

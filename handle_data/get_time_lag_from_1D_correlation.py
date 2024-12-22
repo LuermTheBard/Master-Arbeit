@@ -48,8 +48,8 @@ def get_fit_window_function(window_methode):
     """
     Wählt die passende Funktion für die Fit-Fenster-Berechnung aus.
 
-    Parameters:
-        window_methode (str): Methode zur Auswahl des Fit-Fensters ("minima", "turningpoints", "gradientchange", "percentage").
+    Parameters: window_methode (str): Methode zur Auswahl des Fit-Fensters ("minima", "turningpoints",
+    "gradientchange", "percentage").
 
     Returns:
         function: Die passende Funktion zur Fensterberechnung.
@@ -181,10 +181,6 @@ def fit_window_with_percentage(max_index, x, y, percentage=20):
     left = best_left
     right = best_right
 
-    # Erhalte die y-Werte für die gefundenen Indizes
-    y_left = y[left]
-    y_right = y[right]
-
     # Fenster extrahieren
     return extract_fit_window(left, right, x, y)
 
@@ -241,7 +237,8 @@ def fit_window_with_minima(max_index, x, y, max_ratio=1.5):
     left_distance = max_index - left
     right_distance = right - max_index
 
-    if left_distance > 0 and right_distance > 0 and max(left_distance, right_distance) / min(left_distance, right_distance) > max_ratio:
+    if (left_distance > 0 and right_distance > 0 and
+            max(left_distance, right_distance) / min(left_distance, right_distance) > max_ratio):
         if left_distance > right_distance:
             # Verwende das nächste Minimum rechts vom ersten Kandidaten
             right = right_candidates[1] if len(right_candidates) > 1 else right
@@ -309,10 +306,12 @@ def calculate_time_lags_for_continuum(results, continuum_name):
             if result.get("fit_success", False):
                 time_lag = result.get("time_lag")
                 time_lag_error = result.get("time_lag_error")
-                if time_lag is not None and time_lag_error is not None and not np.isnan(time_lag) and not np.isnan(time_lag_error):
+                if (time_lag is not None and time_lag_error is not None and not np.isnan(time_lag)
+                        and not np.isnan(time_lag_error)):
                     continuum_results.append(result)
                 else:
-                    skipped_result += f"Result of {result.get('continuum', 'Unknown')} and {result.get('line_name', 'Unknown')} was skipped, because of invalid values\n"
+                    skipped_result += (f"Result of {result.get('continuum', 'Unknown')} and "
+                                       f"{result.get('line_name', 'Unknown')} was skipped, because of invalid values\n")
 
     if not continuum_results:
         print(f"Keine gültigen Time Lag Ergebnisse für das Continuum '{continuum_name}' gefunden.")
