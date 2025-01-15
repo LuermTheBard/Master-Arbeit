@@ -237,7 +237,7 @@ def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
     if data_type == 'lightcurves':
         ax.xaxis.set_major_locator(MultipleLocator(4))
         ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-        ax.grid(True, linestyle='--', linewidth=0.5)
+        # ax.grid(True, linestyle='--', linewidth=0.5)
 
         if row == 0:
             ax_top = ax.secondary_xaxis('top')
@@ -247,7 +247,7 @@ def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
 
     elif data_type == 'ccfs':
         ax.yaxis.set_major_locator(MultipleLocator(0.1))
-        ax.grid(True, linestyle='--', linewidth=0.5)
+        # ax.grid(True, linestyle='--', linewidth=0.5)
 
         if row == 0:
             ax_top = ax.secondary_xaxis('top')

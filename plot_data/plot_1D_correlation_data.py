@@ -44,7 +44,7 @@ def process_plot(params, save_path=None, save_only=False):
     plt.ylim(params["ylim"])
     plt.xticks(params["x_ticks"])
     plt.yticks(params["y_ticks"])
-    plt.grid(True)
+    # plt.grid(True)
 
     if save_path:
         plt.savefig(save_path)
@@ -214,7 +214,7 @@ def plot_individual(data_list, current_line_name, campaign, output_dir, save_onl
     plt.title(f"Comparison for Line: {current_line_name} ({campaign})")
     plt.xticks(range(int(x_min), int(x_max) + 2, 1))
     plt.yticks([round(i / 10, 2) for i in range(int(y_min * 10 - 2), int(y_max * 10 + 2), 1)])
-    plt.grid(visible=True, which='both', linestyle='--', linewidth=0.5)
+    #plt.grid(visible=True, which='both', linestyle='--', linewidth=0.5)
     plt.legend(loc="upper right", fontsize=8)
 
     if output_dir:
@@ -286,7 +286,7 @@ def plot_combined(comparison_data, current_line_name, output_dir, save_only, sho
         ax.set_title(f"Comparison: {campaign}")
         ax.set_xticks(range(int(x_min), int(x_max) + 2, 1))
         ax.set_yticks([round(i / 10, 2) for i in range(int(y_min * 10 - 2), int(y_max * 10 + 2), 1)])
-        ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5)
+        # ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5)
         ax.legend(loc="upper right", fontsize=8)
 
     fig_combined.suptitle(f"{'Average ' if show_average else ''}Comparison for Line: {current_line_name}")
