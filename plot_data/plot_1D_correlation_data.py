@@ -2,7 +2,7 @@ from pathlib import Path
 
 import matplotlib
 import numpy as np
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, cm
 
 from plot_data.general_plot import plot_1d_data_in_groups
 
@@ -198,11 +198,16 @@ def plot_individual(data_list, current_line_name, campaign, output_dir, save_onl
     plt.figure(figsize=(10, 6))
     x_min, x_max, y_min, y_max = float("inf"), float("-inf"), float("inf"), float("-inf")
 
-    for data in data_list:
+    # Create a colormap with enough colors for all data entries
+    num_colors = len(data_list)
+    color_map = cm.get_cmap('tab20', num_colors)  # Use a predefined colormap like 'tab20'
+    colors = [color_map(i) for i in range(num_colors)]
+
+    for idx, data in enumerate(data_list):
         x, y = data[1], data[2]
         x_min, x_max = min(x_min, min(x)), max(x_max, max(x))
         y_min, y_max = min(y_min, min(y)), max(y_max, max(y))
-        plt.plot(x, y, label=f"{data[0]}")
+        plt.plot(x, y, label=f"{data[0]}", color=colors[idx])  # Use unique colors for each line
 
     plt.xlabel("time shift (tau)")
     plt.ylabel("Correlation Coefficient")
@@ -210,6 +215,7 @@ def plot_individual(data_list, current_line_name, campaign, output_dir, save_onl
     plt.xticks(range(int(x_min), int(x_max) + 2, 1))
     plt.yticks([round(i / 10, 2) for i in range(int(y_min * 10 - 2), int(y_max * 10 + 2), 1)])
     plt.grid(visible=True, which='both', linestyle='--', linewidth=0.5)
+    plt.legend(loc="upper right", fontsize=8)
 
     if output_dir:
         save_path = prepare_output_path(output_dir, campaign, current_line_name, "plot_individual", is_combined=False)
@@ -322,7 +328,7 @@ def prepare_output_path(output_dir, campaign, line_name, methode_name, is_combin
     """
     comparison_dir = Path(output_dir) / "plot_1d_correlations" / methode_name
     comparison_dir.mkdir(parents=True, exist_ok=True)
-    file_name = f"{line_name.replace(' ', '_')}_{'combined' if is_combined else campaign}_comparison.png"
+    file_name = f"{line_name.replace(' ', '_')}_{'combined' if is_combined else campaign}_comparison.pdf"
     return comparison_dir / file_name
 
 
@@ -355,8 +361,8 @@ def compare_plots_across_continua(
         for campaign, data_list in comparison_data:
             plot_individual(data_list, current_line_name, campaign, output_dir, save_only)
 
-        plot_combined(comparison_data, current_line_name, output_dir, save_only)
+        #plot_combined(comparison_data, current_line_name, output_dir, save_only)
 
-        plot_combined(comparison_data, current_line_name, output_dir, save_only, show_average=True)
-        plot_combined(comparison_data, current_line_name, output_dir, save_only, show_only_average=True)
+        #plot_combined(comparison_data, current_line_name, output_dir, save_only, show_average=True)
+        #plot_combined(comparison_data, current_line_name, output_dir, save_only, show_only_average=True)
 
