@@ -9,54 +9,40 @@ All_LINES = {
     "Hγ": {"position": 4340.47, "offset_avg": 0.2, "slanted_avg": True},
     "Hδ": {"position": 4101.74, "offset_avg": 0.1, "slanted_avg": True},
     "Hε": {"position": 3970.08, "offset_avg": 0.1, "slanted_avg": True},
-    "H8": {"position": 3889.06, "offset_avg": 0.1, "slanted_avg": True},
-    # "H9": {"position": 3835.39, "offset_avg": 0.1, "slanted_avg": False},
 
-    "[Ne V] 3345": {"position": 3345.82, "offset_avg": 0.01, "slanted_avg": False},
-    "[Ne V] 3425": {"position": 3425.88, "offset_avg": 0.01, "slanted_avg": False},
+    # "[Ne V] 3345": {"position": 3345.82, "offset_avg": 0.01, "slanted_avg": False},
+    # "[Ne V] 3425": {"position": 3425.88, "offset_avg": 0.01, "slanted_avg": False},
     "[Ne III] 3868": {"position": 3868.76, "offset_avg": 0.1, "slanted_avg": True},
 
-    "He I 3487": {"position": 3487.72, "offset_avg": 0.1, "slanted_avg": True},
+    # "He I 3487": {"position": 3487.72, "offset_avg": 0.1, "slanted_avg": True},
     "He I 4471": {"position": 4471.48, "offset_avg": 0.1, "slanted_avg": False},
     "He I 5875": {"position": 5875.6, "offset_avg": 0.1, "slanted_avg": True},
     "He I 5016": {"position": 5015.67, "offset_avg": 0.3, "slanted_avg": True},
-    "He I 5047": {"position": 5047.74, "offset_avg": 0.1, "slanted_avg": True},
     "He I 7065": {"position": 7065.2, "offset_avg": 0.1, "slanted_avg": True},
     "He II 4685": {"position": 4685.7, "offset_avg": 0.1, "slanted_avg": True},
-    "He I 3187": {"position": 3187.74, "offset_avg": 0.2, "slanted_avg": True},
-    "He II 3203": {"position": 3203.1, "offset_avg": 0.1, "slanted_avg": True},
+    # "He I 3187": {"position": 3187.74, "offset_avg": 0.2, "slanted_avg": True},
+    # "He II 3203": {"position": 3203.1, "offset_avg": 0.1, "slanted_avg": True},
 
     "[O III] 4363": {"position": 4363.21, "offset_avg": 0.05, "slanted_avg": True},
     "[O III] 4958": {"position": 4958.91, "offset_avg": 0.1, "slanted_avg": False},
     "[O III] 5006": {"position": 5006.84, "offset_avg": 0.1, "slanted_avg": True},
 
-    # "Fe II 4489": {"position": 4489.18, "offset_avg": 0.3, "slanted_avg": True},
-    # "Fe II 4491": {"position": 4491.41, "offset_avg": 0.2, "slanted_avg": True},
-    # "Fe II 4522": {"position": 4522.63, "offset_avg": 0.1, "slanted_avg": True},
-    # "Fe II 4555": {"position": 4555.89, "offset_avg": 0.1, "slanted_avg": True},
-    # "Fe II 4582": {"position": 4582.84, "offset_avg": 0.2, "slanted_avg": True},
-    # "Fe II 4583": {"position": 4583.83, "offset_avg": 0.1, "slanted_avg": True},
-    # "Fe II 4629": {"position": 4629.33, "offset_avg": 0.1, "slanted_avg": True},
-
-    "Fe II 5169": {"position": 5169.03, "offset_avg": 0.3, "slanted_avg": True},
-    "Fe II 5197": {"position": 5197.58, "offset_avg": 0.2, "slanted_avg": True},
-    "Fe II 6369": {"position": 6369.46, "offset_avg": 0.1, "slanted_avg": False},
+    "[O I] 6364": {"position": 6363.77, "offset_avg": 0.4, "slanted_avg": True},
+    "[Fe X] 6375": {"position": 6374.51, "offset_avg": 0.1, "slanted_avg": True},
     "Fe II 6516": {"position": 6516.08, "offset_avg": 0.3, "slanted_avg": False},
-    "[Fe III] 5270": {"position": 5270.40, "offset_avg": 0.3, "slanted_avg": True},
-    "[Fe XIV] 5302": {"position": 5302.86, "offset_avg": 0.1, "slanted_avg": True},
-    "[Fe VI] 5336": {"position": 5336.18, "offset_avg": 0.1, "slanted_avg": True},
     "[Fe VII] 5721": {"position": 5721.7, "offset_avg": 0.1, "slanted_avg": True},
     "[Fe VII] 6087": {"position": 6087, "offset_avg": 0.1, "slanted_avg": True},
-    "[Fe VII] 3586": {"position": 3586.32, "offset_avg": 0.1, "slanted_avg": True},
+    # "[Fe VII] 3586": {"position": 3586.32, "offset_avg": 0.1, "slanted_avg": True},
 
     "[S II] 6716": {"position": 6716.44, "offset_avg": 0.35, "slanted_avg": True},
     "[S II] 6731": {"position": 6730.81, "offset_avg": 0.1, "slanted_avg": True},
 
-    "[N II] 6583": {"position": 6583.46, "offset_avg": 0.1, "slanted_avg": True},
+    "[N II] 6548": {"position": 6548.05, "offset_avg": 0.1, "slanted_avg": False},
+    "[N II] 6584": {"position": 6583.46, "offset_avg": 0.1, "slanted_avg": False},
 
     "[Ar III] 7135": {"position": 7135.79, "offset_avg": 0.1, "slanted_avg": True},
 
-    "O III 3132": {"position": 3132.79, "offset_avg": 0.1, "slanted_avg": True},
+    # "O III 3132": {"position": 3132.79, "offset_avg": 0.1, "slanted_avg": True},
     "O I 8446": {"position": 8446.35, "offset_avg": 0.1, "slanted_avg": True},
     "[O I] 6300": {"position": 6300.30, "offset_avg": 0.1, "slanted_avg": False},
 
@@ -70,18 +56,9 @@ All_LINE_GROUPS = {
                            4629.33],
               "offset": 0.2},
 
-    "Balmer": {"position": [3683.83,
-                            3691.55,
-                            3697.15,
-                            3703.85,
-                            3711.97,
-                            3721.94,
-                            3734.36,
-                            3750.15,
-                            3770.6,
-                            3797.90,
-                            3835.39],
-               "offset": 0.1},
+    "Fe II ": {"position": [5169.03,
+                           5336.18],
+              "offset": 0.2},
 
 }
 
@@ -168,7 +145,7 @@ def plot_avg_rms(fits_data, save_path=None, log_scale=False):
         lines=All_LINES,
         save_path=save_path,
         log_scale=log_scale,
-        xlim=(2900, 10000),
+        xlim=(3800, 8900),
     )
 
 
