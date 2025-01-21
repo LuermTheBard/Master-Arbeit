@@ -254,7 +254,7 @@ def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
 # HAUPT-PLOT-FUNKTION
 # -----------------------------------------------------------------------------
 
-def plot_1d_data_in_groups(data, x_key, y_key, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
+def plot_1d_data_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
                            yerr_name=None, title=None, save_only=False,
                            output_dir=None, color_dict=None, rows=4, cols=2, data_type='lightcurves'):
     """
@@ -315,10 +315,10 @@ def plot_1d_data_in_groups(data, x_key, y_key, xlabel='X-axis', ylabel='Y-axis',
 
         # Aufruf der Abschlussmethode (abhängig vom Datentyp)
         finalize_figure(fig, axes, x_label=xlabel, title=title, group_index=group_index,
-                        save_only=save_only, output_dir=output_dir)
+                        save_only=save_only, output_dir=output_dir, compare_cont=compare_cont)
 
 
-def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_label):
+def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_label, compare_cont):
     """
     Finalisiert das Layout der Figure und speichert bzw. zeigt sie an.
 
@@ -351,7 +351,7 @@ def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_labe
         fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
 
     if save_only and output_dir:
-        save_path = output_dir / f"{title.replace(' ', '_')}_group_{group_index + 1}.pdf"
+        save_path = output_dir / f"{title.replace(' ', '_')}_compare_cont_{compare_cont}_group_{group_index + 1}.pdf"
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
     else:

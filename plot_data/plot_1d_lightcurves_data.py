@@ -7,7 +7,7 @@ from settings import COLORCODE_CONTINUA_NORMALIZED
 matplotlib.use("Qt5Agg")
 
 
-def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_only=False):
+def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, compare_cont, key_order=None, save_only=False):
     xlabel = 'timestamps [MJD]'
     ylabel = 'fluxes [ergs/s/cm2/A]'
     yerr_name = 'fluxerrs [ergs/s/cm2/A]'
@@ -21,12 +21,23 @@ def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, save_o
     for campaign, data_dict in galaxie_campaigns_dict.items():
         # Plot for lines
         super_title = f"{campaign} Lines"
-        plot_1d_data_in_groups(data_dict["lines"], x_key, y_key, xlabel, ylabel, yerr_name=yerr_name, title=super_title,
+        compare_cont_data = {compare_cont: data_dict["continua"][compare_cont]}
+        compare_cont_data.update(data_dict["lines"])
+
+        def sort_keys(key):
+            for idx, prefix in enumerate(key_order):
+                if key.startswith(prefix):
+                    return idx
+            return len(key_order)
+
+        sorted_line_data_dict = dict(sorted(compare_cont_data.items(), key=lambda item: sort_keys(item[0])))
+
+        plot_1d_data_in_groups(sorted_line_data_dict, x_key, y_key, compare_cont, ylabel, yerr_name=yerr_name, title=super_title,
                                save_only=save_only, output_dir=save_folder)
 
         # Plot for continua (with custom color dictionary if needed)
         super_title = f"{campaign} Continua"
-        plot_1d_data_in_groups(data_dict["continua"], x_key, y_key, xlabel, ylabel, yerr_name=yerr_name,
+        plot_1d_data_in_groups(data_dict["continua"], x_key, y_key, compare_cont, xlabel, ylabel, yerr_name=yerr_name,
                                title=super_title, save_only=save_only, output_dir=save_folder,
                                color_dict=COLORCODE_CONTINUA_NORMALIZED)
 
