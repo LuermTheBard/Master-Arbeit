@@ -4,61 +4,71 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 All_LINES = {
-    "Hα": {"position": 6562.82, "offset": 0.001, "slanted_avg": True},
-    "Hβ": {"position": 4861.33, "offset": 0.1, "slanted_avg": True},
-    "Hγ": {"position": 4340.47, "offset": 0.2, "slanted_avg": True},
-    "Hδ": {"position": 4101.74, "offset": 0.1, "slanted_avg": True},
-    "Hε": {"position": 3970.08, "offset": 0.1, "slanted_avg": True},
+    "Hα": {"position": 6562.82, "offset": 0.1, "slanted": False},
+    "Hβ": {"position": 4861.33, "offset": 0.1, "slanted": False},
+    "Hγ": {"position": 4340.47, "offset": 0.4, "slanted": False},
+    "Hδ": {"position": 4101.74, "offset": 0.1, "slanted": False},
+    "Hε": {"position": 3970.08, "offset": 0.1, "slanted": False},
 
-    # "[Ne V] 3345": {"position": 3345.82, "offset": 0.01, "slanted_avg": False},
-    # "[Ne V] 3425": {"position": 3425.88, "offset": 0.01, "slanted_avg": False},
-    "[Ne III] 3868": {"position": 3868.76, "offset": 0.1, "slanted_avg": True},
+    # "[Ne V] 3345": {"position": 3345.82, "offset": 0.01, "slanted": False},
+    # "[Ne V] 3425": {"position": 3425.88, "offset": 0.01, "slanted": False},
+    "[Ne III] 3868": {"position": 3868.76, "offset": 0.1, "slanted": False},
 
-    # "He I 3487": {"position": 3487.72, "offset": 0.1, "slanted_avg": True},
-    "He I 4471": {"position": 4471.48, "offset": 0.1, "slanted_avg": False},
-    "He I 5875": {"position": 5875.6, "offset": 0.1, "slanted_avg": True},
-    "He I 5016": {"position": 5015.67, "offset": 0.3, "slanted_avg": True},
-    "He I 7065": {"position": 7065.2, "offset": 0.1, "slanted_avg": True},
-    "He II 4685": {"position": 4685.7, "offset": 0.1, "slanted_avg": True},
-    # "He I 3187": {"position": 3187.74, "offset": 0.2, "slanted_avg": True},
-    # "He II 3203": {"position": 3203.1, "offset": 0.1, "slanted_avg": True},
+    # "He I 3487": {"position": 3487.72, "offset": 0.1, "slanted": True},
+    "He I 4471": {"position": 4471.48, "offset": 0.1, "slanted": False, "text_shift": -20},
+    "He I 5875": {"position": 5875.6, "offset": 0.1, "slanted": False},
+    "He I 5016": {"position": 5015.67, "offset": 0.1, "slanted": True},
+    "He I 7065": {"position": 7065.2, "offset": 0.3, "slanted": True},
+    "He II 4685": {"position": 4685.7, "offset": 0.1, "slanted": False},
+    # "He I 3187": {"position": 3187.74, "offset": 0.2, "slanted": True},
+    # "He II 3203": {"position": 3203.1, "offset": 0.1, "slanted": True},
 
-    "[O III] 4363": {"position": 4363.21, "offset": 0.05, "slanted_avg": True},
-    "[O III] 4958": {"position": 4958.91, "offset": 0.1, "slanted_avg": False},
-    "[O III] 5006": {"position": 5006.84, "offset": 0.1, "slanted_avg": True},
+    "[O III] 4363": {"position": 4363.21, "offset": 0.1, "slanted": True},
+    "[O III] 4958": {"position": 4958.91, "offset": 0.1, "slanted": False},
+    "[O III] 5006": {"position": 5006.84, "offset": 0.1, "slanted": False},
 
-    "[O I] 6364": {"position": 6363.77, "offset": 0.4, "slanted_avg": True},
-    "[Fe X] 6375": {"position": 6374.51, "offset": 0.1, "slanted_avg": True},
-    "Fe II 6516": {"position": 6516.08, "offset": 0.3, "slanted_avg": False},
-    "[Fe VII] 5721": {"position": 5721.7, "offset": 0.1, "slanted_avg": True},
-    "[Fe VII] 6087": {"position": 6087, "offset": 0.1, "slanted_avg": True},
-    # "[Fe VII] 3586": {"position": 3586.32, "offset": 0.1, "slanted_avg": True},
+    # "[O I] 6364": {"position": 6363.77, "offset": 0.1, "slanted": False},
+    # "[Fe X] 6375": {"position": 6374.51, "offset": 0.1, "slanted": False},
+    "Fe II 6516": {"position": 6516.08, "offset": 0.1, "slanted": False, "text_shift": -40},
+    "[Fe VII] 5721": {"position": 5721.7, "offset": 0.1, "slanted": False},
+    "[Fe VII] 6087": {"position": 6087, "offset": 0.1, "slanted": False},
+    # "[Fe VII] 3586": {"position": 3586.32, "offset": 0.1, "slanted": True},
 
-    "[S II] 6716": {"position": 6716.44, "offset": 0.35, "slanted_avg": True},
-    "[S II] 6731": {"position": 6730.81, "offset": 0.1, "slanted_avg": True},
+    # "[S II] 6716": {"position": 6716.44, "offset": 0.1, "slanted": False},
+    # "[S II] 6731": {"position": 6730.81, "offset": 0.1, "slanted": False},
 
-    "[N II] 6548": {"position": 6548.05, "offset": 0.1, "slanted_avg": False},
-    "[N II] 6584": {"position": 6583.46, "offset": 0.1, "slanted_avg": False},
+    "[N II] 6548": {"position": 6548.05, "offset": 0.1, "slanted": False, "text_shift": -40},
+    "[N II] 6584": {"position": 6583.46, "offset": 0.1, "slanted": False, "text_shift": 40},
 
-    "[Ar III] 7135": {"position": 7135.79, "offset": 0.1, "slanted_avg": True},
+    "[Ar III] 7135": {"position": 7135.79, "offset": 0.1, "slanted": True},
 
-    # "O III 3132": {"position": 3132.79, "offset": 0.1, "slanted_avg": True},
-    "O I 8446": {"position": 8446.35, "offset": 0.1, "slanted_avg": True},
-    "[O I] 6300": {"position": 6300.30, "offset": 0.1, "slanted_avg": False},
+    # "O III 3132": {"position": 3132.79, "offset": 0.1, "slanted": True},
+    "O I 8446": {"position": 8446.35, "offset": 0.5, "slanted": False},
+    "[O I] 6300": {"position": 6300.30, "offset": 0.1, "slanted": False},
 
-    "Ca II 8498": {"position": 8498.02, "offset": 0.1, "slanted_avg": True},
-    "Ca II 8542": {"position": 8542.09, "offset": 0.1, "slanted_avg": True},
-    "Ca II 8662": {"position": 8662.14, "offset": 0.1, "slanted_avg": True},
+    "Ca II 8498": {"position": 8498.02, "offset": 0.5, "slanted": True},
+    "Ca II 8542": {"position": 8542.09, "offset": 0, "slanted": True},
+    "Ca II 8662": {"position": 8662.14, "offset": 0.1, "slanted": True},
 }
 
 All_LINE_GROUPS = {
     "Fe II": {"position": [4489,
                            4629.33],
-              "offset": 0.2},
+              "offset": 0.5},
 
     "Fe II ": {"position": [5169.03,
                             5336.18],
-               "offset": 0.2},
+               "offset": 0.5},
+
+    "[S II] 6716,6730 ": {"position": [6716.44,
+                                       6730.81],
+                          "offset": 0.1,
+                          "show_in_rms": True},
+
+    "[O I] 6364, [Fe X] 6375": {"position": [6363.77,
+                                             6374.51],
+                                "offset": 0.1,
+                                "show_in_rms": True},
 
 }
 
@@ -176,6 +186,8 @@ def plot_avg_rms_spectra(
     exponent = 10 ** exponent_value
     latex_exponent = f"10^{{{exponent_value}}}"
 
+    line_length = 0.75
+
     # Aktualisierung des y-Labels
     ylabel_parts = ylabel.split("[")
     new_ylabel = ylabel_parts[0] + f"[{latex_exponent} " + ylabel_parts[1]
@@ -188,13 +200,13 @@ def plot_avg_rms_spectra(
     y2_scaled = y2_filtered * scale_factor - 4
 
     # Create the plot
-    fig, ax = plt.subplots(figsize=(12, 12))
+    fig, ax = plt.subplots(figsize=(16, 12))
 
     ax.plot(x_filtered, y1_filtered, label=f"{title1}", linestyle="-", color="blue")
     ax.plot(x_filtered, y2_scaled, label=f"{title2} (scaled by {scale_factor:.2f})", linestyle="-", color="orange")
 
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(f"{new_ylabel} + const.")
+    ax.set_xlabel(xlabel, fontsize=16)
+    ax.set_ylabel(f"{new_ylabel} + const.", fontsize=16)
 
     if log_scale:
         ax.set_yscale("log")
@@ -206,22 +218,35 @@ def plot_avg_rms_spectra(
         ax.set_ylim(ylim)
 
     # ax.grid(visible=True, which="both", linestyle="--", linewidth=0.5)
-    ax.legend()
+    ax.legend(fontsize=16)
+
+    ax.tick_params(axis='both', labelsize=16)
 
     # Add lines with labels
     for label, props in lines.items():
         pos = props["position"]
         offset = props.get("offset", 0.1)
+        text_shift = props.get("text_shift", 0)
+        slanted = props["slanted"]
+        rotation_angle = 45 if slanted else 90
 
         # Bestimme die y-Position für die Linie
         idx = np.abs(x_filtered - pos).argmin()
-        y_pos = y1_filtered[idx] * (1 + offset)
+        y_pos1 = y1_filtered[idx] + 0.1
+        y_pos2 = y2_scaled[idx] + 0.3
 
         # Zeichne die Linie und füge das Label hinzu
-        ax.plot([pos, pos], [y_pos, y_pos + 1], color="black", linewidth=1.5)
-        ax.text(pos, y_pos + 1.2, label, fontsize=12, color="black", rotation=90, ha="center", va="bottom")
+        ax.plot([pos, pos], [y_pos1, y_pos1 + line_length], color="black", linewidth=1.5)
+        ax.plot([pos, pos], [y_pos2, y_pos2 + line_length], color="black", linewidth=1.5)
+        ax.text(pos + text_shift, y_pos1 + line_length + offset, label, fontsize=14, color="black", rotation=rotation_angle,
+                ha="left" if slanted else "center",
+                va="bottom")
 
-    fig.suptitle(super_title, fontsize=14)
+    for group, data in All_LINE_GROUPS.items():
+        plot_line_group(ax, data["position"], x_filtered, y1_filtered, y2_scaled, group, line_length=line_length,
+                        offset=data["offset"], show_in_rms=data.get("show_in_rms", False))
+
+    plt.title(super_title, fontsize=20)
 
     if save_path:
         fig.savefig(save_path, dpi=300)
@@ -230,40 +255,44 @@ def plot_avg_rms_spectra(
     plt.show()
 
 
-def plot_line_group(ax_obj, positions, x, y_values_avg, group, offset=0.1, all_lines=False):
+def plot_line_group(ax_obj, positions, x, y1_filtered, y2_scaled, group, line_length=0.5, offset=0.5, all_lines=False,
+                    show_in_rms=False):
     """Funktion, um verbundene Linien zu zeichnen."""
     min_pos = min(positions)
     max_pos = max(positions)
 
-    # Bestimme die Größenordnung der Daten für die aktuelle Achse
-    max_y_value_avg = np.max(y_values_avg)
-    order_of_magnitude_avg = 10 ** math.floor(math.log10(max_y_value_avg))
-
-    # Definiere die konstante Linienlänge (z.B. 10% der Größenordnung)
-    line_length_avg = 0.1 * order_of_magnitude_avg
-
     # Finde den nächstgelegenen Y-Wert zu pos
     idx = np.abs(x - min_pos).argmin()
-    spectrum_y = y_values_avg[idx]
+    spectrum_avg = y1_filtered[idx]
+    spectrum_rms = y2_scaled[idx]
 
     # Linienstart und -ende berechnen
-    line_ymin_avg = spectrum_y * (1 + offset)
-    line_ymax_avg = line_ymin_avg + line_length_avg
+    line_ymin_avg = spectrum_avg + offset
+    line_ymax_avg = line_ymin_avg + line_length
+
+    line_ymin_rms = spectrum_rms + offset
+    line_ymax_rms = line_ymin_rms + line_length
 
     if all_lines:
 
         for pos in positions:
             # Vertikale Linien zeichnen
-            ax_obj.vlines(x=pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=1.2)
+            ax_obj.vlines(x=pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=1.5)
+
     else:
-        ax_obj.vlines(x=min_pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=1.2)
-        ax_obj.vlines(x=max_pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=1.2)
+        ax_obj.vlines(x=min_pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=1.5)
+        ax_obj.vlines(x=max_pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=1.5)
+
+    if show_in_rms:
+        for pos in positions:
+            ax_obj.vlines(x=pos, ymin=line_ymin_rms, ymax=line_ymax_rms, color='black', linewidth=1.5)
 
     ax_obj.text(x=((max_pos - min_pos) / 2) + min_pos,
-                y=line_ymax_avg + 0.01 * order_of_magnitude_avg,
+                y=line_ymax_avg + 0.1,
                 s=group,
                 ha='center',
-                fontsize=10,
+                fontsize=14,
+                rotation=90,
                 va="bottom")
     # Horizontale Verbindungslinie
     ax_obj.hlines(y=line_ymax_avg, xmin=min_pos, xmax=max_pos, color='black', linewidth=1.2)
