@@ -57,8 +57,8 @@ All_LINE_GROUPS = {
               "offset": 0.2},
 
     "Fe II ": {"position": [5169.03,
-                           5336.18],
-              "offset": 0.2},
+                            5336.18],
+               "offset": 0.2},
 
 }
 
@@ -124,21 +124,18 @@ def plot_avg_rms(fits_data, save_path=None, log_scale=False):
     avg_flux = avg_dict["data"][0]
     rms_flux = rms_dict["data"][0]
 
-    avg_label = (r"$F_\lambda \, (\mathrm{AVG}) \, [\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, "
-                 r"\mathrm{\AA}^{-1}]$")
-    rms_label = (r"$F_\lambda \, (\mathrm{RMS}) \, [\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, "
-                 r"\mathrm{\AA}^{-1}]$")
+    label = (r"$F_\lambda \, [\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, "
+             r"\mathrm{\AA}^{-1}]$")
     wavelengths_label = r"Rest Wavelength $[\mathrm{\AA}]$"
     avg_title = "AVG"
     rms_title = "RMS"
 
-    plot_two_spectra(
+    plot_avg_rms_spectra(
         wavelengths,
         avg_flux,
         rms_flux,
         wavelengths_label,
-        avg_label,
-        rms_label,
+        label,
         avg_title,
         rms_title,
         galaxy_name,
@@ -149,8 +146,8 @@ def plot_avg_rms(fits_data, save_path=None, log_scale=False):
     )
 
 
-def plot_two_spectra(
-        x, y1, y2, xlabel, ylabel1, ylabel2, title1, title2, super_title, lines, save_path=None, log_scale=False,
+def plot_avg_rms_spectra(
+        x, y1, y2, xlabel, ylabel, title1, title2, super_title, lines, save_path=None, log_scale=False,
         xlim=None,
         ylim=None):
     """
@@ -180,16 +177,15 @@ def plot_two_spectra(
     latex_exponent = f"10^{{{exponent_value}}}"
 
     # Aktualisierung des y-Labels
-    ylabel_parts = ylabel1.split("[")
+    ylabel_parts = ylabel.split("[")
     new_ylabel = ylabel_parts[0] + f"[{latex_exponent} " + ylabel_parts[1]
 
-    y1_filtered = y1_filtered/exponent
-    y2_filtered = y2_filtered/exponent
+    y1_filtered = y1_filtered / exponent
+    y2_filtered = y2_filtered / exponent
 
     # Scale y1 to overlay it above y2
     scale_factor = 10
     y2_scaled = y2_filtered * scale_factor - 4
-
 
     # Create the plot
     fig, ax = plt.subplots(figsize=(12, 12))
@@ -232,7 +228,6 @@ def plot_two_spectra(
         print(f"Plot saved to {save_path}")
 
     plt.show()
-
 
 
 def plot_line_group(ax_obj, positions, x, y_values_avg, group, offset=0.1, all_lines=False):
