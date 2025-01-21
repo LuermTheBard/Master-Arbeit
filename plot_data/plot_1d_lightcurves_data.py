@@ -9,11 +9,12 @@ matplotlib.use("Qt5Agg")
 
 def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, compare_cont, key_order=None, save_only=False):
     xlabel = 'timestamps [MJD]'
-    ylabel = 'fluxes [ergs/s/cm2/A]'
+    ylabel = (r"fluxes $[\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, "
+             r"\mathrm{\AA}^{-1}]$")
     yerr_name = 'fluxerrs [ergs/s/cm2/A]'
 
     x_key = xlabel
-    y_key = ylabel
+    y_key = 'fluxes [ergs/s/cm2/A]'
 
     save_folder = output_dir / "plot_1d_lightcurves"
     save_folder.mkdir(parents=True, exist_ok=True)
@@ -32,7 +33,7 @@ def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, compar
 
         sorted_line_data_dict = dict(sorted(compare_cont_data.items(), key=lambda item: sort_keys(item[0])))
 
-        plot_1d_data_in_groups(sorted_line_data_dict, x_key, y_key, compare_cont, ylabel, yerr_name=yerr_name, title=super_title,
+        plot_1d_data_in_groups(sorted_line_data_dict, x_key, y_key, compare_cont, xlabel, ylabel, yerr_name=yerr_name, title=super_title,
                                save_only=save_only, output_dir=save_folder)
 
         # Plot for continua (with custom color dictionary if needed)

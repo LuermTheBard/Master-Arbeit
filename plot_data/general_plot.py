@@ -104,7 +104,7 @@ def check_for_empty_rows(axes, fig, x_label):
         for row in remaining_rows:
             for col in range(2):
                 if axes[row, col].has_data():  # Stelle sicher, dass die Achse existiert und Daten hat
-                    axes[row, col].xaxis.set_major_locator(MultipleLocator(2))  # Ticks festlegen
+                    axes[row, col].xaxis.set_major_locator(MultipleLocator(5))  # Ticks festlegen
 
                     axes[row, col].xaxis.set_major_formatter(
                             plt.FuncFormatter(lambda x, pos: f"{x}")
@@ -230,13 +230,13 @@ def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
         ax.set_xticklabels([])
 
     if data_type == 'lightcurves':
-        ax.xaxis.set_major_locator(MultipleLocator(4))
+        ax.xaxis.set_major_locator(MultipleLocator(5))
         ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
         # ax.grid(True, linestyle='--', linewidth=0.5)
 
         if row == 0:
             ax_top = ax.secondary_xaxis('top')
-            ax_top.xaxis.set_major_locator(MultipleLocator(4))
+            ax_top.xaxis.set_major_locator(MultipleLocator(5))
             ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
             ax_top.tick_params(axis='x', rotation=45, labelsize=8)
 
@@ -246,7 +246,7 @@ def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
 
         if row == 0:
             ax_top = ax.secondary_xaxis('top')
-            ax_top.xaxis.set_major_locator(MultipleLocator(2))
+            ax_top.xaxis.set_major_locator(MultipleLocator(5))
             ax_top.tick_params(axis='x')
 
 
@@ -310,8 +310,20 @@ def plot_1d_data_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', yl
             yerr_values = np.array(line_data.get(yerr_name, [])) if yerr_name else None
             color = color_dict.get(line_name, 'black') if color_dict else 'black'
 
+
+            exponent_value = -15
+            exponent = 10 ** exponent_value
+            latex_exponent = f"10^{{{exponent_value}}}"
+
+            ylabel_parts = ylabel.split("[")
+            new_ylabel = ylabel_parts[0] + f"[{latex_exponent} " + ylabel_parts[1]
+
+            y_values = y_values / exponent
+            yerr_values = yerr_values / exponent
+
+
             # Aufruf der Konfigurationsmethode (abhängig vom Datentyp)
-            configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name, data_type)
+            configure_axis(ax, row, col, new_ylabel, color, x_values, y_values, yerr_values, line_name, data_type)
 
         # Aufruf der Abschlussmethode (abhängig vom Datentyp)
         finalize_figure(fig, axes, x_label=xlabel, title=title, group_index=group_index,
@@ -348,10 +360,15 @@ def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_labe
     check_for_empty_rows(axes, fig, x_label=x_label)
 
     if title:
-        fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
+        if group_index > 0:
+            fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
+        else:
+            fig.suptitle(f'{title}', fontsize=14)
 
     if save_only and output_dir:
         save_path = output_dir / f"{title.replace(' ', '_')}_compare_cont_{compare_cont}_group_{group_index + 1}.pdf"
+        plt.savefig(save_path, bbox_inches='tight')
+        save_path = output_dir / f"{title.replace(' ', '_')}_compare_cont_{compare_cont}_group_{group_index + 1}.png"
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
     else:

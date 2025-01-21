@@ -330,7 +330,7 @@ def calc_dopplershift_correction(file_name=None):
 
 def run_task(commands):
     for command in commands:
-        try:
+        #try:
             # Split command name and additional arguments
             parts = command.split("::")
             name_of_task = parts[0]
@@ -340,10 +340,10 @@ def run_task(commands):
 
             # Call the command with unpacked arguments
             registered_tasks[name_of_task](*task_args)
-        except KeyError as k:
-            print(f"Task '{command}' is not available.")
-        except Exception as e:
-            print(f"An error occurred while running '{command}': {e}")
+        #except KeyError as k:
+            #print(f"Task '{command}' is not available.")
+        #except Exception as e:
+            #print(f"An error occurred while running '{command}': {e}")
 
 
 if __name__ == "__main__":

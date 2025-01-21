@@ -252,6 +252,9 @@ def plot_avg_rms_spectra(
         fig.savefig(save_path, dpi=300)
         print(f"Plot saved to {save_path}")
 
+        savepath_png = f"{save_path}.png"
+        fig.savefig(savepath_png, dpi=300)
+
     plt.show()
 
 
