@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 All_LINES = {
-    "Hα": {"position": 6562.82, "offset_avg": 0.01, "slanted_avg": True},
+    "Hα": {"position": 6562.82, "offset_avg": 0.001, "slanted_avg": True},
     "Hβ": {"position": 4861.33, "offset_avg": 0.1, "slanted_avg": True},
     "Hγ": {"position": 4340.47, "offset_avg": 0.2, "slanted_avg": True},
     "Hδ": {"position": 4101.74, "offset_avg": 0.1, "slanted_avg": True},
@@ -174,18 +174,31 @@ def plot_two_spectra(
         y1_filtered = y1
         y2_filtered = y2
 
+    # Berechnung des Exponenten
+    exponent_value = int(f"{min(y1_filtered):.1e}".split("e")[1])
+    exponent = 10 ** exponent_value
+    latex_exponent = f"10^{{{exponent_value}}}"
+
+    # Aktualisierung des y-Labels
+    ylabel_parts = ylabel1.split("[")
+    new_ylabel = ylabel_parts[0] + f"[{latex_exponent} " + ylabel_parts[1]
+
+    y1_filtered = y1_filtered/exponent
+    y2_filtered = y2_filtered/exponent
+
     # Scale y1 to overlay it above y2
-    scale_factor = np.max(y2_filtered) / np.max(y1_filtered) * 5
-    y1_scaled = y1_filtered * scale_factor
+    scale_factor = 10
+    y2_scaled = y2_filtered * scale_factor - 4
+
 
     # Create the plot
-    fig, ax = plt.subplots(figsize=(7, 7))
+    fig, ax = plt.subplots(figsize=(12, 12))
 
-    ax.plot(x_filtered, y1_scaled, label=f"{title1} (scaled by {scale_factor:.2f})", linestyle="-", color="blue")
-    ax.plot(x_filtered, y2_filtered, label=title2, linestyle="-", color="orange")
+    ax.plot(x_filtered, y1_filtered, label=f"{title1}", linestyle="-", color="blue")
+    ax.plot(x_filtered, y2_scaled, label=f"{title2} (scaled by {scale_factor:.2f})", linestyle="-", color="orange")
 
     ax.set_xlabel(xlabel)
-    ax.set_ylabel(f"{ylabel1} (scaled) / {ylabel2}")
+    ax.set_ylabel(f"{new_ylabel} + const.")
 
     if log_scale:
         ax.set_yscale("log")
@@ -202,13 +215,15 @@ def plot_two_spectra(
     # Add lines with labels
     for label, props in lines.items():
         pos = props["position"]
-        offset = props.get("offset", 0.1)
+        offset = props.get("offset_avg", 0.1)
 
+        # Bestimme die y-Position für die Linie
         idx = np.abs(x_filtered - pos).argmin()
-        y_pos = y2_filtered[idx] * (1 + offset)
+        y_pos = y1_filtered[idx] * (1 + offset)
 
-       # ax.axvline(x=pos, color="gray", linestyle="--", linewidth=0.8)
-       # ax.text(pos, y_pos, label, fontsize=10, color="black", rotation=90, ha="center", va="bottom")
+        # Zeichne die Linie und füge das Label hinzu
+        ax.plot([pos, pos], [y_pos, y_pos + 1], color="black", linewidth=1.5)
+        ax.text(pos, y_pos + 1.2, label, fontsize=12, color="black", rotation=90, ha="center", va="bottom")
 
     fig.suptitle(super_title, fontsize=14)
 
