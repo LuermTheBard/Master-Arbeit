@@ -154,8 +154,7 @@ def plot_two_spectra(
         xlim=None,
         ylim=None):
     """
-    Plots two spectra with specific lines and labels placed vertically above the lines.
-    Removes excessive space between the title and the figure.
+    Plots two spectra in the same figure, scaling the first spectrum to overlay it above the second spectrum.
     """
 
     if xlim:
@@ -175,108 +174,41 @@ def plot_two_spectra(
         y1_filtered = y1
         y2_filtered = y2
 
-    # Adjusted figure size
-    fig, axs = plt.subplots(2, 1, figsize=(26, 13), sharex=True)
+    # Scale y1 to overlay it above y2
+    scale_factor = np.max(y2_filtered) / np.max(y1_filtered) * 5
+    y1_scaled = y1_filtered * scale_factor
 
-    fig.subplots_adjust(hspace=0, wspace=0, left=0.05, right=0.95, top=0.95, bottom=0.1)
+    # Create the plot
+    fig, ax = plt.subplots(figsize=(7, 7))
 
-    # Plot for y1
-    axs[0].plot(x_filtered, y1_filtered, label=title1)
-    axs[0].set_ylabel(ylabel1)
-    if xlim:
-        axs[0].set_xlim(xlim)
+    ax.plot(x_filtered, y1_scaled, label=f"{title1} (scaled by {scale_factor:.2f})", linestyle="-", color="blue")
+    ax.plot(x_filtered, y2_filtered, label=title2, linestyle="-", color="orange")
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(f"{ylabel1} (scaled) / {ylabel2}")
+
     if log_scale:
-        axs[0].set_yscale("log")
-    axs[0].grid(visible=True, which="both", linestyle="--", linewidth=0.5)
-    axs[0].legend()
+        ax.set_yscale("log")
 
-    # Plot for y2
-    axs[1].plot(x_filtered, y2_filtered, label=title2, color="orange")
-    axs[1].set_xlabel(xlabel)
-    axs[1].set_ylabel(ylabel2)
     if xlim:
-        axs[1].set_xlim(xlim)
-    if log_scale:
-        axs[1].set_yscale("log")
-    axs[1].grid(visible=True, which="both", linestyle="--", linewidth=0.5)
-    axs[1].legend()
+        ax.set_xlim(xlim)
 
+    if ylim:
+        ax.set_ylim(ylim)
+
+    # ax.grid(visible=True, which="both", linestyle="--", linewidth=0.5)
+    ax.legend()
+
+    # Add lines with labels
     for label, props in lines.items():
         pos = props["position"]
-        offset_avg = props["offset_avg"]
-        slanted_avg = props.get("slanted_avg", False)
+        offset = props.get("offset", 0.1)
 
-        for i, ax in enumerate(axs):
-            # Wähle das entsprechende Spektrum und Offset
+        idx = np.abs(x_filtered - pos).argmin()
+        y_pos = y2_filtered[idx] * (1 + offset)
 
-            y_values_avg = y1
-            y_values_rms = y2
-
-            # Bestimme die Größenordnung der Daten für die aktuelle Achse
-            max_y_value_avg = np.max(y_values_avg)
-            order_of_magnitude_avg = 10 ** math.floor(math.log10(max_y_value_avg))
-
-            # Definiere die konstante Linienlänge (z.B. 10% der Größenordnung)
-            line_length_avg = 0.1 * order_of_magnitude_avg
-
-            # Finde den nächstgelegenen Y-Wert zu pos
-            idx = np.abs(x - pos).argmin()
-            spectrum_y = y_values_avg[idx]
-
-            # Linienstart und -ende berechnen
-            line_ymin_avg = spectrum_y * (1 + offset_avg)
-            line_ymax_avg = line_ymin_avg + line_length_avg
-
-            # Bestimme die Größenordnung der Daten für die aktuelle Achse
-            max_y_value_rms = np.max(y_values_rms)
-            order_of_magnitude_rms = 10 ** math.floor(math.log10(max_y_value_rms))
-
-            # Definiere die konstante Linienlänge (z.B. 10% der Größenordnung)
-            line_length_rms = 0.1 * order_of_magnitude_rms
-
-            # Finde den nächstgelegenen Y-Wert zu pos
-            idx = np.abs(x - pos).argmin()
-            spectrum_y = y_values_avg[idx]
-
-            # Linienstart und -ende berechnen
-            line_ymin_rms = 0
-            line_ymax_rms = 2 * order_of_magnitude_rms
-
-            if i == 0:  # AVG-Spektrum
-                slanted = slanted_avg
-
-                text_pos = line_ymax_avg + 0.015 * order_of_magnitude_avg
-
-                # Vertikale Linie zeichnen
-                ax.plot([pos, pos], [line_ymin_avg, line_ymax_avg], color="black", linewidth=1.2)
-
-                ax.plot([pos, pos], [0, line_ymin_avg], color="red", linestyle="--", linewidth=0.8)
-                ax.set_ylim(0.05 * order_of_magnitude_avg, 2.2 * order_of_magnitude_avg)
-
-                # Text über der Linie hinzufügen
-                rotation_angle = 45 if slanted else 90
-
-                ax.text(
-                    x=pos,
-                    y=text_pos,  # Genau am oberen Ende der Linie
-                    s=label,
-                    fontsize=10,
-                    color="black",
-                    rotation=rotation_angle,
-                    ha="left" if slanted else "center",
-                    va="bottom"
-
-                )
-
-                for group, data in All_LINE_GROUPS.items():
-                    plot_line_group(ax, data["position"], x, y_values_avg, group, offset=data["offset"])
-
-
-            else:
-
-                # Vertikale Linie zeichnen
-                ax.plot([pos, pos], [line_ymin_rms, line_ymax_rms], color="red", linestyle="--", linewidth=0.8)
-                ax.set_ylim(0.05 * order_of_magnitude_rms, 1.3 * order_of_magnitude_rms)
+       # ax.axvline(x=pos, color="gray", linestyle="--", linewidth=0.8)
+       # ax.text(pos, y_pos, label, fontsize=10, color="black", rotation=90, ha="center", va="bottom")
 
     fig.suptitle(super_title, fontsize=14)
 
@@ -285,6 +217,7 @@ def plot_two_spectra(
         print(f"Plot saved to {save_path}")
 
     plt.show()
+
 
 
 def plot_line_group(ax_obj, positions, x, y_values_avg, group, offset=0.1, all_lines=False):
