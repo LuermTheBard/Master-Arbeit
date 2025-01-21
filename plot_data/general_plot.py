@@ -172,11 +172,6 @@ def prepare_data(data, xlabel, ylabel, yerr_name, rows, cols):
         yield current_data, group_index
 
 
-# -----------------------------------------------------------------------------
-# DATENTYP-SPEZIFISCHE FUNKTIONSAUSWAHL
-# -----------------------------------------------------------------------------
-
-
 def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name, data_type):
     """
     Konfiguriert die Achse basierend auf dem Datentyp.

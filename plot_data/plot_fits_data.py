@@ -4,51 +4,51 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 All_LINES = {
-    "Hα": {"position": 6562.82, "offset_avg": 0.001, "slanted_avg": True},
-    "Hβ": {"position": 4861.33, "offset_avg": 0.1, "slanted_avg": True},
-    "Hγ": {"position": 4340.47, "offset_avg": 0.2, "slanted_avg": True},
-    "Hδ": {"position": 4101.74, "offset_avg": 0.1, "slanted_avg": True},
-    "Hε": {"position": 3970.08, "offset_avg": 0.1, "slanted_avg": True},
+    "Hα": {"position": 6562.82, "offset": 0.001, "slanted_avg": True},
+    "Hβ": {"position": 4861.33, "offset": 0.1, "slanted_avg": True},
+    "Hγ": {"position": 4340.47, "offset": 0.2, "slanted_avg": True},
+    "Hδ": {"position": 4101.74, "offset": 0.1, "slanted_avg": True},
+    "Hε": {"position": 3970.08, "offset": 0.1, "slanted_avg": True},
 
-    # "[Ne V] 3345": {"position": 3345.82, "offset_avg": 0.01, "slanted_avg": False},
-    # "[Ne V] 3425": {"position": 3425.88, "offset_avg": 0.01, "slanted_avg": False},
-    "[Ne III] 3868": {"position": 3868.76, "offset_avg": 0.1, "slanted_avg": True},
+    # "[Ne V] 3345": {"position": 3345.82, "offset": 0.01, "slanted_avg": False},
+    # "[Ne V] 3425": {"position": 3425.88, "offset": 0.01, "slanted_avg": False},
+    "[Ne III] 3868": {"position": 3868.76, "offset": 0.1, "slanted_avg": True},
 
-    # "He I 3487": {"position": 3487.72, "offset_avg": 0.1, "slanted_avg": True},
-    "He I 4471": {"position": 4471.48, "offset_avg": 0.1, "slanted_avg": False},
-    "He I 5875": {"position": 5875.6, "offset_avg": 0.1, "slanted_avg": True},
-    "He I 5016": {"position": 5015.67, "offset_avg": 0.3, "slanted_avg": True},
-    "He I 7065": {"position": 7065.2, "offset_avg": 0.1, "slanted_avg": True},
-    "He II 4685": {"position": 4685.7, "offset_avg": 0.1, "slanted_avg": True},
-    # "He I 3187": {"position": 3187.74, "offset_avg": 0.2, "slanted_avg": True},
-    # "He II 3203": {"position": 3203.1, "offset_avg": 0.1, "slanted_avg": True},
+    # "He I 3487": {"position": 3487.72, "offset": 0.1, "slanted_avg": True},
+    "He I 4471": {"position": 4471.48, "offset": 0.1, "slanted_avg": False},
+    "He I 5875": {"position": 5875.6, "offset": 0.1, "slanted_avg": True},
+    "He I 5016": {"position": 5015.67, "offset": 0.3, "slanted_avg": True},
+    "He I 7065": {"position": 7065.2, "offset": 0.1, "slanted_avg": True},
+    "He II 4685": {"position": 4685.7, "offset": 0.1, "slanted_avg": True},
+    # "He I 3187": {"position": 3187.74, "offset": 0.2, "slanted_avg": True},
+    # "He II 3203": {"position": 3203.1, "offset": 0.1, "slanted_avg": True},
 
-    "[O III] 4363": {"position": 4363.21, "offset_avg": 0.05, "slanted_avg": True},
-    "[O III] 4958": {"position": 4958.91, "offset_avg": 0.1, "slanted_avg": False},
-    "[O III] 5006": {"position": 5006.84, "offset_avg": 0.1, "slanted_avg": True},
+    "[O III] 4363": {"position": 4363.21, "offset": 0.05, "slanted_avg": True},
+    "[O III] 4958": {"position": 4958.91, "offset": 0.1, "slanted_avg": False},
+    "[O III] 5006": {"position": 5006.84, "offset": 0.1, "slanted_avg": True},
 
-    "[O I] 6364": {"position": 6363.77, "offset_avg": 0.4, "slanted_avg": True},
-    "[Fe X] 6375": {"position": 6374.51, "offset_avg": 0.1, "slanted_avg": True},
-    "Fe II 6516": {"position": 6516.08, "offset_avg": 0.3, "slanted_avg": False},
-    "[Fe VII] 5721": {"position": 5721.7, "offset_avg": 0.1, "slanted_avg": True},
-    "[Fe VII] 6087": {"position": 6087, "offset_avg": 0.1, "slanted_avg": True},
-    # "[Fe VII] 3586": {"position": 3586.32, "offset_avg": 0.1, "slanted_avg": True},
+    "[O I] 6364": {"position": 6363.77, "offset": 0.4, "slanted_avg": True},
+    "[Fe X] 6375": {"position": 6374.51, "offset": 0.1, "slanted_avg": True},
+    "Fe II 6516": {"position": 6516.08, "offset": 0.3, "slanted_avg": False},
+    "[Fe VII] 5721": {"position": 5721.7, "offset": 0.1, "slanted_avg": True},
+    "[Fe VII] 6087": {"position": 6087, "offset": 0.1, "slanted_avg": True},
+    # "[Fe VII] 3586": {"position": 3586.32, "offset": 0.1, "slanted_avg": True},
 
-    "[S II] 6716": {"position": 6716.44, "offset_avg": 0.35, "slanted_avg": True},
-    "[S II] 6731": {"position": 6730.81, "offset_avg": 0.1, "slanted_avg": True},
+    "[S II] 6716": {"position": 6716.44, "offset": 0.35, "slanted_avg": True},
+    "[S II] 6731": {"position": 6730.81, "offset": 0.1, "slanted_avg": True},
 
-    "[N II] 6548": {"position": 6548.05, "offset_avg": 0.1, "slanted_avg": False},
-    "[N II] 6584": {"position": 6583.46, "offset_avg": 0.1, "slanted_avg": False},
+    "[N II] 6548": {"position": 6548.05, "offset": 0.1, "slanted_avg": False},
+    "[N II] 6584": {"position": 6583.46, "offset": 0.1, "slanted_avg": False},
 
-    "[Ar III] 7135": {"position": 7135.79, "offset_avg": 0.1, "slanted_avg": True},
+    "[Ar III] 7135": {"position": 7135.79, "offset": 0.1, "slanted_avg": True},
 
-    # "O III 3132": {"position": 3132.79, "offset_avg": 0.1, "slanted_avg": True},
-    "O I 8446": {"position": 8446.35, "offset_avg": 0.1, "slanted_avg": True},
-    "[O I] 6300": {"position": 6300.30, "offset_avg": 0.1, "slanted_avg": False},
+    # "O III 3132": {"position": 3132.79, "offset": 0.1, "slanted_avg": True},
+    "O I 8446": {"position": 8446.35, "offset": 0.1, "slanted_avg": True},
+    "[O I] 6300": {"position": 6300.30, "offset": 0.1, "slanted_avg": False},
 
-    "Ca II 8498": {"position": 8498.02, "offset_avg": 0.1, "slanted_avg": True},
-    "Ca II 8542": {"position": 8542.09, "offset_avg": 0.1, "slanted_avg": True},
-    "Ca II 8662": {"position": 8662.14, "offset_avg": 0.1, "slanted_avg": True},
+    "Ca II 8498": {"position": 8498.02, "offset": 0.1, "slanted_avg": True},
+    "Ca II 8542": {"position": 8542.09, "offset": 0.1, "slanted_avg": True},
+    "Ca II 8662": {"position": 8662.14, "offset": 0.1, "slanted_avg": True},
 }
 
 All_LINE_GROUPS = {
@@ -215,7 +215,7 @@ def plot_two_spectra(
     # Add lines with labels
     for label, props in lines.items():
         pos = props["position"]
-        offset = props.get("offset_avg", 0.1)
+        offset = props.get("offset", 0.1)
 
         # Bestimme die y-Position für die Linie
         idx = np.abs(x_filtered - pos).argmin()
