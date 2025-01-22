@@ -4,71 +4,78 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 All_LINES = {
-    "Hα": {"position": 6562.82, "offset": 0.1, "slanted": False},
-    "Hβ": {"position": 4861.33, "offset": 0.1, "slanted": False},
-    "Hγ": {"position": 4340.47, "offset": 0.4, "slanted": False},
-    "Hδ": {"position": 4101.74, "offset": 0.1, "slanted": False},
-    "Hε": {"position": 3970.08, "offset": 0.1, "slanted": False},
+    "Hα": {"position": 6562.82, "text_vertical_shift": -10, "slanted": False, "text_shift": -60, "show_no_tick_avg": True, "tick_shift_rms": 1},
+    "Hβ": {"position": 4861.33, "text_vertical_shift": -0.7, "slanted": False, "show_no_tick_avg": True, "tick_shift_rms": 0.6},
+    "Hγ": {"position": 4340.47, "text_vertical_shift": 0.1, "tick_shift_avg": 0.31, "text_shift": -20, "slanted": False, "tick_shift_rms": 0.57},
+    "Hδ": {"position": 4101.74, "text_vertical_shift": 0.1, "slanted": False},
+    "Hε": {"position": 3970.08, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.6},
 
-    # "[Ne V] 3345": {"position": 3345.82, "offset": 0.01, "slanted": False},
-    # "[Ne V] 3425": {"position": 3425.88, "offset": 0.01, "slanted": False},
-    "[Ne III] 3868": {"position": 3868.76, "offset": 0.1, "slanted": False},
+    # "[Ne V] 3345": {"position": 3345.82, "text_vertical_shift": 0.01, "slanted": False},
+    # "[Ne V] 3425": {"position": 3425.88, "text_vertical_shift": 0.01, "slanted": False},
+    "[Ne III] 3868": {"position": 3868.76, "text_vertical_shift": 0.1, "slanted": False, "show_no_tick_rms": True},
 
-    # "He I 3487": {"position": 3487.72, "offset": 0.1, "slanted": True},
-    "He I 4471": {"position": 4471.48, "offset": 0.1, "slanted": False, "text_shift": -20},
-    "He I 5875": {"position": 5875.6, "offset": 0.1, "slanted": False},
-    "He I 5016": {"position": 5015.67, "offset": 0.1, "slanted": True},
-    "He I 7065": {"position": 7065.2, "offset": 0.3, "slanted": True},
-    "He II 4685": {"position": 4685.7, "offset": 0.1, "slanted": False},
-    # "He I 3187": {"position": 3187.74, "offset": 0.2, "slanted": True},
-    # "He II 3203": {"position": 3203.1, "offset": 0.1, "slanted": True},
+    # "He I 3487": {"position": 3487.72, "text_vertical_shift": 0.1, "slanted": True},
+    "He I 4471": {"position": 4471.48, "text_vertical_shift": 0.1, "slanted": False, "text_shift": -20},
+    "He I 5875": {"position": 5875.6, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.3},
+    "He I 5016": {"position": 5015.67, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_avg": 0.2,"text_shift": 40, "show_no_tick_rms": True},
+    "He I 7065": {"position": 7065.2, "text_vertical_shift": 0.1, "slanted": False},
+    "He II 4685": {"position": 4685.7, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.4},
+    # "He I 3187": {"position": 3187.74, "text_vertical_shift": 0.2, "slanted": True},
+    # "He II 3203": {"position": 3203.1, "text_vertical_shift": 0.1, "slanted": True},
 
-    "[O III] 4363": {"position": 4363.21, "offset": 0.1, "slanted": True},
-    "[O III] 4958": {"position": 4958.91, "offset": 0.1, "slanted": False},
-    "[O III] 5006": {"position": 5006.84, "offset": 0.1, "slanted": False},
+    "[O III] 4363": {"position": 4363.21, "text_vertical_shift": 0.1, "slanted": False, "text_shift": 30},
+    "[O III] 4958": {"position": 4958.91, "text_vertical_shift": 0.1, "slanted": False, "show_no_tick_rms": True},
+    "[O III] 5006": {"position": 5006.84, "text_vertical_shift": -2, "text_shift": -40, "slanted": False, "show_no_tick_avg": True, "show_no_tick_rms": True},
 
-    # "[O I] 6364": {"position": 6363.77, "offset": 0.1, "slanted": False},
-    # "[Fe X] 6375": {"position": 6374.51, "offset": 0.1, "slanted": False},
-    "Fe II 6516": {"position": 6516.08, "offset": 0.1, "slanted": False, "text_shift": -40},
-    "[Fe VII] 5721": {"position": 5721.7, "offset": 0.1, "slanted": False},
-    "[Fe VII] 6087": {"position": 6087, "offset": 0.1, "slanted": False},
-    # "[Fe VII] 3586": {"position": 3586.32, "offset": 0.1, "slanted": True},
+    # "[O I] 6364": {"position": 6363.77, "text_vertical_shift": 0.1, "slanted": False},
+    # "[Fe X] 6375": {"position": 6374.51, "text_vertical_shift": 0.1, "slanted": False},
+    "Fe II 6516": {"position": 6516.08, "text_vertical_shift": 0.1, "slanted": False, "text_shift": -30, "show_no_tick_rms": True, "tick_shift_avg": 1.5},
+    "[Fe VII] 5721": {"position": 5721.7, "text_vertical_shift": 0.1, "slanted": False, "show_no_tick_rms": True},
+    "[Fe VII] 6087": {"position": 6087, "text_vertical_shift": 0.1, "slanted": False, "show_no_tick_rms": True},
+    # "[Fe VII] 3586": {"position": 3586.32, "text_vertical_shift": 0.1, "slanted": True},
 
-    # "[S II] 6716": {"position": 6716.44, "offset": 0.1, "slanted": False},
-    # "[S II] 6731": {"position": 6730.81, "offset": 0.1, "slanted": False},
+    # "[S II] 6716": {"position": 6716.44, "text_vertical_shift": 0.1, "slanted": False},
+    # "[S II] 6731": {"position": 6730.81, "text_vertical_shift": 0.1, "slanted": False},
 
-    "[N II] 6548": {"position": 6548.05, "offset": 0.1, "slanted": False, "text_shift": -40},
-    "[N II] 6584": {"position": 6583.46, "offset": 0.1, "slanted": False, "text_shift": 40},
+    # "[N II] 6548": {"position": 6548.05, "text_vertical_shift": 0.1, "slanted": False, "text_shift": -40},
+    # "[N II] 6584": {"position": 6583.46, "text_vertical_shift": 0.1, "slanted": False, "text_shift": 40},
 
-    "[Ar III] 7135": {"position": 7135.79, "offset": 0.1, "slanted": True},
+    "[Ar III] 7135": {"position": 7135.79, "text_vertical_shift": 0.1, "tick_shift_avg": 0.37, "slanted": False, "show_no_tick_rms": True},
 
-    # "O III 3132": {"position": 3132.79, "offset": 0.1, "slanted": True},
-    "O I 8446": {"position": 8446.35, "offset": 0.5, "slanted": False},
-    "[O I] 6300": {"position": 6300.30, "offset": 0.1, "slanted": False},
+    # "O III 3132": {"position": 3132.79, "text_vertical_shift": 0.1, "slanted": True},
+    "O I 8446": {"position": 8446.35, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.29},
+    "[O I] 6300": {"position": 6300.30, "text_vertical_shift": 0.1, "tick_shift_avg": 0.43, "slanted": False, "show_no_tick_rms": True},
 
-    "Ca II 8498": {"position": 8498.02, "offset": 0.5, "slanted": True},
-    "Ca II 8542": {"position": 8542.09, "offset": 0, "slanted": True},
-    "Ca II 8662": {"position": 8662.14, "offset": 0.1, "slanted": True},
+    # "Ca II 8498": {"position": 8498.02, "text_vertical_shift": 0.5, "slanted": False},
+    # "Ca II 8542": {"position": 8542.09, "text_vertical_shift": 0, "slanted": False},
+    # "Ca II 8662": {"position": 8662.14, "text_vertical_shift": 0.1, "slanted": False},
 }
 
 All_LINE_GROUPS = {
     "Fe II": {"position": [4489,
                            4629.33],
-              "offset": 0.5},
+              "tick_vertical_shift_avg": 0.8},
 
     "Fe II ": {"position": [5169.03,
                             5336.18],
-               "offset": 0.5},
+               "tick_vertical_shift_avg": 0.5},
 
     "[S II] 6716,6730 ": {"position": [6716.44,
                                        6730.81],
-                          "offset": 0.1,
-                          "show_in_rms": True},
+                          "tick_vertical_shift_avg": 0.1,
+                          "show_in_rms": False},
 
     "[O I] 6364, [Fe X] 6375": {"position": [6363.77,
                                              6374.51],
-                                "offset": 0.1,
-                                "show_in_rms": True},
+                                "tick_vertical_shift_avg": 0.2,
+                                "show_in_rms": False},
+    "Ca II": {"position": [8498.02,
+                           8542.09,
+                           8662.14],
+              "tick_vertical_shift_avg": 0.34,
+              "tick_vertical_shift_rms": 0.23,
+              "all_lines": True,
+              "show_in_rms": True},
 
 }
 
@@ -153,6 +160,7 @@ def plot_avg_rms(fits_data, save_path=None, log_scale=False):
         save_path=save_path,
         log_scale=log_scale,
         xlim=(3800, 8900),
+        ylim=(0,14)
     )
 
 
@@ -195,15 +203,21 @@ def plot_avg_rms_spectra(
     y1_filtered = y1_filtered / exponent
     y2_filtered = y2_filtered / exponent
 
+    shift_factor_1 = 2
+    shift_factor_2 = -0.8
+
     # Scale y1 to overlay it above y2
-    scale_factor = 10
-    y2_scaled = y2_filtered * scale_factor - 4
+    scale_factor = 8
+    y2_scaled = y2_filtered * scale_factor + shift_factor_2
+
+    y1_filtered = y1_filtered + shift_factor_1
+
 
     # Create the plot
-    fig, ax = plt.subplots(figsize=(16, 12))
+    fig, ax = plt.subplots(figsize=(20, 12))
 
-    ax.plot(x_filtered, y1_filtered, label=f"{title1}", linestyle="-", color="blue")
-    ax.plot(x_filtered, y2_scaled, label=f"{title2} (scaled by {scale_factor:.2f})", linestyle="-", color="orange")
+    ax.plot(x_filtered, y1_filtered, label=f"{title1} (shifted by {shift_factor_1:.1f})", linestyle="-", color="blue")
+    ax.plot(x_filtered, y2_scaled, label=f"{title2} (scaled by {scale_factor:.1f}, shifted by {shift_factor_2:.1f})", linestyle="-", color="orange")
 
     ax.set_xlabel(xlabel, fontsize=16)
     ax.set_ylabel(f"{new_ylabel} + const.", fontsize=16)
@@ -225,26 +239,33 @@ def plot_avg_rms_spectra(
     # Add lines with labels
     for label, props in lines.items():
         pos = props["position"]
-        offset = props.get("offset", 0.1)
+        text_vertical_shift = props.get("text_vertical_shift", 0.1)
         text_shift = props.get("text_shift", 0)
+        show_no_tick_avg = props.get("show_no_tick_avg", False)
+        show_no_tick_rms = props.get("show_no_tick_rms", False)
+        tick_shift_avg = props.get("tick_shift_avg", 0.2)
+        tick_shift_rms = props.get("tick_shift_rms", 0.2)
+
         slanted = props["slanted"]
         rotation_angle = 45 if slanted else 90
 
         # Bestimme die y-Position für die Linie
         idx = np.abs(x_filtered - pos).argmin()
-        y_pos1 = y1_filtered[idx] + 0.1
-        y_pos2 = y2_scaled[idx] + 0.3
+        y_pos1 = y1_filtered[idx] + tick_shift_avg
+        y_pos2 = y2_scaled[idx] + tick_shift_rms
 
         # Zeichne die Linie und füge das Label hinzu
-        ax.plot([pos, pos], [y_pos1, y_pos1 + line_length], color="black", linewidth=1.5)
-        ax.plot([pos, pos], [y_pos2, y_pos2 + line_length], color="black", linewidth=1.5)
-        ax.text(pos + text_shift, y_pos1 + line_length + offset, label, fontsize=14, color="black", rotation=rotation_angle,
+        if not show_no_tick_avg:
+            ax.plot([pos, pos], [y_pos1, y_pos1 + line_length], color="black", linewidth=1.5)
+        if not show_no_tick_rms:
+            ax.plot([pos, pos], [y_pos2, y_pos2 + line_length], color="black", linewidth=1.5)
+        ax.text(pos + text_shift, y_pos1 + line_length + text_vertical_shift, label, fontsize=14, color="black", rotation=rotation_angle,
                 ha="left" if slanted else "center",
                 va="bottom")
 
     for group, data in All_LINE_GROUPS.items():
         plot_line_group(ax, data["position"], x_filtered, y1_filtered, y2_scaled, group, line_length=line_length,
-                        offset=data["offset"], show_in_rms=data.get("show_in_rms", False))
+                        tick_vertical_shift_avg=data.get("tick_vertical_shift_avg",0.2), tick_vertical_shift_rms=data.get("tick_vertical_shift_rms", 0.2), show_in_rms=data.get("show_in_rms", False), all_lines=data.get("all_lines", False))
 
     plt.title(super_title, fontsize=20)
 
@@ -258,7 +279,7 @@ def plot_avg_rms_spectra(
     plt.show()
 
 
-def plot_line_group(ax_obj, positions, x, y1_filtered, y2_scaled, group, line_length=0.5, offset=0.5, all_lines=False,
+def plot_line_group(ax_obj, positions, x, y1_filtered, y2_scaled, group, line_length=0.5, tick_vertical_shift_avg=0.5, tick_vertical_shift_rms=0.5, all_lines=False,
                     show_in_rms=False):
     """Funktion, um verbundene Linien zu zeichnen."""
     min_pos = min(positions)
@@ -269,11 +290,13 @@ def plot_line_group(ax_obj, positions, x, y1_filtered, y2_scaled, group, line_le
     spectrum_avg = y1_filtered[idx]
     spectrum_rms = y2_scaled[idx]
 
+    line_length = line_length + 0.015
+
     # Linienstart und -ende berechnen
-    line_ymin_avg = spectrum_avg + offset
+    line_ymin_avg = spectrum_avg + tick_vertical_shift_avg
     line_ymax_avg = line_ymin_avg + line_length
 
-    line_ymin_rms = spectrum_rms + offset
+    line_ymin_rms = spectrum_rms + tick_vertical_shift_rms
     line_ymax_rms = line_ymin_rms + line_length
 
     if all_lines:
