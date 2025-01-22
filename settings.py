@@ -16,6 +16,8 @@ COLORCODE_CONTINUA = {
     'Cont8900': (139, 0, 0, 255)
 }
 
+BASE_MJD = 57581.66
+
 
 def normalize_color_values(colorcode_dict):
     """

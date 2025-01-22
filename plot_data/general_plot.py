@@ -3,6 +3,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
+from settings import BASE_MJD
+
 
 # -----------------------------------------------------------------------------
 # UTILITY-FUNKTIONEN
@@ -62,10 +64,13 @@ def format_relative_days(mjd):
     str
         String der Form '0', '1', '2', ... basierend auf dem Abstand zum base_mjd.
     """
-    base_mjd = 57581.66  # Startwert (erster MJD)
+    base_mjd = BASE_MJD # Startwert (erster MJD)
     relative_day = mjd - base_mjd
     return relative_day
 
+
+def format_yaxis(value, _):
+    return f"{value:.1f}"
 
 # -----------------------------------------------------------------------------
 # FORMAT- & LAYOUT-HELFERFUNKTIONEN
@@ -84,11 +89,8 @@ def check_for_empty_rows(axes, fig, x_label):
         Matplotlib-Figure, die die Subplots enthält.
     x_label : str
         Beschriftung für die X-Achse.
-    formating : bool, optional
-        Wenn True, wird ein spezieller Formatter für die Achsenlabels verwendet.
-        Andernfalls wird der Standardformatter genutzt.
     """
-    base_mjd = 57581.66
+
     # Löschen leerer Reihen
     for row in range(4):
         if all(not axes[row, col].has_data() for col in range(2)):
@@ -106,20 +108,13 @@ def check_for_empty_rows(axes, fig, x_label):
                 if axes[row, col].has_data():  # Stelle sicher, dass die Achse existiert und Daten hat
                     axes[row, col].xaxis.set_major_locator(MultipleLocator(5))  # Ticks festlegen
 
-                    axes[row, col].xaxis.set_major_formatter(
-                            plt.FuncFormatter(lambda x, pos: f"{x}")
-                        )
-
                     axes[row, col].xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
 
                     # Beschriftungen nur in der untersten vorhandenen Reihe anzeigen
                     if row == lowest_row:
+                        axes[row, col].set_xlabel(x_label, fontsize=12)
                         axes[row, col].tick_params(axis='x', which='both', direction='inout', labelbottom=True)
 
-    len_remaining_rows = len(remaining_rows)
-    text_heigth = 0.04 + (4 - len_remaining_rows) * 0.20
-    fig.text(0.95, text_heigth, f"Base: {base_mjd:.2f} MJD", ha='right', fontsize=10)
-    fig.text(0.5, text_heigth, x_label, ha='center', fontsize=12)
 
 
 def prepare_data(data, xlabel, ylabel, yerr_name, rows, cols):
@@ -220,11 +215,13 @@ def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
         ax.legend(fontsize=8, loc='upper right')
 
     if col == 0:
-        ax.set_ylabel(ylabel)
+        ax.set_ylabel(ylabel, fontsize=12)
+        ax.yaxis.set_label_coords(-0.17, 0.5)  # Position des Labels für die linke Achse
     else:
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
-        ax.set_ylabel(ylabel)
+        ax.set_ylabel(ylabel, fontsize=12)
+        ax.yaxis.set_label_coords(1.18, 0.5)
 
     if row < 3:
         ax.set_xticklabels([])
@@ -232,16 +229,18 @@ def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
     if data_type == 'lightcurves':
         ax.xaxis.set_major_locator(MultipleLocator(5))
         ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+        ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
         # ax.grid(True, linestyle='--', linewidth=0.5)
 
         if row == 0:
             ax_top = ax.secondary_xaxis('top')
             ax_top.xaxis.set_major_locator(MultipleLocator(5))
             ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
-            ax_top.tick_params(axis='x', rotation=45, labelsize=8)
+            ax_top.tick_params(axis='x', rotation=45, labelsize=10)
 
     elif data_type == 'ccfs':
         ax.yaxis.set_major_locator(MultipleLocator(0.1))
+        ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
         # ax.grid(True, linestyle='--', linewidth=0.5)
 
         if row == 0:
