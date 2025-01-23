@@ -96,10 +96,10 @@ def plot_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
     one_dim_lightcurve_data = import_1d_lightcurve_data()
 
-    key_order = ["Cont4010", 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeII4685', 'OI8446']
+    key_order = ["Cont4010", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'OI8446']
     plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir, compare_cont="Cont4010", key_order=key_order)
 
-    key_order = ["Cont5100", 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeII4685', 'OI8446']
+    key_order = ["Cont5100", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'OI8446']
     plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir, compare_cont="Cont5100", key_order=key_order)
 
 
@@ -114,11 +114,11 @@ def save_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
     one_dim_lightcurve_data = import_1d_lightcurve_data()
 
-    key_order = ["Cont4010", 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeII4685', 'OI8446']
+    key_order = ["Cont4010", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'OI8446']
     plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir, compare_cont="Cont4010", key_order=key_order,
                                       save_only=True)
 
-    key_order = ["Cont5100", 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeII4685', 'OI8446']
+    key_order = ["Cont5100", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'OI8446']
     plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir, compare_cont="Cont5100", key_order=key_order,
                                       save_only=True)
 
