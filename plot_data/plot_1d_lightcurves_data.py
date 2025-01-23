@@ -7,15 +7,13 @@ from settings import COLORCODE_CONTINUA_NORMALIZED, BASE_MJD
 matplotlib.use("Qt5Agg")
 
 
-
-
 def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, compare_cont, key_order=None, save_only=False):
     base_mjd = BASE_MJD
 
     xlabel = f"MJD - {base_mjd:.2f}"
     ylabel_cont = (r"$F_{\lambda}$ $[\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, "
              r"\mathrm{\AA}^{-1}]$")
-    ylabel_line = (r"$F_{\lambda}$ $[\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1}$")
+    ylabel_line = (r"$F_{\lambda}$ $[\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1}]$")
     yerr_name = 'fluxerrs [ergs/s/cm2/A]'
 
 

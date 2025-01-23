@@ -216,12 +216,12 @@ def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
 
     if col == 0:
         ax.set_ylabel(ylabel, fontsize=12)
-        ax.yaxis.set_label_coords(-0.17, 0.5)  # Position des Labels für die linke Achse
+        ax.yaxis.set_label_coords(-0.19, 0.5)  # Position des Labels für die linke Achse
     else:
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
         ax.set_ylabel(ylabel, fontsize=12)
-        ax.yaxis.set_label_coords(1.18, 0.5)
+        ax.yaxis.set_label_coords(1.19, 0.5)
 
     if row < 3:
         ax.set_xticklabels([])
