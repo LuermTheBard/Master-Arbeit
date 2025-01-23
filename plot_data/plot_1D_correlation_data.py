@@ -18,9 +18,35 @@ def plot_all_1d_ccfs_in_groups_for_line(galaxie_campaigns_dict, line_name, outpu
 
     save_folder = output_dir / "plot_1d_ccfs" / line_name
     save_folder.mkdir(parents=True, exist_ok=True)
+    compare_cont = "Cont4010"
 
     for campaign, data_dict in galaxie_campaigns_dict.items():
-        plot_1d_data_in_groups(data_dict, x_key, y_key, xlabel, ylabel, title=f"CCFs of {line_name}",
+        plot_1d_data_in_groups(data_dict, x_key, y_key, compare_cont, xlabel, ylabel, title=f"CCFs of {line_name}",
+                               save_only=save_only, output_dir=save_folder, shared_y=True, data_type="ccfs")
+
+
+def plot_all_1d_ccfs_in_groups_for_cont(galaxie_campaigns_correlation_data_dict, cont_name, output_dir, key_order=None, save_only=False):
+    xlabel = "Time Lag $\\tau$ [d]"
+    ylabel = "Correlation Coefficient"
+
+    x_key = "time shift (tau)"
+    y_key = cont_name
+
+    save_folder = output_dir / "plot_1d_ccfs" / cont_name
+    save_folder.mkdir(parents=True, exist_ok=True)
+
+    def sort_keys(key):
+        for idx, prefix in enumerate(key_order):
+            if key.startswith(prefix):
+                return idx
+        return len(key_order)
+
+    for campaign, data_dict in galaxie_campaigns_correlation_data_dict.items():
+
+        sorted_data_dict = dict(sorted(data_dict[cont_name].items(), key=lambda item: sort_keys(item[0])))
+
+        plot_1d_data_in_groups(sorted_data_dict , x_key, y_key, cont_name, xlabel, ylabel,
+                               title=f"CCFs between Emission Lines and {cont_name}",
                                save_only=save_only, output_dir=save_folder, shared_y=True, data_type="ccfs")
 
 

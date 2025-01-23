@@ -239,7 +239,7 @@ def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
             ax_top.tick_params(axis='x', rotation=45, labelsize=10)
 
     elif data_type == 'ccfs':
-        ax.yaxis.set_major_locator(MultipleLocator(0.1))
+        ax.yaxis.set_major_locator(MultipleLocator(0.2))
         ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
         # ax.grid(True, linestyle='--', linewidth=0.5)
 
@@ -295,34 +295,52 @@ def plot_1d_data_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', yl
     None
     """
 
+    if data_type == "ccfs":
+
+        x_values_ccfs = data['time shift (tau)']
+
+        data.pop('time shift (tau)')
+
+
     # Haupt-Schleife zur Erstellung der Subplots in Gruppen
     for current_data, group_index in prepare_data(data, x_key, y_key, yerr_name, rows, cols):
         fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=True, sharey=shared_y)
         fig.subplots_adjust(hspace=0, wspace=0)
 
-        for i, (line_name, line_data) in enumerate(current_data):
-            row, col = divmod(i, cols)
-            ax = axes[row, col]
+        if data_type == "lightcurves":
+            for i, (line_name, line_data) in enumerate(current_data):
+                row, col = divmod(i, cols)
+                ax = axes[row, col]
 
-            x_values = np.array(line_data.get(x_key, []))
-            y_values = np.array(line_data.get(y_key, []))
-            yerr_values = np.array(line_data.get(yerr_name, [])) if yerr_name else None
-            color = color_dict.get(line_name, 'black') if color_dict else 'black'
+                x_values = np.array(line_data.get(x_key, []))
+                y_values = np.array(line_data.get(y_key, []))
+                yerr_values = np.array(line_data.get(yerr_name, [])) if yerr_name else None
+                color = color_dict.get(line_name, 'black') if color_dict else 'black'
+
+                exponent_value = -15
+                exponent = 10 ** exponent_value
+                latex_exponent = f"10^{{{exponent_value}}}"
+
+                ylabel_parts = ylabel.split("[")
+                new_ylabel = ylabel_parts[0] + f"[{latex_exponent} " + ylabel_parts[1]
+
+                y_values = y_values / exponent
+                yerr_values = yerr_values / exponent
 
 
-            exponent_value = -15
-            exponent = 10 ** exponent_value
-            latex_exponent = f"10^{{{exponent_value}}}"
+                # Aufruf der Konfigurationsmethode (abhängig vom Datentyp)
+                configure_axis(ax, row, col, new_ylabel, color, x_values, y_values, yerr_values, line_name, data_type)
+        elif data_type == "ccfs":
 
-            ylabel_parts = ylabel.split("[")
-            new_ylabel = ylabel_parts[0] + f"[{latex_exponent} " + ylabel_parts[1]
+            for i, (line_name, line_data) in enumerate(current_data):
 
-            y_values = y_values / exponent
-            yerr_values = yerr_values / exponent
+                row, col = divmod(i, cols)
+                ax = axes[row, col]
+                y_values = line_data
+                color = color_dict.get(line_name, 'black') if color_dict else 'black'
 
-
-            # Aufruf der Konfigurationsmethode (abhängig vom Datentyp)
-            configure_axis(ax, row, col, new_ylabel, color, x_values, y_values, yerr_values, line_name, data_type)
+                # Aufruf der Konfigurationsmethode (abhängig vom Datentyp)
+                configure_axis(ax, row, col, ylabel, color, x_values_ccfs, y_values, None, line_name, data_type)
 
         # Aufruf der Abschlussmethode (abhängig vom Datentyp)
         finalize_figure(fig, axes, x_label=xlabel, title=title, group_index=group_index,

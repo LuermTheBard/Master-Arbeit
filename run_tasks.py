@@ -12,7 +12,7 @@ from handle_data.dopplershift import calc_broad_lines_doppler_shift_with_error
 from import_data.import_data import import_1d_correlation_data, load_dopplershift_data_from_toml, \
     import_1d_lightcurve_data, import_fits_data
 from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua, \
-    plot_all_1d_ccfs_in_groups_for_line
+    plot_all_1d_ccfs_in_groups_for_line, plot_all_1d_ccfs_in_groups_for_cont
 from plot_data.plot_time_lag import plot_fit_results, plot_time_lags_from_toml
 from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_lightcurves_with_offset, \
     plot_all_1d_lightcurves_in_groups
@@ -198,6 +198,49 @@ def plot_1d_corr_in_groups_for_line(line_name=None, output_dir=DEFAULT_OUTPUT_DI
 
     one_dim_lightcurve_data = import_1d_correlation_data()
     plot_all_1d_ccfs_in_groups_for_line(one_dim_lightcurve_data, line_name=line_name, output_dir=output_dir)
+
+
+@task
+def plot_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DIR):
+    """
+    save all 1D correlations.
+    """
+
+    # Prüfen, ob line_name definiert ist
+    if not cont_name:
+        raise ValueError("Please specify a line name in the following form: plot_line_1d_corr::line_name")
+
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir.mkdir(parents=True)
+
+    key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5015', 'HeI5875', 'HeII4685', 'OI8446']
+
+    one_dim_correlation_data = import_1d_correlation_data()
+
+    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data, cont_name=cont_name, output_dir=output_dir, key_order=key_order)
+
+
+@task
+def save_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DIR):
+    """
+    save all 1D correlations.
+    """
+
+    # Prüfen, ob line_name definiert ist
+    if not cont_name:
+        raise ValueError("Please specify a line name in the following form: plot_line_1d_corr::line_name")
+
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir.mkdir(parents=True)
+
+    key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5015', 'HeI5875', 'HeII4685', 'OI8446']
+
+    one_dim_correlation_data = import_1d_correlation_data()
+
+    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data, cont_name=cont_name, output_dir=output_dir,
+                                        key_order=key_order, save_only=True)
 
 
 @task
