@@ -300,43 +300,6 @@ def configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_va
         ax_top.tick_params(axis='x')
 
 
-def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name, data_type):
-    """
-    Konfiguriert die Achse basierend auf dem Datentyp.
-
-    Parameter:
-    -----------
-    ax : matplotlib.axes.Axes
-        Die jeweilige Achse, auf der geplottet wird.
-    row : int
-        Zeilenindex des Subplots.
-    col : int
-        Spaltenindex des Subplots.
-    ylabel : str
-        Beschriftung der Y-Achse.
-    color : str
-        Linienfarbe.
-    x_values : np.ndarray
-        X-Daten für den Plot.
-    y_values : np.ndarray
-        Y-Daten für den Plot.
-    yerr_values : np.ndarray or None
-        Fehlerbalkendaten, falls vorhanden.
-    line_name : str
-        Name / Label für die Datenlinie.
-    data_type : str
-        Typ der Daten, entweder 'lightcurves' oder 'ccfs'.
-
-    Returns:
-    -----------
-    None
-    """
-    if data_type == 'lightcurves':
-        configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name)
-    elif data_type == 'ccfs':
-        configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name)
-
-
 # -----------------------------------------------------------------------------
 # HAUPT-PLOT-FUNKTION
 # -----------------------------------------------------------------------------
