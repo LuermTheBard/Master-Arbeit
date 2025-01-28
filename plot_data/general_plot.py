@@ -167,6 +167,139 @@ def prepare_data(data, xlabel, ylabel, yerr_name, rows, cols):
         yield current_data, group_index
 
 
+def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name):
+    """
+    Konfiguriert die Achse für Lightcurves.
+
+    Parameter:
+    -----------
+    ax : matplotlib.axes.Axes
+        Die jeweilige Achse, auf der geplottet wird.
+    row : int
+        Zeilenindex des Subplots.
+    col : int
+        Spaltenindex des Subplots.
+    ylabel : str
+        Beschriftung der Y-Achse.
+    color : str
+        Linienfarbe.
+    x_values : np.ndarray
+        X-Daten für den Plot.
+    y_values : np.ndarray
+        Y-Daten für den Plot.
+    yerr_values : np.ndarray or None
+        Fehlerbalkendaten, falls vorhanden.
+    line_name : str
+        Name / Label für die Datenlinie.
+
+    Returns:
+    -----------
+    None
+    """
+    if x_values.size > 0 and y_values.size > 0:
+        if yerr_values is not None:
+            ax.errorbar(
+                format_relative_days(x_values),
+                y_values,
+                yerr=yerr_values,
+                fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color
+            )
+        else:
+            ax.plot(
+                format_relative_days(x_values),
+                y_values, label=f'{line_name}', color=color
+            )
+
+        ax.legend(fontsize=8, loc='upper right')
+
+    if col == 0:
+        ax.set_ylabel(ylabel, fontsize=12)
+        ax.yaxis.set_label_coords(-0.19, 0.5)
+    else:
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position("right")
+        ax.set_ylabel(ylabel, fontsize=12)
+        ax.yaxis.set_label_coords(1.19, 0.5)
+
+    if row < 3:
+        ax.set_xticklabels([])
+
+    ax.xaxis.set_major_locator(MultipleLocator(5))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+    ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
+
+    if row == 0:
+        ax_top = ax.secondary_xaxis('top')
+        ax_top.xaxis.set_major_locator(MultipleLocator(5))
+        ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
+        ax_top.tick_params(axis='x', rotation=45, labelsize=10)
+
+
+def configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name):
+    """
+    Konfiguriert die Achse für CCFs.
+
+    Parameter:
+    -----------
+    ax : matplotlib.axes.Axes
+        Die jeweilige Achse, auf der geplottet wird.
+    row : int
+        Zeilenindex des Subplots.
+    col : int
+        Spaltenindex des Subplots.
+    ylabel : str
+        Beschriftung der Y-Achse.
+    color : str
+        Linienfarbe.
+    x_values : np.ndarray
+        X-Daten für den Plot.
+    y_values : np.ndarray
+        Y-Daten für den Plot.
+    yerr_values : np.ndarray or None
+        Fehlerbalkendaten, falls vorhanden.
+    line_name : str
+        Name / Label für die Datenlinie.
+
+    Returns:
+    -----------
+    None
+    """
+    if x_values.size > 0 and y_values.size > 0:
+        if yerr_values is not None:
+            ax.errorbar(
+                x_values,
+                y_values,
+                yerr=yerr_values,
+                fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color
+            )
+        else:
+            ax.plot(
+                x_values, y_values, label=f'{line_name}', color=color
+            )
+
+        ax.legend(fontsize=8, loc='upper right')
+
+    if col == 0:
+        ax.set_ylabel(ylabel, fontsize=12)
+        ax.yaxis.set_label_coords(-0.19, 0.5)
+    else:
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position("right")
+        ax.set_ylabel(ylabel, fontsize=12)
+        ax.yaxis.set_label_coords(1.19, 0.5)
+
+    if row < 3:
+        ax.set_xticklabels([])
+
+    ax.yaxis.set_major_locator(MultipleLocator(0.2))
+    ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
+
+    if row == 0:
+        ax_top = ax.secondary_xaxis('top')
+        ax_top.xaxis.set_major_locator(MultipleLocator(5))
+        ax_top.tick_params(axis='x')
+
+
 def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name, data_type):
     """
     Konfiguriert die Achse basierend auf dem Datentyp.
@@ -198,55 +331,10 @@ def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
     -----------
     None
     """
-    if x_values.size > 0 and y_values.size > 0:
-        if yerr_values is not None:
-            ax.errorbar(
-                x_values if data_type == 'ccfs' else format_relative_days(x_values),
-                y_values,
-                yerr=yerr_values,
-                fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color
-            )
-        else:
-            ax.plot(
-                x_values if data_type == 'ccfs' else format_relative_days(x_values),
-                y_values, label=f'{line_name}', color=color
-            )
-
-        ax.legend(fontsize=8, loc='upper right')
-
-    if col == 0:
-        ax.set_ylabel(ylabel, fontsize=12)
-        ax.yaxis.set_label_coords(-0.19, 0.5)  # Position des Labels für die linke Achse
-    else:
-        ax.yaxis.tick_right()
-        ax.yaxis.set_label_position("right")
-        ax.set_ylabel(ylabel, fontsize=12)
-        ax.yaxis.set_label_coords(1.19, 0.5)
-
-    if row < 3:
-        ax.set_xticklabels([])
-
     if data_type == 'lightcurves':
-        ax.xaxis.set_major_locator(MultipleLocator(5))
-        ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-        ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
-        # ax.grid(True, linestyle='--', linewidth=0.5)
-
-        if row == 0:
-            ax_top = ax.secondary_xaxis('top')
-            ax_top.xaxis.set_major_locator(MultipleLocator(5))
-            ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
-            ax_top.tick_params(axis='x', rotation=45, labelsize=10)
-
+        configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name)
     elif data_type == 'ccfs':
-        ax.yaxis.set_major_locator(MultipleLocator(0.2))
-        ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
-        # ax.grid(True, linestyle='--', linewidth=0.5)
-
-        if row == 0:
-            ax_top = ax.secondary_xaxis('top')
-            ax_top.xaxis.set_major_locator(MultipleLocator(5))
-            ax_top.tick_params(axis='x')
+        configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name)
 
 
 # -----------------------------------------------------------------------------
@@ -254,10 +342,62 @@ def configure_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
 # -----------------------------------------------------------------------------
 
 def plot_1d_data_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
-                           yerr_name=None, title=None, save_only=False,
-                           output_dir=None, color_dict=None, rows=4, cols=2, data_type='lightcurves'):
+                            yerr_name=None, title=None, save_only=False,
+                            output_dir=None, color_dict=None, rows=4, cols=2, data_type='lightcurves'):
     """
-    Plot multiple 1D data sets in Gruppen, abhängig von einem angegebenen Datentyp.
+    Delegiert das Plotten von 1D-Daten an die entsprechenden Funktionen basierend auf dem Datentyp.
+
+    Parameter:
+    -----------
+    data : dict
+        Dictionary containing the data for the plots.
+    x_key : str
+        Key für die x-Daten in den Dictionaries der Daten.
+    y_key : str
+        Key für die y-Daten in den Dictionaries der Daten.
+    compare_cont : bool
+        Vergleichskontrolle.
+    xlabel : str, optional
+        Label für die X-Achse.
+    ylabel : str, optional
+        Label für die Y-Achse.
+    shared_y : bool, optional
+        Wenn True, teilen sich alle Subplots die Y-Achse.
+    yerr_name : str, optional
+        Key für die Fehlerbalken im Dictionary.
+    title : str, optional
+        Titel für die gesamte Figure.
+    save_only : bool, optional
+        Ob die Abbildungen gespeichert werden sollen, ohne sie anzuzeigen.
+    output_dir : str or Path, optional
+        Verzeichnis, in dem die Abbildungen gespeichert werden.
+    color_dict : dict, optional
+        Dictionary mit Farben für jede Datenserie.
+    rows : int, optional
+        Anzahl der Subplot-Reihen.
+    cols : int, optional
+        Anzahl der Subplot-Spalten.
+    data_type : str, optional
+        Typ der Daten, entweder 'lightcurves' oder 'ccfs'.
+
+    Returns:
+    -----------
+    None
+    """
+    if data_type == 'lightcurves':
+        plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel, ylabel, shared_y,
+                                   yerr_name, title, save_only, output_dir, color_dict, rows, cols)
+    elif data_type == 'ccfs':
+        plot_ccfs_in_groups(data, x_key, y_key, compare_cont, xlabel, ylabel, shared_y,
+                            title, save_only, output_dir, color_dict, rows, cols)
+
+
+
+def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
+                               yerr_name=None, title=None, save_only=False,
+                               output_dir=None, color_dict=None, rows=4, cols=2):
+    """
+    Plots 1D-Daten in Gruppen für Lightcurves.
 
     Parameter:
     -----------
@@ -287,62 +427,92 @@ def plot_1d_data_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', yl
         Anzahl der Subplot-Reihen.
     cols : int, optional
         Anzahl der Subplot-Spalten.
-    data_type : str, optional
-        Entweder 'lightcurves' oder 'ccfs', bestimmt die Konfiguration der Achsen.
 
     Returns:
     -----------
     None
     """
-
-    if data_type == "ccfs":
-
-        x_values_ccfs = data['time shift (tau)']
-
-        data.pop('time shift (tau)')
-
-
-    # Haupt-Schleife zur Erstellung der Subplots in Gruppen
     for current_data, group_index in prepare_data(data, x_key, y_key, yerr_name, rows, cols):
         fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=True, sharey=shared_y)
         fig.subplots_adjust(hspace=0, wspace=0)
 
-        if data_type == "lightcurves":
-            for i, (line_name, line_data) in enumerate(current_data):
-                row, col = divmod(i, cols)
-                ax = axes[row, col]
+        for i, (line_name, line_data) in enumerate(current_data):
+            row, col = divmod(i, cols)
+            ax = axes[row, col]
 
-                x_values = np.array(line_data.get(x_key, []))
-                y_values = np.array(line_data.get(y_key, []))
-                yerr_values = np.array(line_data.get(yerr_name, [])) if yerr_name else None
-                color = color_dict.get(line_name, 'black') if color_dict else 'black'
+            x_values = np.array(line_data.get(x_key, []))
+            y_values = np.array(line_data.get(y_key, []))
+            yerr_values = np.array(line_data.get(yerr_name, [])) if yerr_name else None
+            color = color_dict.get(line_name, 'black') if color_dict else 'black'
 
-                exponent_value = -15
-                exponent = 10 ** exponent_value
-                latex_exponent = f"10^{{{exponent_value}}}"
+            exponent_value = -15
+            exponent = 10 ** exponent_value
+            latex_exponent = f"10^{{{exponent_value}}}"
 
-                ylabel_parts = ylabel.split("[")
-                new_ylabel = ylabel_parts[0] + f"[{latex_exponent} " + ylabel_parts[1]
+            ylabel_parts = ylabel.split("[")
+            new_ylabel = ylabel_parts[0] + f"[{latex_exponent} " + ylabel_parts[1]
 
-                y_values = y_values / exponent
-                yerr_values = yerr_values / exponent
+            y_values = y_values / exponent
+            yerr_values = yerr_values / exponent
+
+            configure_lightcurves_axis(ax, row, col, new_ylabel, color, x_values, y_values, yerr_values, line_name)
+
+        finalize_figure(fig, axes, x_label=xlabel, title=title, group_index=group_index,
+                        save_only=save_only, output_dir=output_dir, compare_cont=compare_cont)
 
 
-                # Aufruf der Konfigurationsmethode (abhängig vom Datentyp)
-                configure_axis(ax, row, col, new_ylabel, color, x_values, y_values, yerr_values, line_name, data_type)
-        elif data_type == "ccfs":
+def plot_ccfs_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
+                        title=None, save_only=False, output_dir=None, color_dict=None, rows=4, cols=2):
+    """
+    Plots 1D-Daten in Gruppen für CCFs.
 
-            for i, (line_name, line_data) in enumerate(current_data):
+    Parameter:
+    -----------
+    data : dict
+        Dictionary containing the data for the plots.
+    x_key : str
+        Key für die x-Daten in den Dictionaries der Daten.
+    y_key : str
+        Key für die y-Daten in den Dictionaries der Daten.
+    xlabel : str, optional
+        Label für die X-Achse (nicht immer verwendet).
+    ylabel : str, optional
+        Label für die Y-Achse.
+    shared_y : bool, optional
+        Wenn True, teilen sich alle Subplots die Y-Achse.
+    title : str, optional
+        Titel für die gesamte Figure.
+    save_only : bool, optional
+        Ob die Abbildungen gespeichert werden sollen, ohne sie anzuzeigen.
+    output_dir : str or Path, optional
+        Verzeichnis, in dem die Abbildungen gespeichert werden.
+    color_dict : dict, optional
+        Dictionary mit Farben für jede Datenserie.
+    rows : int, optional
+        Anzahl der Subplot-Reihen.
+    cols : int, optional
+        Anzahl der Subplot-Spalten.
 
-                row, col = divmod(i, cols)
-                ax = axes[row, col]
-                y_values = line_data
-                color = color_dict.get(line_name, 'black') if color_dict else 'black'
+    Returns:
+    -----------
+    None
+    """
+    x_values_ccfs = data['time shift (tau)']
+    data.pop('time shift (tau)')
 
-                # Aufruf der Konfigurationsmethode (abhängig vom Datentyp)
-                configure_axis(ax, row, col, ylabel, color, x_values_ccfs, y_values, None, line_name, data_type)
+    for current_data, group_index in prepare_data(data, x_key, y_key, None, rows, cols):
+        fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=True, sharey=shared_y)
+        fig.subplots_adjust(hspace=0, wspace=0)
 
-        # Aufruf der Abschlussmethode (abhängig vom Datentyp)
+        for i, (line_name, line_data) in enumerate(current_data):
+            row, col = divmod(i, cols)
+            ax = axes[row, col]
+
+            y_values = line_data
+            color = color_dict.get(line_name, 'black') if color_dict else 'black'
+
+            configure_ccfs_axis(ax, row, col, ylabel, color, x_values_ccfs, y_values, None, line_name)
+
         finalize_figure(fig, axes, x_label=xlabel, title=title, group_index=group_index,
                         save_only=save_only, output_dir=output_dir, compare_cont=compare_cont)
 
