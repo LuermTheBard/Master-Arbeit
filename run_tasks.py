@@ -2,8 +2,6 @@ import sys
 import subprocess
 from pathlib import Path
 
-import toml
-
 from handle_data.handle_data import sort_1d_corr_data_for_lines, get_continua_with_highest_corr_coef, \
     get_weighted_best_continua
 from handle_data.dopplershift import calc_broad_lines_doppler_shift_with_error
@@ -11,7 +9,6 @@ from import_data.import_data import import_1d_correlation_data, load_dopplershif
     import_1d_lightcurve_data, import_fits_data
 from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua
 from plot_data.plot_1D_ccfs_in_groups_data import plot_all_1d_ccfs_in_groups_for_cont
-from plot_data.plot_time_lag import plot_fit_results, plot_time_lags_from_toml
 from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_lightcurves_with_offset
 from plot_data.plot_1D_lightcurves_in_groups_data import plot_all_1d_lightcurves_in_groups
 from plot_data.plot_fits_data import plot_avg_rms
