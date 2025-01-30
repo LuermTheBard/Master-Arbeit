@@ -119,8 +119,6 @@ def get_centroid_of_peak(x_values, y_values, baseline=None, threshold=0.8):
     if baseline is None:
         baseline = min(y_values)
 
-    print(f"Baseline is set to {baseline}")
-
     if baseline == 0:
         y_threshold = y_values_max * threshold
     else:
