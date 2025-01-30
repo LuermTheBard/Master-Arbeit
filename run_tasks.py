@@ -32,7 +32,7 @@ def dummy_task():
 def calc_time_lag():
 
     one_dim_correlation_data = import_1d_correlation_data()
-    result_dict = get_time_lags(one_dim_correlation_data, selected_continua=["Cont1150", "Cont5100"], baseline=0.01, plot=True)
+    result_dict = get_time_lags(one_dim_correlation_data, selected_continua=["Cont1150", "Cont5100"], plot=True)
 
     print(result_dict)
 

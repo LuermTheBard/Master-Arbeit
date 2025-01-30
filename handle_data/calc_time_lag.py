@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-def plot_ccf_with_centroid(x_values, y_values, x_selected, y_selected, centroid, baseline, threshold):
+def plot_ccf_with_centroid(x_values, y_values, x_selected, y_selected, centroid, baseline, threshold, line_name, cont_name):
     """
     Plottet die CCF-Kurve und markiert den Bereich, in dem der Centroid berechnet wurde.
 
@@ -30,15 +30,19 @@ def plot_ccf_with_centroid(x_values, y_values, x_selected, y_selected, centroid,
     plt.axhline(baseline, color='orange', linestyle=':', label='Baseline')
     plt.axhline(threshold, color='magenta', linestyle='-.', label='Threshold')
 
-    plt.xlabel('Time Shift (tau)')
-    plt.ylabel('CCF Amplitude')
-    plt.title('CCF Curve with Centroid Region, Baseline, and Threshold')
+    # Den Centroid-Wert direkt an der x-Achse anzeigen
+    plt.text(centroid, plt.ylim()[0] - 0.05 * (plt.ylim()[1] - plt.ylim()[0]),
+             f'{centroid:.2f}', color='purple', fontsize=10, ha='center')
+
+    plt.xlabel("Time Lag $\\tau$ [d]")
+    plt.ylabel("Correlation Coefficient")
+    plt.title(f'CCF between {line_name} and {cont_name}')
     plt.legend()
     plt.grid()
     plt.show()
 
 
-def calculate_time_lag_and_err(x_values, y_values, baseline=None, plot=False):
+def calculate_time_lag_and_err(x_values, y_values, cont_name, line_name, baseline=None, plot=False):
     """
     Berechnet den Centroid und optional die CCF-Kurve mit markiertem Bereich plotten.
 
@@ -55,7 +59,7 @@ def calculate_time_lag_and_err(x_values, y_values, baseline=None, plot=False):
     centroid_error = estimate_centroid_error(x_selected, y_selected)
 
     if plot:
-        plot_ccf_with_centroid(x_values, y_values, x_selected, y_selected, centroid, baseline, threshold)
+        plot_ccf_with_centroid(x_values, y_values, x_selected, y_selected, centroid, baseline, threshold,line_name, cont_name)
 
     return {
         "time_lag": centroid,
@@ -74,13 +78,13 @@ def get_time_lags(campaign_ccf_data, baseline=None, selected_continua=None, plot
         for name, cont_data in cont_data_dict.items():
             # Falls eine Liste von Continuen gegeben ist, nur die relevanten Namen speichern
             if selected_continua is None or name in selected_continua:
-                result_dict = get_time_lag_from_line(cont_data, baseline=baseline, plot=plot)
+                result_dict = get_time_lag_from_line(cont_data, name, baseline=baseline, plot=plot)
                 campaign_cont_result_dict[campaign][name] = result_dict
 
     return campaign_cont_result_dict
 
 
-def get_time_lag_from_line(cont_data, baseline=None, plot=False):
+def get_time_lag_from_line(cont_data, cont_name, baseline=None, plot=False):
 
 
     x_values = cont_data.pop('time shift (tau)')
@@ -89,7 +93,7 @@ def get_time_lag_from_line(cont_data, baseline=None, plot=False):
 
     for line, y_values in cont_data.items():
 
-        result_dict = calculate_time_lag_and_err(x_values, y_values, baseline=baseline, plot=plot)
+        result_dict = calculate_time_lag_and_err(x_values, y_values, cont_name, line, baseline=baseline, plot=plot)
 
         line_time_lag_dict[line] = result_dict
 
