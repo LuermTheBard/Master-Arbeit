@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-def plot_ccf_with_centroid(x_values, y_values, x_selected, y_selected, centroid, baseline):
+def plot_ccf_with_centroid(x_values, y_values, x_selected, y_selected, centroid, baseline, threshold):
     """
     Plottet die CCF-Kurve und markiert den Bereich, in dem der Centroid berechnet wurde.
 
@@ -13,18 +13,26 @@ def plot_ccf_with_centroid(x_values, y_values, x_selected, y_selected, centroid,
     y_selected (array-like): Die entsprechenden y-Werte.
     centroid (float): Der berechnete Centroid.
     baseline (float): Die verwendete Baseline.
+    threshold (float): Der Schwellenwert für die Centroid-Berechnung.
     """
     plt.figure(figsize=(8, 5))
     plt.plot(x_values, y_values, label='CCF Curve', color='blue')
+
+    # Markiere die nicht ausgewählten Punkte in Schwarz
+    x_unselected = np.setdiff1d(x_values, x_selected)
+    y_unselected = [y_values[np.where(x_values == x)[0][0]] for x in x_unselected]
+    plt.scatter(x_unselected, y_unselected, color='black', label='Unselected Points')
+
     plt.scatter(x_selected, y_selected, color='red', label='Selected Points')
     plt.axvline(x_selected[0], color='green', linestyle='--', label='Centroid Region')
     plt.axvline(x_selected[-1], color='green', linestyle='--')
     plt.axvline(centroid, color='purple', linestyle='-', label='Centroid')
     plt.axhline(baseline, color='orange', linestyle=':', label='Baseline')
+    plt.axhline(threshold, color='magenta', linestyle='-.', label='Threshold')
 
     plt.xlabel('Time Shift (tau)')
     plt.ylabel('CCF Amplitude')
-    plt.title('CCF Curve with Centroid Region and Baseline')
+    plt.title('CCF Curve with Centroid Region, Baseline, and Threshold')
     plt.legend()
     plt.grid()
     plt.show()
@@ -43,11 +51,11 @@ def calculate_time_lag_and_err(x_values, y_values, baseline=None, plot=False):
     Returns:
     dict: Enthält time_lag, time_lag_err, x_selected, y_selected
     """
-    centroid, x_selected, y_selected, baseline = get_centroid_of_peak(x_values, y_values, baseline=baseline)
+    centroid, x_selected, y_selected, baseline, threshold = get_centroid_of_peak(x_values, y_values, baseline=baseline)
     centroid_error = estimate_centroid_error(x_selected, y_selected)
 
     if plot:
-        plot_ccf_with_centroid(x_values, y_values, x_selected, y_selected, centroid, baseline)
+        plot_ccf_with_centroid(x_values, y_values, x_selected, y_selected, centroid, baseline, threshold)
 
     return {
         "time_lag": centroid,
@@ -113,9 +121,8 @@ def get_centroid_of_peak(x_values, y_values, baseline=None, threshold=0.8):
 
     print(f"Baseline is set to {baseline}")
 
-    # Korrektur: Berechne die absolute Schwelle richtig
     if baseline == 0:
-        y_threshold = y_values_max * threshold  # Falls baseline = 0, keine zusätzliche Baseline abziehen
+        y_threshold = y_values_max * threshold
     else:
         y_threshold = baseline + threshold * (y_values_max - baseline)
 
@@ -144,7 +151,7 @@ def get_centroid_of_peak(x_values, y_values, baseline=None, threshold=0.8):
     # Berechne den gewichteten Mittelwert als Centroid
     centroid = np.sum(x_selected * y_selected) / np.sum(y_selected)
 
-    return centroid, x_selected, y_selected, baseline
+    return centroid, x_selected, y_selected, baseline, y_threshold
 
 
 def estimate_centroid_error(x_selected, y_selected, num_samples=1000, noise_std=0.1):
