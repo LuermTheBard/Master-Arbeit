@@ -2,11 +2,10 @@ import sys
 import subprocess
 from pathlib import Path
 
+from handle_data.calc_time_lag import get_time_lags
 from handle_data.handle_data import sort_1d_corr_data_for_lines, get_continua_with_highest_corr_coef, \
     get_weighted_best_continua
-from handle_data.dopplershift import calc_broad_lines_doppler_shift_with_error
-from import_data.import_data import import_1d_correlation_data, load_dopplershift_data_from_toml, \
-    import_1d_lightcurve_data, import_fits_data
+from import_data.import_data import import_1d_correlation_data, import_1d_lightcurve_data, import_fits_data
 from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua
 from plot_data.plot_1D_ccfs_in_groups_data import plot_all_1d_ccfs_in_groups_for_cont
 from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_lightcurves_with_offset
@@ -27,6 +26,15 @@ def task(func):
 @task
 def dummy_task():
     subprocess.run(["python", "-m", "scrap.scripts.dummy_script", "calc_2_plus_2"], check=True)
+
+
+@task
+def calc_time_lag():
+
+    one_dim_correlation_data = import_1d_correlation_data()
+    result_dict = get_time_lags(one_dim_correlation_data, selected_continua=["Cont1150", "Cont5100"])
+
+    print(result_dict)
 
 
 @task
@@ -235,11 +243,6 @@ def plot_avg_rms_spec(file_name="avg_rms_spec", output_dir=DEFAULT_OUTPUT_DIR):
 
 
 @task
-def plot_time_lags_of_lines(input_file=None):
-    plot_time_lags_from_toml(input_file)
-
-
-@task
 def highest_corr_coef():
     one_dim_correlation_data = import_1d_correlation_data()
     sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
@@ -250,32 +253,6 @@ def highest_corr_coef():
 
     print()
 
-
-
-@task
-def calc_dopplershift_correction(file_name=None):
-    if not file_name:
-        raise ValueError("Please specify a file name in the following form: calc_dopplershift_correction::file_name")
-
-    toml_data = load_dopplershift_data_from_toml(file_name)
-
-    ref_name = toml_data["reference_shift"]["name"]
-
-    lambda_rest_ref = toml_data["central_wavelengths"][ref_name]
-    lambda_rest_ref_err = toml_data["central_wavelengths_err"][f"{ref_name}_err"]
-
-    delta_lambda_ref = toml_data["reference_shift"]["delta_lambda"]
-    delta_lambda_ref_err = toml_data["reference_shift"]["delta_lambda_err"]
-
-    line_rest_lambda_dict = toml_data["central_wavelengths"]
-    line_rest_lambda_dict.pop(ref_name)
-
-    line_rest_lambda_err_dict = toml_data["central_wavelengths_err"]
-    line_rest_lambda_err_dict.pop(f"{ref_name}_err")
-
-    calc_broad_lines_doppler_shift_with_error(delta_lambda_ref, delta_lambda_ref_err, lambda_rest_ref,
-                                              lambda_rest_ref_err, ref_name, line_rest_lambda_dict,
-                                              line_rest_lambda_err_dict)
 
 
 def run_task(commands):
