@@ -1,3 +1,4 @@
+import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 
@@ -114,6 +115,10 @@ def configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_va
     -----------
     None
     """
+
+    if type(y_values) is dict:
+        y_values = np.array(list())
+
     if x_values.size > 0 and y_values.size > 0:
         if yerr_values is not None:
             ax.errorbar(
