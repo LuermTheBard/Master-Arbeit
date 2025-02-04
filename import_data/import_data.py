@@ -216,4 +216,57 @@ def import_fits_data():
     return fits_data_dict
 
 
-import_fits_data()
+def import_line_profile_data():
+
+    data_path = find_prime_data_folder()
+    campaigns_path = data_path / "campaigns"
+
+    galaxie_campaigns = [f.name for f in campaigns_path.iterdir() if f.is_dir()]
+    galaxie_campaigns_dict = dict()
+
+    for campaign in galaxie_campaigns:
+        campaign_path = campaigns_path / campaign
+
+        avg_data_dict = dict()
+        rms_data_dict = dict()
+
+        if "LineProfiles" in [f.name for f in campaign_path.iterdir()]:
+            line_profile_path = campaign_path / "LineProfiles"
+
+            avg_line_profiles = [f.name for f in line_profile_path.glob('*_avg_*')]
+            rms_line_profiles = [f.name for f in line_profile_path.glob('*_rms_*')]
+
+            avg_data_dict = process_line_profile_data(avg_line_profiles, line_profile_path)
+            rms_data_dict = process_line_profile_data(rms_line_profiles, line_profile_path)
+
+        galaxie_campaigns_dict[campaign] = {"avg": avg_data_dict, "rms": rms_data_dict}
+
+    return galaxie_campaigns_dict
+
+
+def process_line_profile_data(line_profiles_list, line_profile_path):
+    result_dict = dict()
+
+    for item in line_profiles_list:
+
+        line_name = item.split("_", 1)[0]
+
+        base, cont1, cont2 = item.rsplit("-", 2)
+        pseudo_conts = (cont1, cont2.removesuffix(".txt"))
+
+        file_path = str(line_profile_path / item)
+
+        with open(file_path, "r") as file:
+            header = file.readline().strip().split(" \t ")
+            line_profile_data = np.loadtxt(file_path).T
+
+        array_keys = [header[0].split("# ")[1], header[1]]
+
+        line_profile_data_dict = {name: line_profile_data[i] for i, name in enumerate(array_keys)}
+
+        local_data_dict = {"pseudo_conts": pseudo_conts, "data_dict": line_profile_data_dict}
+        result_dict[line_name] = local_data_dict
+
+    return result_dict
+
+import_line_profile_data()
