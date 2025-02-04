@@ -25,7 +25,7 @@ def plot_all_1d_ccfs_in_groups_for_cont(galaxie_campaigns_correlation_data_dict,
 
         sorted_data_dict = dict(sorted(data_dict[cont_name].items(), key=lambda item: sort_keys(item[0])))
 
-        plot_ccfs_in_groups(sorted_data_dict , x_key, y_key, cont_name, xlabel, ylabel,
+        plot_ccfs_in_groups(sorted_data_dict, x_key, y_key, cont_name, xlabel, ylabel,
                                title=f"CCFs between Emission Lines and {cont_name}",
                                save_only=save_only, output_dir=save_folder, shared_y=True)
 
@@ -77,8 +77,12 @@ def plot_ccfs_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabe
             row, col = divmod(i, cols)
             ax = axes[row, col]
 
-            y_values = line_data
-            color = color_dict.get(line_name, 'black') if color_dict else 'black'
+            if line_data is not None:
+                y_values = line_data
+                color = color_dict.get(line_name, 'black') if color_dict else 'black'
+            else:
+                y_values = np.array([])
+                color = "black"
 
             configure_ccfs_axis(ax, row, col, ylabel, color, x_values_ccfs, y_values, None, line_name)
 
@@ -115,9 +119,6 @@ def configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_va
     -----------
     None
     """
-
-    if type(y_values) is dict:
-        y_values = np.array(list())
 
     if x_values.size > 0 and y_values.size > 0:
         if yerr_values is not None:
