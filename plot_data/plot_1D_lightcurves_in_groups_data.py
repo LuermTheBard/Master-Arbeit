@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, MaxNLocator, FuncFormatter
 
+from handle_data.handle_data import calculate_standard_error_for_lightcurves
 from plot_data.general_plot import prepare_data, finalize_figure, format_relative_days, format_yaxis, format_month_day
 from settings import BASE_MJD, COLORCODE_CONTINUA_NORMALIZED
 
@@ -97,7 +98,10 @@ def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis'
             if line_data:
                 x_values = np.array(line_data.get(x_key, []))
                 y_values = np.array(line_data.get(y_key, []))
-                yerr_values = np.array(line_data.get(yerr_name, [])) if yerr_name else None
+                yerr_noise_values = np.array(line_data.get(yerr_name, [])) if yerr_name else None
+
+                yerr_values = calculate_standard_error_for_lightcurves(y_values, yerr_noise_values)
+
             else:
                 x_values = np.array([])
                 y_values = np.array([])

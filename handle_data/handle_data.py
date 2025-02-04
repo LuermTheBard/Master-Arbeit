@@ -1,4 +1,33 @@
 import numpy as np
+from settings import F_MEAN, F_SIGMA
+
+
+def calculate_standard_error_for_lightcurves(flux, flux_noise_err):
+    """
+    Berechnet den Gesamtfehler einer Lichtkurve basierend auf:
+
+    1. Der relativen Standardabweichung des Flusses (F_SIGMA / F_MEAN).
+    2. Dem individuellen Rauschfehler (flux_noise_err).
+
+    Formel:
+    Gesamtfehler = sqrt((F_SIGMA / F_MEAN * FLUX)² + flux_noise_err²)
+
+    Parameter:
+    - flux (float oder np.array): Der beobachtete Flusswert oder ein Array von Flüssen.
+    - flux_noise_err (float): Zusätzlicher Fehler durch Rauschen.
+
+    Rückgabewert:
+    - Gesamtfehler als float oder np.array (je nach Eingabetyp von `flux`).
+    """
+
+    if F_MEAN == 0:
+        raise ValueError("Der Mittelwert des Flusses (F_MEAN) darf nicht 0 sein.")
+
+    total_error = np.sqrt((F_SIGMA / F_MEAN * flux) ** 2 + flux_noise_err ** 2)
+    return total_error
+
+
+# -------------------------------------------------------------------------------------------------------------------
 
 
 def get_continua_with_highest_corr_coef(line_sorted_data):

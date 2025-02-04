@@ -18,6 +18,10 @@ COLORCODE_CONTINUA = {
 
 BASE_MJD = 57581.66
 
+F_MEAN = 13.15 * 10 ** (-15)
+
+F_SIGMA = 0.23 * 10 ** (-15)
+
 
 def normalize_color_values(colorcode_dict):
     """

@@ -72,6 +72,7 @@ def format_yaxis(value, _):
 # FORMAT- & LAYOUT-HELFERFUNKTIONEN
 # -----------------------------------------------------------------------------
 
+
 def check_for_empty_rows(axes, fig, x_label):
     """
     Prüft, ob in der Figure leere Subplot-Zeilen existieren, und entfernt diese gegebenenfalls.
