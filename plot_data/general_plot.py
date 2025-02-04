@@ -112,8 +112,7 @@ def check_for_empty_rows(axes, fig, x_label):
                         axes[row, col].tick_params(axis='x', which='both', direction='inout', labelbottom=True)
 
 
-
-def prepare_data(data, xlabel, ylabel, yerr_name, rows, cols):
+def prepare_data(data, rows, cols):
     """
     Bereitet die Daten vor, indem sie gruppenweise anhand der verfügbaren Subplot-Größe (rows x cols) aufgeteilt werden.
     Eventuell unvollständige Gruppen werden mit leeren Platzhaltern aufgefüllt.
@@ -154,11 +153,7 @@ def prepare_data(data, xlabel, ylabel, yerr_name, rows, cols):
         while len(current_data) < (rows * cols):
             current_data.append((
                 f'Empty {len(current_data) + 1}',
-                {
-                    xlabel: np.array([]),
-                    ylabel: np.array([]),
-                    yerr_name: np.array([]) if yerr_name else np.array([])
-                }
+                None
             ))
         yield current_data, group_index
 

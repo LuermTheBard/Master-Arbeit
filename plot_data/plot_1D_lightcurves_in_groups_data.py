@@ -86,7 +86,7 @@ def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis'
     -----------
     None
     """
-    for current_data, group_index in prepare_data(data, x_key, y_key, yerr_name, rows, cols):
+    for current_data, group_index in prepare_data(data, rows, cols):
         fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=True, sharey=shared_y)
         fig.subplots_adjust(hspace=0, wspace=0)
 
@@ -94,9 +94,15 @@ def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis'
             row, col = divmod(i, cols)
             ax = axes[row, col]
 
-            x_values = np.array(line_data.get(x_key, []))
-            y_values = np.array(line_data.get(y_key, []))
-            yerr_values = np.array(line_data.get(yerr_name, [])) if yerr_name else None
+            if line_data:
+                x_values = np.array(line_data.get(x_key, []))
+                y_values = np.array(line_data.get(y_key, []))
+                yerr_values = np.array(line_data.get(yerr_name, [])) if yerr_name else None
+            else:
+                x_values = np.array([])
+                y_values = np.array([])
+                yerr_values = np.array([])
+
             color = color_dict.get(line_name, 'black') if color_dict else 'black'
 
             exponent_value = -15

@@ -69,7 +69,7 @@ def plot_ccfs_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabe
     x_values_ccfs = data['time shift (tau)']
     data.pop('time shift (tau)')
 
-    for current_data, group_index in prepare_data(data, x_key, y_key, None, rows, cols):
+    for current_data, group_index in prepare_data(data, rows, cols):
         fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=True, sharey=shared_y)
         fig.subplots_adjust(hspace=0, wspace=0)
 
