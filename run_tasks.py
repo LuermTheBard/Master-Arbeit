@@ -5,7 +5,8 @@ from pathlib import Path
 from handle_data.calc_time_lag import get_time_lags
 from handle_data.handle_data import sort_1d_corr_data_for_lines, get_continua_with_highest_corr_coef, \
     get_weighted_best_continua
-from import_data.import_data import import_1d_correlation_data, import_1d_lightcurve_data, import_fits_data
+from import_data.import_data import import_1d_correlation_data, import_1d_lightcurve_data, import_fits_data, \
+    import_line_profile_data
 from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua
 from plot_data.plot_1D_ccfs_in_groups_data import plot_all_1d_ccfs_in_groups_for_cont
 from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_lightcurves_with_offset
@@ -30,9 +31,9 @@ def dummy_task():
 
 @task
 def calc_time_lag():
-
     one_dim_correlation_data = import_1d_correlation_data()
-    result_dict = get_time_lags(one_dim_correlation_data, baseline=0, selected_continua=["Cont1150", "Cont5100"], plot=True)
+    result_dict = get_time_lags(one_dim_correlation_data, baseline=0, selected_continua=["Cont1150", "Cont5100"],
+                                plot=True)
 
     print(result_dict)
 
@@ -203,7 +204,8 @@ def plot_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
 
     one_dim_correlation_data = import_1d_correlation_data()
 
-    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data, cont_name=cont_name, output_dir=output_dir, key_order=key_order)
+    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data, cont_name=cont_name, output_dir=output_dir,
+                                        key_order=key_order)
 
 
 @task
@@ -229,10 +231,8 @@ def save_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
                                         key_order=key_order, save_only=True)
 
 
-
 @task
 def plot_avg_rms_spec(file_name="avg_rms_spec", output_dir=DEFAULT_OUTPUT_DIR):
-
     avg_rms_spec_dir = output_dir / "avg_rms_spec"
 
     avg_rms_spec_dir.mkdir(parents=True, exist_ok=True)
@@ -241,6 +241,23 @@ def plot_avg_rms_spec(file_name="avg_rms_spec", output_dir=DEFAULT_OUTPUT_DIR):
 
     fits_data = import_fits_data()
     plot_avg_rms(fits_data, save_path=avg_rms_spec_file)
+
+
+@task
+def plot_and_save_line_profiles_for_line(line_name=None, output_dir=DEFAULT_OUTPUT_DIR):
+
+    # Prüfen, ob line_name definiert ist
+    if not line_name:
+        raise ValueError("Please specify a line name in the following form: "
+                         "plot_and_save_line_profiles_for_line::line_name")
+
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir.mkdir(parents=True)
+
+    line_profile_campaign_dict = import_line_profile_data()
+
+
 
 
 @task
@@ -255,23 +272,22 @@ def highest_corr_coef():
     print()
 
 
-
 def run_task(commands):
     for command in commands:
-        #try:
-            # Split command name and additional arguments
-            parts = command.split("::")
-            name_of_task = parts[0]
-            task_args = parts[1:] if len(parts) > 1 else []
+        # try:
+        # Split command name and additional arguments
+        parts = command.split("::")
+        name_of_task = parts[0]
+        task_args = parts[1:] if len(parts) > 1 else []
 
-            print(f"Running {name_of_task} with arguments {task_args}...")
+        print(f"Running {name_of_task} with arguments {task_args}...")
 
-            # Call the command with unpacked arguments
-            registered_tasks[name_of_task](*task_args)
-        #except KeyError as k:
-            #print(f"Task '{command}' is not available.")
-        #except Exception as e:
-            #print(f"An error occurred while running '{command}': {e}")
+        # Call the command with unpacked arguments
+        registered_tasks[name_of_task](*task_args)
+    # except KeyError as k:
+    # print(f"Task '{command}' is not available.")
+    # except Exception as e:
+    # print(f"An error occurred while running '{command}': {e}")
 
 
 if __name__ == "__main__":
