@@ -5,7 +5,8 @@ from matplotlib.ticker import MultipleLocator, FuncFormatter
 from plot_data.general_plot import prepare_data, finalize_figure, format_yaxis
 
 
-def plot_all_1d_ccfs_in_groups_for_cont(galaxie_campaigns_correlation_data_dict, cont_name, output_dir, key_order=None, save_only=False):
+def plot_all_1d_ccfs_in_groups_for_cont(galaxie_campaigns_correlation_data_dict, cont_name, output_dir, key_order=None,
+                                        save_only=False):
     xlabel = "Time Lag $\\tau$ [d]"
     ylabel = "Correlation Coefficient"
 
@@ -22,12 +23,11 @@ def plot_all_1d_ccfs_in_groups_for_cont(galaxie_campaigns_correlation_data_dict,
         return len(key_order)
 
     for campaign, data_dict in galaxie_campaigns_correlation_data_dict.items():
-
         sorted_data_dict = dict(sorted(data_dict[cont_name].items(), key=lambda item: sort_keys(item[0])))
 
         plot_ccfs_in_groups(sorted_data_dict, x_key, y_key, cont_name, xlabel, ylabel,
-                               title=f"CCFs between Emission Lines and {cont_name}",
-                               save_only=save_only, output_dir=save_folder, shared_y=True)
+                            title=f"CCFs between Emission Lines and {cont_name}",
+                            save_only=save_only, output_dir=save_folder, shared_y=True)
 
 
 def plot_ccfs_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
@@ -149,6 +149,8 @@ def configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_va
 
     ax.yaxis.set_major_locator(MultipleLocator(0.2))
     ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
+    ax.set_xlim(-10, 15)
+    ax.set_ylim(-0.1, 0.9)
 
     if row == 0:
         ax_top = ax.secondary_xaxis('top')
