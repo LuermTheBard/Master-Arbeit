@@ -101,10 +101,10 @@ def plot_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
     one_dim_lightcurve_data = import_1d_lightcurve_data()
 
-    key_order = ["Cont1150", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'OI8446']
+    key_order = ["Cont1150", 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
     plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir, compare_cont="Cont1150", key_order=key_order)
 
-    key_order = ["Cont5100", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'OI8446']
+    key_order = ["Cont5100", 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
     plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir, compare_cont="Cont5100", key_order=key_order)
 
 
@@ -119,11 +119,11 @@ def save_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
     one_dim_lightcurve_data = import_1d_lightcurve_data()
 
-    key_order = ["Cont1150", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'OI8446']
+    key_order = ["Cont1150", 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
     plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir, compare_cont="Cont1150", key_order=key_order,
                                       save_only=True)
 
-    key_order = ["Cont5100", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'OI8446']
+    key_order = ["Cont5100", 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
     plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir, compare_cont="Cont5100", key_order=key_order,
                                       save_only=True)
 
@@ -201,7 +201,7 @@ def plot_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
     if not output_dir_path.exists():
         output_dir.mkdir(parents=True)
 
-    key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5015', 'HeI5875', 'HeII4685', 'OI8446']
+    key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI7065', 'HeI5875', 'HeII4685', 'OI8446']
 
     one_dim_correlation_data = import_1d_correlation_data()
 
@@ -223,7 +223,7 @@ def save_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
     if not output_dir_path.exists():
         output_dir.mkdir(parents=True)
 
-    key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5015', 'HeI5875', 'HeII4685', 'OI8446']
+    key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI7065', 'HeI5875', 'HeII4685', 'OI8446']
     # key_order = ["time shift (tau)", 'HeI5015', 'HeI5875', 'HeI4471', 'HeI7065', 'HeII4685','HAlpha', 'HBeta', 'HGamma', 'HDelta',  'OI8446']
 
     one_dim_correlation_data = import_1d_correlation_data()
