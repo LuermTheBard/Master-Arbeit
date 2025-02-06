@@ -12,6 +12,7 @@ from plot_data.plot_1D_ccfs_in_groups_data import plot_all_1d_ccfs_in_groups_for
 from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_lightcurves_with_offset
 from plot_data.plot_1D_lightcurves_in_groups_data import plot_all_1d_lightcurves_in_groups
 from plot_data.plot_fits_data import plot_avg_rms
+from plot_data.plot_line_profiles import plot_line_profiles_in_pairs
 from settings import DEFAULT_OUTPUT_DIR
 
 # Dictionary to store registered tasks
@@ -244,18 +245,19 @@ def plot_avg_rms_spec(file_name="avg_rms_spec", output_dir=DEFAULT_OUTPUT_DIR):
 
 
 @task
-def plot_and_save_line_profiles_for_line(line_name=None, output_dir=DEFAULT_OUTPUT_DIR):
-
-    # Prüfen, ob line_name definiert ist
-    if not line_name:
-        raise ValueError("Please specify a line name in the following form: "
-                         "plot_and_save_line_profiles_for_line::line_name")
+def plot_and_save_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
 
     output_dir_path = Path(output_dir)
     if not output_dir_path.exists():
         output_dir.mkdir(parents=True)
 
     line_profile_campaign_dict = import_line_profile_data()
+
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5015', 'HeI5875', 'HeII4685', 'OI8446']
+
+    for campaign, data in line_profile_campaign_dict.items():
+
+        plot_line_profiles_in_pairs(data, campaign)
 
 
 
