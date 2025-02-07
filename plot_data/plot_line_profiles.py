@@ -1,67 +1,104 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
-from settings import VALUES_CONTINUA
+from settings import VALUES_CONTINUA, All_LINES, DEFAULT_OUTPUT_DIR
+
+line_mapping = {
+    'HAlpha': 'Hα',
+    'HBeta': 'Hβ',
+    'HGamma': 'Hγ',
+    'HDelta': 'Hδ',
+    'HeI5875': 'He I 5875',
+    'HeI7065': 'He I 7065',
+    'HeI4471': 'He I 4471',
+    'HeI5015': 'He I 5015',
+    'HeII4685': 'He II 4685',
+    'OI8446': 'O I 8446'
+}
 
 
-def plot_line_profiles_in_pairs(data, campaign, key_order=None):
+
+def plot_line_profiles_in_pairs(data, campaign, key_order=None, output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     x_keys = 'velocity space (km/s)'
     y_keys = 'flux ergs/s/cm2/A'
-
-    x_label = x_keys
-    y_label = y_keys
 
     if key_order is None:
         key_order = list(data["avg"].keys())
 
+    save_path_dir = output_dir / "plot_line_profiles"
+    save_path_dir.mkdir(parents=True, exist_ok=True)
+
     for line in key_order:
-        avg_line_data = data["avg"][line]
-        pseudo_conts_avg = avg_line_data["pseudo_conts"]
-        rms_line_data = data["rms"][line]
-        pseudo_conts_rms = rms_line_data["pseudo_conts"]
+        avg_data = data["avg"][line]
+        rms_data = data["rms"][line]
 
-        x_limit_avg = (VALUES_CONTINUA[pseudo_conts_avg[0]][0], VALUES_CONTINUA[pseudo_conts_avg[1]][1])
-        x_limit_rms = (VALUES_CONTINUA[pseudo_conts_rms[0]][0], VALUES_CONTINUA[pseudo_conts_rms[1]][1])
+        avg_x, avg_y = avg_data["data_dict"][x_keys], avg_data["data_dict"][y_keys]
+        rms_x, rms_y = rms_data["data_dict"][x_keys], rms_data["data_dict"][y_keys]
 
-        avg_x = avg_line_data["data_dict"][x_keys]
-        avg_y = avg_line_data["data_dict"][y_keys]
+        real_line_name = line_mapping[line]
+        line_position = All_LINES[real_line_name]["position"]
 
-        rms_x = rms_line_data["data_dict"][x_keys]
-        rms_y = rms_line_data["data_dict"][y_keys]
+        # Original x_limit Werte
+        x_min_avg, x_max_avg = VALUES_CONTINUA[avg_data["pseudo_conts"][0]][0], VALUES_CONTINUA[avg_data["pseudo_conts"][1]][1]
+        x_min_rms, x_max_rms = VALUES_CONTINUA[rms_data["pseudo_conts"][0]][0], VALUES_CONTINUA[rms_data["pseudo_conts"][1]][1]
+
+        # Begrenzung der x-Werte auf max. 300 Å
+        avg_half_width = min(max(line_position - x_min_avg, x_max_avg - line_position), 150)
+        rms_half_width = min(max(line_position - x_min_rms, x_max_rms - line_position), 150)
+
+        x_limit_avg = (line_position - avg_half_width, line_position + avg_half_width)
+        x_limit_rms = (line_position - rms_half_width, line_position + rms_half_width)
+
+        ### 🔹 **Nur den Peak direkt an der Linienposition verwenden – separat für AVG und RMS**
+        peak_window = 10  # Enge Auswahl um die Linie
+
+        peak_avg_mask = (avg_x >= line_position - peak_window) & (avg_x <= line_position + peak_window)
+        peak_rms_mask = (rms_x >= line_position - peak_window) & (rms_x <= line_position + peak_window)
+
+        # Falls keine Werte im Peak-Bereich gefunden werden, benutze die x-Limits als Fallback
+        if not np.any(peak_avg_mask):
+            peak_avg_mask = (avg_x >= x_limit_avg[0]) & (avg_x <= x_limit_avg[1])
+        if not np.any(peak_rms_mask):
+            peak_rms_mask = (rms_x >= x_limit_rms[0]) & (rms_x <= x_limit_rms[1])
+
+        # **Normierung: AVG und RMS getrennt**
+        peak_avg_max = avg_y[peak_avg_mask].max()
+        peak_rms_max = rms_y[peak_rms_mask].max()
+
+        avg_y_norm = avg_y / peak_avg_max  # **Normierung auf den Peak von AVG**
+        rms_y_norm = rms_y / peak_rms_max  # **Normierung auf den Peak von RMS**
+
+        # Fixierte y-Limits 10 % Puffer) für normierte Werte
+        y_limit_avg = (-0.1, 1.1)
+        y_limit_rms = (-0.1, 1.1)
 
         fig, axes = plt.subplots(2, 1, figsize=(8, 12))
+        fig.suptitle(f'{campaign}\n\nLine Profile: {line}', fontsize=16)
 
-        axes[0].plot(avg_x, avg_y, label=f'AVG')
-
-        axes[0].legend(fontsize=8, loc='upper right')
-
-        axes[0].set_ylabel(y_label, fontsize=12)
-        axes[0].set_xlabel(x_label, fontsize=12)
-        # axes[0]yaxis.set_label_coords(-0.19, 0.5)
-
-        # axes[0].set_xticklabels([])
-
-        mask = (avg_x >= x_limit_avg[0]) & (avg_x <= x_limit_avg[1])
-        max_y_in_range = max(avg_y[mask])
-
+        # **Plot AVG**
+        axes[0].plot(avg_x, avg_y_norm, label='AVG', color='blue')
         axes[0].set_xlim(x_limit_avg)
-        axes[0].set_ylim(0, max_y_in_range)
+        axes[0].set_ylim(y_limit_avg)
+        axes[0].set_xlabel("Velocity Space (km/s)", fontsize=14)
+        axes[0].set_ylabel("Normalized Flux (AVG)", fontsize=14)
+        axes[0].legend(fontsize=10, loc='upper right')
 
-        axes[1].plot(rms_x, rms_y, label=f'RMS')
-
-        axes[1].legend(fontsize=8, loc='upper right')
-
-        axes[1].set_ylabel(y_label, fontsize=12)
-        axes[1].set_xlabel(x_label, fontsize=12)
-        # axes[1]yaxis.set_label_coords(-0.19, 0.5)
-
-        # axes[1].set_xticklabels([])
-
-        mask = (rms_x >= x_limit_rms[0]) & (rms_x <= x_limit_rms[1])
-        max_y_in_range = max(rms_y[mask])
-
+        # **Plot RMS**
+        axes[1].plot(rms_x, rms_y_norm, label='RMS', color='red')
         axes[1].set_xlim(x_limit_rms)
-        axes[1].set_ylim(0, max_y_in_range)
+        axes[1].set_ylim(y_limit_rms)
+        axes[1].set_xlabel("Velocity Space (km/s)", fontsize=14)
+        axes[1].set_ylabel("Normalized Flux (RMS)", fontsize=14)
+        axes[1].legend(fontsize=10, loc='upper right')
 
-        plt.show()
+        plt.tight_layout(rect=[0, 0, 1, 0.96])
 
-    print()
+        # **Speichern oder Anzeigen**
+        save_path_png = save_path_dir / f"{campaign}_{line}.png"
+        save_path_pdf = save_path_dir / f"{campaign}_{line}.pdf"
+
+        plt.savefig(save_path_png, dpi=500)
+        plt.savefig(save_path_pdf, dpi=500)
+        if not save_only:
+            plt.show()
+        plt.close(fig)
