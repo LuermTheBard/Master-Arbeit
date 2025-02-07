@@ -260,6 +260,20 @@ def plot_and_save_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
         plot_line_profiles_in_pairs(data, campaign, key_order)
 
 
+@task
+def save_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
+
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir.mkdir(parents=True)
+
+    line_profile_campaign_dict = import_line_profile_data()
+
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015','HeII4685', 'OI8446']
+
+    for campaign, data in line_profile_campaign_dict.items():
+
+        plot_line_profiles_in_pairs(data, campaign, key_order, save_only=True)
 
 
 @task

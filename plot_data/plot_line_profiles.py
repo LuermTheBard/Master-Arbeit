@@ -72,13 +72,13 @@ def plot_line_profiles_in_pairs(data, campaign, key_order=None, output_dir=DEFAU
         y_limit_avg = (-0.1, 1.1)
         y_limit_rms = (-0.1, 1.1)
 
-        fig, axes = plt.subplots(2, 1, figsize=(8, 12))
+        fig, axes = plt.subplots(2, 1, figsize=(6, 16))  # Höheres Format für gestreckte Y-Achse
         fig.suptitle(f'{campaign}\n\nLine Profile: {line}', fontsize=16)
 
         # **Plot AVG**
         axes[0].plot(avg_x, avg_y_norm, label='AVG', color='blue')
         axes[0].set_xlim(x_limit_avg)
-        axes[0].set_ylim(y_limit_avg)
+        axes[0].set_ylim(y_limit_avg)  # Unverändert lassen
         axes[0].set_xlabel("Velocity Space (km/s)", fontsize=14)
         axes[0].set_ylabel("Normalized Flux (AVG)", fontsize=14)
         axes[0].legend(fontsize=10, loc='upper right')
@@ -86,10 +86,12 @@ def plot_line_profiles_in_pairs(data, campaign, key_order=None, output_dir=DEFAU
         # **Plot RMS**
         axes[1].plot(rms_x, rms_y_norm, label='RMS', color='red')
         axes[1].set_xlim(x_limit_rms)
-        axes[1].set_ylim(y_limit_rms)
+        axes[1].set_ylim(y_limit_rms)  # Unverändert lassen
         axes[1].set_xlabel("Velocity Space (km/s)", fontsize=14)
         axes[1].set_ylabel("Normalized Flux (RMS)", fontsize=14)
         axes[1].legend(fontsize=10, loc='upper right')
+
+        plt.subplots_adjust(hspace=0.5)  # Mehr Abstand zwischen den Subplots
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])
 
