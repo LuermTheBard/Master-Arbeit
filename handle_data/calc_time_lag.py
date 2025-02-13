@@ -1,5 +1,9 @@
+from pathlib import Path
+
 import numpy as np
 from matplotlib import pyplot as plt
+
+from Malte_get_BH_mass import Line
 
 
 def plot_ccf_with_centroid(x_values, y_values, x_selected, y_selected, centroid, baseline, threshold, line_name, cont_name):
@@ -56,14 +60,14 @@ def calculate_time_lag_and_err(x_values, y_values, cont_name, line_name, baselin
     dict: Enthält time_lag, time_lag_err, x_selected, y_selected
     """
     centroid, x_selected, y_selected, baseline, threshold = get_centroid_of_peak(x_values, y_values, baseline=baseline)
-    centroid_error = estimate_centroid_error(x_selected, y_selected)
+    #centroid_error = estimate_centroid_error(x_selected, y_selected)
 
     if plot:
         plot_ccf_with_centroid(x_values, y_values, x_selected, y_selected, centroid, baseline, threshold,line_name, cont_name)
 
     return {
         "time_lag": centroid,
-        "time_lag_err": centroid_error,
+    #    "time_lag_err": centroid_error,
         "x_selected": x_selected,
         "y_selected": y_selected
     }
@@ -156,44 +160,108 @@ def get_centroid_of_peak(x_values, y_values, baseline=None, threshold=0.8):
     return centroid, x_selected, y_selected, baseline, y_threshold
 
 
-def estimate_centroid_error(x_selected, y_selected, num_samples=1000, noise_std=0.1):
-    """
-    Berechnet den Fehler des Centroids mit Monte-Carlo-Simulation.
+def printTable(filename, linelist, continuum):
+    with open(filename, 'w') as outfile:
+        # LaTeX Dokument-Kopf
+        outfile.write(r'\documentclass{article}' + '\n')
+        outfile.write(r'\usepackage{booktabs}' + '\n')  # Schöne Tabellen
+        outfile.write(r'\usepackage{siunitx}' + '\n')   # Zahlenformatierung
+        outfile.write(r'\usepackage{amsmath}' + '\n')   # _{-x}^{+y}-Notation
+        outfile.write(r'\usepackage{graphicx}' + '\n')  # Falls notwendig
+        outfile.write(r'\begin{document}' + '\n\n')
 
-    Parameters:
-    x_selected (array-like): Die x-Werte oberhalb der Schwelle.
-    y_selected (array-like): Die y-Werte oberhalb der Schwelle.
-    num_samples (int, optional): Anzahl der Monte-Carlo-Simulationen. Standard: 1000.
-    noise_std (float, optional): Standardabweichung des zufälligen Rauschens. Standard: 0.1.
+        # LaTeX Tabelle mit Continuum-Info
+        outfile.write(r'\begin{table}[!htb]' + '\n')
+        outfile.write(r'\centering' + '\n')
+        outfile.write(fr'\caption{{Centroid and Peak Time Lag for {continuum}.}}' + '\n')
+        outfile.write(fr'\label{{tab:lags_{continuum}}}' + '\n')
+        outfile.write(r'\begin{tabular}{l c c}' + '\n')  # Standard-Tabellenformat
+        outfile.write(r'\toprule' + '\n')
 
-    Returns:
-    float: Standardabweichung des Centroids aus Monte-Carlo-Simulation.
-    """
-    if len(x_selected) == 0 or np.sum(y_selected) == 0:
-        return np.nan
+        # Spaltenüberschriften
+        outfile.write(r'Name & $\tau_{\text{cent}}$ [d] & $\tau_{\text{peak}}$ [d] \\' + '\n')
+        outfile.write(r'\midrule' + '\n')
 
-    centroid_samples = []
+        # Tabelleninhalt mit Fehlerdarstellung
+        for line in linelist:
+            tau_cent_str = f"{line.tau_cent:.1f} \\ensuremath{{_{{-{abs(line.tau_cent_err[0] - line.tau_cent):.1f}}}^{{+{abs(line.tau_cent_err[1] - line.tau_cent):.1f}}}}}"
+            tau_peak_str = f"{line.tau_peak:.1f} \\ensuremath{{_{{-{abs(line.tau_peak_err[0] - line.tau_peak):.1f}}}^{{+{abs(line.tau_peak_err[1] - line.tau_peak):.1f}}}}}"
 
-    for _ in range(num_samples):
-        # Erzeuge gestörte y-Werte durch zufälliges Rauschen
-        y_noisy = y_selected + np.random.normal(0, noise_std * np.abs(y_selected), size=len(y_selected))
+            outfile.write(f"{line.name} & ${tau_cent_str}$ & ${tau_peak_str}$ \\\\" + '\n')
 
-        # Berechne den Centroid für die gestörten Werte
-        noisy_centroid = np.sum(x_selected * y_noisy) / np.sum(y_noisy)
-        centroid_samples.append(noisy_centroid)
+        # Tabellenabschluss
+        outfile.write(r'\bottomrule' + '\n')
+        outfile.write(r'\end{tabular}' + '\n')
+        outfile.write(r'\end{table}' + '\n\n')
 
-    # Berechne den Standardfehler des Centroids aus den Monte-Carlo-Simulationen
-    centroid_error = np.std(centroid_samples)
-
-    return centroid_error
-
-
-
-
-
-
-
-
+        # LaTeX Dokument-Abschluss
+        outfile.write(r'\end{document}' + '\n')
 
 
+from pathlib import Path
+import numpy as np
 
+def calc_centroid_malte_code(continuum):
+    base_path = Path(
+        rf'C:\Users\lukas\Desktop\Python\Master-Arbeit\data\campaigns\NGC4593_CR\calc_time_lag_ccfs\{continuum}')
+
+    # Definiere die Liniennamen
+    lines = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685', 'OI8446']
+
+    # Lade die lineCorrelations-Daten
+    line_correlations_path = base_path / "lineCorrelations_ICCF.txt"
+    try:
+        lineCorrelations = np.loadtxt(line_correlations_path)
+    except Exception as e:
+        print(f"❌ Fehler beim Laden der Datei {line_correlations_path}: {e}")
+        return
+
+    # Lade alle Zentroid- und Peak-Daten in ein Dictionary
+    data = {}
+
+    for line in lines:
+        try:
+            cents_path = base_path / f"calculatedCentroids{continuum}_{line}_ICCF.txt"
+            peaks_path = base_path / f"peakDistribution_{continuum}_{line}_ICCF.txt"
+
+            # Falls eine Datei fehlt, wird sie übersprungen
+            data[line] = {
+                "centroids": np.loadtxt(cents_path) if cents_path.exists() else None,
+                "peaks": np.loadtxt(peaks_path) if peaks_path.exists() else None
+            }
+        except Exception as e:
+            print(f"⚠️ Warnung: Fehler beim Laden der Dateien für {line}: {e}")
+            continue  # Statt `return`, damit andere Linien geladen werden
+
+    # Index-Mapping für die Spalten von lineCorrelations
+    index_map = {
+        'HDelta': 1, 'HGamma': 2, 'HeII4685': 3, 'HBeta': 4,
+        'HeI5875': 5, 'HAlpha': 6, 'HeI5015': 7, 'OI8446': 8,
+        'HeI4471': 9, 'HeI7065': 10, 'OIII5007': 11
+    }
+
+    # Erstelle die Line-Objekte
+    line_objects = []
+    for line in lines:
+        if line in index_map and data[line]["centroids"] is not None and data[line]["peaks"] is not None:
+            line_obj = Line(
+                line,  # Name der Linie
+                1500,  # Beispielwert für eine Eigenschaft (anpassen falls nötig)
+                250,  # Beispielwert für eine Eigenschaft (anpassen falls nötig)
+                np.vstack((lineCorrelations[:, 0], lineCorrelations[:, index_map[line]])).T,
+                data[line]["centroids"],
+                data[line]["peaks"]
+            )
+            line_objects.append(line_obj)
+
+    # Speichere die Ergebnisse mit dynamischem Dateinamen
+    output_filename = f'CCF_lags_{continuum}.tex'
+    print(f"✅ Speichere Ergebnisse in Datei: {output_filename}")
+    printTable(output_filename, line_objects, continuum)
+
+
+
+
+
+calc_centroid_malte_code("Cont1150")
+calc_centroid_malte_code("Cont5100")
