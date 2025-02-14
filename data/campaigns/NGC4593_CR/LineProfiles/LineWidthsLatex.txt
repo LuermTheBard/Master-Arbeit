@@ -1,0 +1,31 @@
+\begin{table}[!htb] 
+\centering 
+\caption{$FWHM$ and line dispersion $\sigma_{\text{line}}$ of the mean and rms line profiles as well as the line} 
+\begin{tabular}{lcccc} 
+\hline 
+\hline 
+\multicolumn{1}{c}{Line} &  $FWHM$ (mean) &  $FWHM$ (rms) &  $\sigma_{\text{line}}$ (mean) &  $\sigma_{\text{line}}$ (rms) \\ 
+  &  [km$\,$s$^{-1}$] &  [km$\,$s$^{-1}$] &  [km$\,$s$^{-1}$] &  [km$\,$s$^{-1}$] \\ 
+\multicolumn{1}{c}{(1)} & \multicolumn{1}{c}{(2)} & \multicolumn{1}{c}{(3)} & \multicolumn{1}{c}{(4)} & \multicolumn{1}{c}{(5)} \\ 
+\hline 
+HAlpha & 3060.0$\pm$ & 3050.0$\pm$ & 1190.0$\pm$ & 1180.0$\pm$ \
+HBeta & 3360.0$\pm$ & 3160.0$\pm$ & 1340.0$\pm$ & 1190.0$\pm$ \
+HDelta & 2820.0$\pm$ & 4940.0$\pm$ & 1380.0$\pm$ & 1560.0$\pm$ \
+HGamma & 3800.0$\pm$ & 3130.0$\pm$ & 1240.0$\pm$ & 1240.0$\pm$ \
+HeI$\,\lambda$4471 & 1250.0$\pm$ & 1000.0$\pm$ & 340.0$\pm$ & 160.0$\pm$ \
+HeI$\,\lambda$5015 & 390.0$\pm$ & 0.0$\pm$ & 920.0$\pm$ & 430.0$\pm$ \
+HeI$\,\lambda$5875 & 3430.0$\pm$ & 3590.0$\pm$ & 1250.0$\pm$ & 1220.0$\pm$ \
+HeI$\,\lambda$7065 & 4280.0$\pm$ & 2540.0$\pm$ & 1750.0$\pm$ & nan$\pm$ \
+HeII$\,\lambda$4685 & 5530.0$\pm$ & 5710.0$\pm$ & 2010.0$\pm$ & 2000.0$\pm$ \
+OI8446 & 3060.0$\pm$ & 2610.0$\pm$ & 950.0$\pm$ & 850.0$\pm$ \
+OIII5007 & 400.0$\pm$ & 0.0$\pm$ & 490.0$\pm$ & nan$\pm$ \
+\hline 
+\hline 
+\label{tab:lineWidths} 
+\end{tabular} 
+\flushleft 
+\begin{tablenotes} 
+\footnotesize 
+\textbf{Notes:} All wavelengths are given in units of [km$\,$s$^{-1}$]. 
+\end{tablenotes} 
+\end{table}
