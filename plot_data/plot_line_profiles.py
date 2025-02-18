@@ -18,6 +18,49 @@ line_mapping = {
     'OI8446': 'O I 8446'
 }
 
+central_wave_length = {
+
+    'HAlpha': 6564.27,
+    'HBeta': 4862.26,
+    'HGamma': 4362.21,
+    'HDelta': 4101.32,
+    #'HeI5875': {'blue': (6107, 6129), 'red': (6861, 6900)},
+    #'HeI7065': {'blue': (6107, 6129), 'red': (6861, 6900)},
+    #'HeI4471': {'blue': (6107, 6129), 'red': (6861, 6900)},
+    #'HeI5015': {'blue': (6107, 6129), 'red': (6861, 6900)},
+    #'HeII4685': {'blue': (6107, 6129), 'red': (6861, 6900)},
+    #'OI8446': {'blue': (6107, 6129), 'red': (6861, 6900)}
+}
+
+
+pseudo_conts_for_line_avg = {
+
+    'HAlpha': {'blue': (6107, 6129), 'red': (6861, 6900)},
+    'HBeta': {'blue': (4762, 4774), 'red': (5085, 5112)},
+    'HGamma': {'blue': (4197, 4220), 'red': (4435, 4450)},
+    'HDelta': {'blue': (4026, 6033), 'red': (4197, 4220)},
+    #'HeI5875': {'blue': (6107, 6129), 'red': (6861, 6900)},
+    #'HeI7065': {'blue': (6107, 6129), 'red': (6861, 6900)},
+    #'HeI4471': {'blue': (6107, 6129), 'red': (6861, 6900)},
+    #'HeI5015': {'blue': (6107, 6129), 'red': (6861, 6900)},
+    #'HeII4685': {'blue': (6107, 6129), 'red': (6861, 6900)},
+    #'OI8446': {'blue': (6107, 6129), 'red': (6861, 6900)}
+}
+
+pseudo_conts_for_line_rms = {
+
+    'HAlpha': {'blue': (6107, 6129), 'red': (6861, 6900)},
+    'HBeta': {'blue': (4435, 4450), 'red': (4980, 4987)},
+    'HGamma': {'blue': (4197, 4220), 'red': (4435, 4450)},
+    'HDelta': {'blue': (4026, 6033), 'red': (4197, 4220)},
+    #'HeI5875': 'He I 5875',
+    #'HeI7065': 'He I 7065',
+    #'HeI4471': 'He I 4471',
+    #'HeI5015': 'He I 5015',
+    #'HeII4685': 'He II 4685',
+    #'OI8446': 'O I 8446'
+}
+
 
 def plot_normalized_line_profiles_in_pairs(data, campaign, key_order=None, output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     x_keys = 'velocity space (km/s)'
@@ -217,4 +260,97 @@ def plot_line_profiles_in_pairs(data, campaign, key_order=None, output_dir=DEFAU
         if not save_only:
             plt.show()
         plt.close(fig)
+
+
+def subtract_continuum(wavelength, intensity, left_range, right_range):
+    """
+    Subtrahiert das Pseudokontinuum von einer Emissionslinie in einem Spektrum.
+    """
+    left_mask = (wavelength > left_range[0]) & (wavelength < left_range[1])
+    right_mask = (wavelength > right_range[0]) & (wavelength < right_range[1])
+
+    left_mean = (np.mean(wavelength[left_mask]), np.mean(intensity[left_mask]))
+    right_mean = (np.mean(wavelength[right_mask]), np.mean(intensity[right_mask]))
+
+    continuum_fit = interp1d([left_mean[0], right_mean[0]], [left_mean[1], right_mean[1]], kind="linear",
+                             fill_value="extrapolate")
+    continuum = continuum_fit(wavelength)
+
+    corrected_intensity = intensity - continuum
+
+    # Normalisierung auf das Maximum der Linie
+    corrected_intensity /= np.max(corrected_intensity)
+
+    return corrected_intensity, continuum
+
+
+def convert_to_velocity(wavelength, line_wavelength):
+    """
+    Wandelt Wellenlängenwerte in Geschwindigkeitswerte um.
+    """
+    c_km_s = c.to('km/s').value  # Lichtgeschwindigkeit in km/s
+    return (wavelength - line_wavelength) / line_wavelength * c_km_s
+
+
+def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_dir=DEFAULT_OUTPUT_DIR,  plot=False):
+    """
+    Berechnet das kontaminumsubtrahierte Spektrum und speichert die Daten in Dateien.
+    """
+    line_wavelength = central_wave_length[line_name]
+
+    if spec_type == "avg":
+        pseudo_conts_for_line = pseudo_conts_for_line_avg
+    else:
+        pseudo_conts_for_line = pseudo_conts_for_line_rms
+
+
+    blue_pseudo_cont = pseudo_conts_for_line[line_name]['blue']
+    red_pseudo_cont = pseudo_conts_for_line[line_name]['red']
+
+    wavelength_x_lim = (blue_pseudo_cont[0]-100, red_pseudo_cont[1]+100)
+
+    mask_x_lim = (wavelength >= wavelength_x_lim[0]) & (wavelength <= wavelength_x_lim[1])
+    max_intensity = np.max(intensity[mask_x_lim])
+
+    y_lim_original = (0, max_intensity * 1.1)  # Optional: 10% Puffer nach oben
+
+    corrected_intensity, continuum = subtract_continuum(wavelength, intensity, blue_pseudo_cont, red_pseudo_cont)
+
+    velocity = convert_to_velocity(wavelength, line_wavelength)
+
+    mask_x_lim = (velocity >= -20000) & (velocity <= 20000)
+    max_intensity = np.max(corrected_intensity[mask_x_lim])
+
+    y_lim_velocity = (0, max_intensity * 1.1)
+
+    output_dir = output_dir / "substracted_pseudocont_data"
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    np.savetxt(str(output_dir / f"{line_name}_{spec_type}_corrected_spectrum.txt"), np.column_stack((wavelength, corrected_intensity, continuum)),
+               header="Wavelength (Å)  Intensity  Continuum")
+    np.savetxt(str(output_dir /f"{line_name}_{spec_type}_velocity_spectrum.txt"), np.column_stack((velocity, corrected_intensity)),
+               header="Velocity (km/s)  Intensity")
+
+    if plot:
+        plt.figure(figsize=(8, 5))
+        plt.plot(wavelength, intensity, label="Originalspektrum")
+        plt.plot(wavelength, continuum, label="Interpoliertes Kontinuum", linestyle="dashed")
+        plt.axvline(line_wavelength, color="r", linestyle=":", label="Linienzentrum")
+        plt.xlim(wavelength_x_lim)
+        plt.ylim(y_lim_original)
+        plt.legend()
+        plt.xlabel("Wellenlänge (Å)")
+        plt.ylabel("Intensität")
+        plt.show()
+
+        plt.figure(figsize=(8, 5))
+        plt.plot(velocity, corrected_intensity, label="Linienprofil im Geschwindigkeitsraum")
+        plt.axvline(0, color="r", linestyle=":", label="v = 0 km/s (Zentrum)")
+        plt.xlim(-20000,20000)
+        plt.ylim(y_lim_velocity)
+        plt.legend()
+        plt.xlabel("Geschwindigkeit (km/s)")
+        plt.ylabel("Intensität")
+        plt.show()
 

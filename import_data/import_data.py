@@ -276,4 +276,3 @@ def process_line_profile_data(line_profiles_list, line_profile_path):
 
     return result_dict
 
-import_line_profile_data()

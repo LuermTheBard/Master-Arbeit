@@ -2,6 +2,8 @@ import sys
 import subprocess
 from pathlib import Path
 
+import numpy as np
+
 from handle_data.calc_time_lag import get_time_lags
 from handle_data.handle_data import sort_1d_corr_data_for_lines, get_continua_with_highest_corr_coef, \
     get_weighted_best_continua
@@ -13,7 +15,7 @@ from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_ligh
 from plot_data.plot_1D_lightcurves_in_groups_data import plot_all_1d_lightcurves_in_groups
 from plot_data.plot_fits_data import plot_avg_rms
 from plot_data.plot_line_profiles import plot_line_profiles_in_pairs, plot_normalized_line_profiles_in_pairs, \
-    plot_normalized_line_profiles_together
+    plot_normalized_line_profiles_together, process_spectrum
 from settings import DEFAULT_OUTPUT_DIR
 
 # Dictionary to store registered tasks
@@ -307,6 +309,27 @@ def save_line_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DIR):
     for campaign, data in line_profile_campaign_dict.items():
 
         plot_normalized_line_profiles_together(data, campaign, key_order, save_only=True)
+
+
+@task
+def substract_pseudo_continua_from_spectra(output_dir=DEFAULT_OUTPUT_DIR):
+
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir.mkdir(parents=True)
+
+    fits_data = import_fits_data()
+
+    wavelenghts = np.array(fits_data['NGC4593_avg.fits']['x_axis'][0])
+    avg_data = np.array(fits_data['NGC4593_avg.fits']['data'][0])
+    rms_data = np.array(fits_data['NGC4593_rms.fits']['data'][0])
+
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta']
+
+    for line in key_order:
+        process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=True)
+        process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=True)
+
 
 @task
 def highest_corr_coef():
