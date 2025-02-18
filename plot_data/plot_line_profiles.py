@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy.constants.codata2018 import c
+from scipy.interpolate import interp1d
 
 from settings import VALUES_CONTINUA, All_LINES, DEFAULT_OUTPUT_DIR
 
@@ -80,6 +82,53 @@ def plot_normalized_line_profiles_in_pairs(data, campaign, key_order=None, outpu
         plt.close(fig)
 
 
+def plot_normalized_line_profiles_together(data, campaign, key_order=None, output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
+    x_keys = 'velocity space (km/s)'
+    y_keys = 'normalized flux'
+
+    if key_order is None:
+        key_order = list(data["avg"].keys())
+
+    save_path_dir = output_dir / "plot_line_profiles"
+    save_path_dir.mkdir(parents=True, exist_ok=True)
+
+    for line in key_order:
+        avg_data = data["avg"][line]
+        rms_data = data["rms"][line]
+
+        avg_x, avg_y = avg_data["data_dict"][x_keys], avg_data["data_dict"][y_keys]
+        rms_x, rms_y = rms_data["data_dict"][x_keys], rms_data["data_dict"][y_keys]
+
+        y_limit = (-0.1, 1.5)
+        x_limit = (-10000, 10000)
+
+        fig, ax = plt.subplots(figsize=(8, 6))  # Gemeinsamer Plot
+        fig.suptitle(f'{campaign}\n\nLine Profile: {line}', fontsize=16)
+
+        # Vertikale Linie bei 0
+        ax.vlines(0, y_limit[0], y_limit[1], linestyles='dashed', color='black', label="0 km/s")
+
+        # Plot AVG und RMS
+        ax.plot(avg_x, avg_y, label='AVG', color='blue')
+        ax.plot(rms_x, rms_y, label='RMS', color='red')
+
+        ax.set_xlim(x_limit)
+        ax.set_ylim(y_limit)
+        ax.set_xlabel("Velocity Space (km/s)", fontsize=14)
+        ax.set_ylabel("Normalized Flux", fontsize=14)
+        ax.legend(fontsize=10, loc='upper right')
+
+        plt.tight_layout()
+
+        # **Speichern oder Anzeigen**
+        save_path_png = save_path_dir / f"{campaign}_{line}_compared.png"
+        save_path_pdf = save_path_dir / f"{campaign}_{line}_compared.pdf"
+
+        plt.savefig(save_path_png, dpi=500)
+        plt.savefig(save_path_pdf, dpi=500)
+        if not save_only:
+            plt.show()
+        plt.close(fig)
 
 
 def plot_line_profiles_in_pairs(data, campaign, key_order=None, output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
@@ -168,3 +217,4 @@ def plot_line_profiles_in_pairs(data, campaign, key_order=None, output_dir=DEFAU
         if not save_only:
             plt.show()
         plt.close(fig)
+
