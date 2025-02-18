@@ -73,8 +73,8 @@ def plot_normalized_line_profiles_in_pairs(data, campaign, key_order=None, outpu
         save_path_png = save_path_dir / f"{campaign}_{line}.png"
         save_path_pdf = save_path_dir / f"{campaign}_{line}.pdf"
 
-       # plt.savefig(save_path_png, dpi=500)
-       # plt.savefig(save_path_pdf, dpi=500)
+        plt.savefig(save_path_png, dpi=500)
+        plt.savefig(save_path_pdf, dpi=500)
         if not save_only:
             plt.show()
         plt.close(fig)
