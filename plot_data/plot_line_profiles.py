@@ -20,10 +20,10 @@ line_mapping = {
 
 central_wave_length = {
 
-    'HAlpha': 6564.27,
-    'HBeta': 4862.26,
-    'HGamma': 4362.21,
-    'HDelta': 4101.32,
+    'HAlpha': 6562.82,
+    'HBeta': 4861.33,
+    'HGamma': 4340.47,
+    'HDelta': 4101.74,
     #'HeI5875': {'blue': (6107, 6129), 'red': (6861, 6900)},
     #'HeI7065': {'blue': (6107, 6129), 'red': (6861, 6900)},
     #'HeI4471': {'blue': (6107, 6129), 'red': (6861, 6900)},
