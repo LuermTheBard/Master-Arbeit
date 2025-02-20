@@ -263,5 +263,5 @@ def calc_centroid_malte_code(continuum):
 
 
 
-calc_centroid_malte_code("Cont1150")
-calc_centroid_malte_code("Cont5100")
+#calc_centroid_malte_code("Cont1150")
+#calc_centroid_malte_code("Cont5100")

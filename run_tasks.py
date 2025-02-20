@@ -15,7 +15,7 @@ from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_ligh
 from plot_data.plot_1D_lightcurves_in_groups_data import plot_all_1d_lightcurves_in_groups
 from plot_data.plot_fits_data import plot_avg_rms
 from plot_data.plot_line_profiles import plot_line_profiles_in_pairs, plot_normalized_line_profiles_in_pairs, \
-    plot_normalized_line_profiles_together, process_spectrum
+    plot_normalized_line_profiles_together, process_spectrum, plot_normalized_line_profiles_type_together
 from settings import DEFAULT_OUTPUT_DIR
 
 # Dictionary to store registered tasks
@@ -276,7 +276,7 @@ def save_line_normalized_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
 
     for campaign, data in line_profile_campaign_dict.items():
 
-        plot_line_profiles_in_pairs(data, campaign, key_order, save_only=True)
+        plot_normalized_line_profiles_in_pairs(data, campaign, key_order, save_only=True)
 
 
 @task
@@ -293,6 +293,24 @@ def plot_and_save_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DI
     for campaign, data in line_profile_campaign_dict.items():
 
         plot_normalized_line_profiles_together(data, campaign, key_order)
+
+
+@task
+def plot_and_save_normalized_line_profiles_types_together(output_dir=DEFAULT_OUTPUT_DIR):
+
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir.mkdir(parents=True)
+
+    line_profile_campaign_dict = import_line_profile_data(normalized=True)
+
+    # key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015','HeII4685', 'OI8446']
+
+    key_order = ['HAlpha', 'HBeta']
+
+    for campaign, data in line_profile_campaign_dict.items():
+
+        plot_normalized_line_profiles_type_together(data, campaign, key_order)
 
 
 @task

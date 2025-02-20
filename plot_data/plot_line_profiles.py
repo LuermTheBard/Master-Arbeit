@@ -49,7 +49,7 @@ pseudo_conts_for_line_avg = {
 
 pseudo_conts_for_line_rms = {
 
-    'HAlpha': {'blue': (6107, 6129), 'red': (6861, 6900)},
+    'HAlpha': {'blue': (6201, 6223), 'red': (6970, 6994)},
     'HBeta': {'blue': (4435, 4450), 'red': (4980, 4987)},
     'HGamma': {'blue': (4197, 4220), 'red': (4435, 4450)},
     'HDelta': {'blue': (4026, 6033), 'red': (4197, 4220)},
@@ -123,6 +123,71 @@ def plot_normalized_line_profiles_in_pairs(data, campaign, key_order=None, outpu
         if not save_only:
             plt.show()
         plt.close(fig)
+
+
+def plot_normalized_line_profiles_type_together(data, campaign, key_order=None, output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
+    x_keys = 'velocity space (km/s)'
+    y_keys = 'normalized flux'
+
+    if key_order is None:
+        key_order = list(data["avg"].keys())
+
+    save_path_dir = output_dir / "plot_line_profiles"
+    save_path_dir.mkdir(parents=True, exist_ok=True)
+
+    fig, axes = plt.subplots(2, 1, figsize=(6, 16))  # Höheres Format für gestreckte Y-Achse
+    fig.suptitle(f'{campaign}\n\nLine Profile: {"/".join(key_order)}', fontsize=16)
+
+    for line in key_order:
+        avg_data = data["avg"][line]
+        rms_data = data["rms"][line]
+
+        avg_x, avg_y = avg_data["data_dict"][x_keys], avg_data["data_dict"][y_keys]
+        rms_x, rms_y = rms_data["data_dict"][x_keys], rms_data["data_dict"][y_keys]
+
+
+        y_limit_avg = (-0.1, 1.5)
+        y_limit_rms = (-0.1, 1.5)
+
+        x_limit = (-10000, 10000)
+
+
+
+
+        axes[0].vlines(0, y_limit_avg[0], y_limit_avg[1], linestyles='dashed', color='black')
+
+        # **Plot AVG**
+        axes[0].plot(avg_x, avg_y, label=line)
+        axes[0].set_xlim(x_limit)
+        axes[0].set_ylim(y_limit_avg)  # Unverändert lassen
+        axes[0].set_xlabel("Velocity Space (km/s)", fontsize=14)
+        axes[0].set_ylabel("Normalized Flux (AVG)", fontsize=14)
+        axes[0].legend(fontsize=10, loc='upper right')
+
+        # **Plot RMS**
+
+        axes[1].vlines(0, y_limit_avg[0], y_limit_avg[1], linestyles='dashed', color='black')
+
+        axes[1].plot(rms_x, rms_y, label=line)
+        axes[1].set_xlim(x_limit)
+        axes[1].set_ylim(y_limit_rms)  # Unverändert lassen
+        axes[1].set_xlabel("Velocity Space (km/s)", fontsize=14)
+        axes[1].set_ylabel("Normalized Flux (RMS)", fontsize=14)
+        axes[1].legend(fontsize=10, loc='upper right')
+
+    plt.subplots_adjust(hspace=0.5)  # Mehr Abstand zwischen den Subplots
+
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+
+        # **Speichern oder Anzeigen**
+    save_path_png = save_path_dir / f"{campaign}_{line}_type_together.png"
+    save_path_pdf = save_path_dir / f"{campaign}_{line}_type_together.pdf"
+
+    plt.savefig(save_path_png, dpi=500)
+    plt.savefig(save_path_pdf, dpi=500)
+    if not save_only:
+        plt.show()
+    plt.close(fig)
 
 
 def plot_normalized_line_profiles_together(data, campaign, key_order=None, output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
@@ -262,9 +327,16 @@ def plot_line_profiles_in_pairs(data, campaign, key_order=None, output_dir=DEFAU
         plt.close(fig)
 
 
-def subtract_continuum(wavelength, intensity, left_range, right_range):
+def subtract_continuum(wavelength, intensity, line_wavelength, left_range, right_range):
     """
-    Subtrahiert das Pseudokontinuum von einer Emissionslinie in einem Spektrum.
+    Subtrahiert das Pseudokontinuum von einer Emissionslinie in einem Spektrum und normalisiert auf das Maximum in einer gegebenen Umgebung.
+
+    :param wavelength: Array der Wellenlängen
+    :param intensity: Array der Intensitätswerte
+    :param line_wavelength: Zentrale Wellenlänge der Linie
+    :param left_range: Tupel (min, max) des linken Bereichs für die Kontinuumsschätzung
+    :param right_range: Tupel (min, max) des rechten Bereichs für die Kontinuumsschätzung
+    :return: (korrigierte Intensität, Pseudokontinuum)
     """
     left_mask = (wavelength > left_range[0]) & (wavelength < left_range[1])
     right_mask = (wavelength > right_range[0]) & (wavelength < right_range[1])
@@ -278,8 +350,15 @@ def subtract_continuum(wavelength, intensity, left_range, right_range):
 
     corrected_intensity = intensity - continuum
 
-    # Normalisierung auf das Maximum der Linie
-    corrected_intensity /= np.max(corrected_intensity)
+    # Bestimme das Maximum innerhalb des Bereichs ±10 um line_wavelength
+    norm_range = (line_wavelength - 10, line_wavelength + 10)
+    norm_mask = (wavelength > norm_range[0]) & (wavelength < norm_range[1])
+    if np.any(norm_mask):
+        max_value = np.max(corrected_intensity[norm_mask])
+    else:
+        max_value = np.max(corrected_intensity)  # Falls der Bereich leer ist, fallback auf das globale Maximum
+
+    corrected_intensity /= max_value
 
     return corrected_intensity, continuum
 
@@ -311,17 +390,19 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
 
     mask_x_lim = (wavelength >= wavelength_x_lim[0]) & (wavelength <= wavelength_x_lim[1])
     max_intensity = np.max(intensity[mask_x_lim])
+    min_intensity = np.min(intensity[mask_x_lim])
 
-    y_lim_original = (0, max_intensity * 1.1)  # Optional: 10% Puffer nach oben
+    y_lim_original = (min_intensity * 0.9, max_intensity * 1.1)  # Optional: 10% Puffer nach oben
 
-    corrected_intensity, continuum = subtract_continuum(wavelength, intensity, blue_pseudo_cont, red_pseudo_cont)
+    corrected_intensity, continuum = subtract_continuum(wavelength, intensity, line_wavelength, blue_pseudo_cont, red_pseudo_cont)
 
     velocity = convert_to_velocity(wavelength, line_wavelength)
 
     mask_x_lim = (velocity >= -20000) & (velocity <= 20000)
     max_intensity = np.max(corrected_intensity[mask_x_lim])
+    min_intensity = np.min(corrected_intensity[mask_x_lim])
 
-    y_lim_velocity = (0, max_intensity * 1.1)
+    y_lim_velocity = (min_intensity * 0.9, max_intensity * 1.1)
 
     output_dir = output_dir / "substracted_pseudocont_data"
 
@@ -330,7 +411,7 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
     np.savetxt(str(output_dir / f"{line_name}_{spec_type}_corrected_spectrum.txt"), np.column_stack((wavelength, corrected_intensity, continuum)),
                header="Wavelength (Å)  Intensity  Continuum")
     np.savetxt(str(output_dir /f"{line_name}_{spec_type}_velocity_spectrum.txt"), np.column_stack((velocity, corrected_intensity)),
-               header="Velocity (km/s)  Intensity")
+               header="# velocity space (km/s) 	 normalized flux")
 
     if plot:
         plt.figure(figsize=(8, 5))
