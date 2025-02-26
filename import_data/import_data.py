@@ -219,34 +219,27 @@ def import_fits_data():
 def import_line_profile_data(normalized=False):
 
     data_path = find_prime_data_folder()
-    campaigns_path = data_path / "campaigns"
 
-    galaxie_campaigns = [f.name for f in campaigns_path.iterdir() if f.is_dir()]
-    galaxie_campaigns_dict = dict()
+    avg_data_dict = dict()
+    rms_data_dict = dict()
 
-    for campaign in galaxie_campaigns:
-        campaign_path = campaigns_path / campaign
+    if "LineProfiles" in [f.name for f in data_path.iterdir()]:
+        line_profile_path = data_path / "LineProfiles"
 
-        avg_data_dict = dict()
-        rms_data_dict = dict()
+        avg_line_profiles = [f.name for f in line_profile_path.glob('*_avg_*')]
+        rms_line_profiles = [f.name for f in line_profile_path.glob('*_rms_*')]
 
-        if "LineProfiles" in [f.name for f in campaign_path.iterdir()]:
-            line_profile_path = campaign_path / "LineProfiles"
+        if normalized:
+            avg_line_profiles = [f for f in avg_line_profiles if "normalized" in f]
+            rms_line_profiles = [f for f in rms_line_profiles if "normalized" in f]
+        else:
+            avg_line_profiles = [f for f in avg_line_profiles if "normalized" not in f]
+            rms_line_profiles = [f for f in rms_line_profiles if "normalized" not in f]
 
-            avg_line_profiles = [f.name for f in line_profile_path.glob('*_avg_*')]
-            rms_line_profiles = [f.name for f in line_profile_path.glob('*_rms_*')]
+        avg_data_dict = process_line_profile_data(avg_line_profiles, line_profile_path)
+        rms_data_dict = process_line_profile_data(rms_line_profiles, line_profile_path)
 
-            if normalized:
-                avg_line_profiles = [f for f in avg_line_profiles if "normalized" in f]
-                rms_line_profiles = [f for f in rms_line_profiles if "normalized" in f]
-            else:
-                avg_line_profiles = [f for f in avg_line_profiles if "normalized" not in f]
-                rms_line_profiles = [f for f in rms_line_profiles if "normalized" not in f]
-
-            avg_data_dict = process_line_profile_data(avg_line_profiles, line_profile_path)
-            rms_data_dict = process_line_profile_data(rms_line_profiles, line_profile_path)
-
-        galaxie_campaigns_dict[campaign] = {"avg": avg_data_dict, "rms": rms_data_dict}
+    galaxie_campaigns_dict = {"avg": avg_data_dict, "rms": rms_data_dict}
 
     return galaxie_campaigns_dict
 

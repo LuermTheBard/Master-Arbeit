@@ -270,13 +270,11 @@ def save_line_normalized_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
     if not output_dir_path.exists():
         output_dir.mkdir(parents=True)
 
-    line_profile_campaign_dict = import_line_profile_data(normalized=True)
+    line_profile_dict = import_line_profile_data(normalized=True)
 
     key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015','HeII4685', 'OI8446']
 
-    for campaign, data in line_profile_campaign_dict.items():
-
-        plot_normalized_line_profiles_in_pairs(data, campaign, key_order, save_only=True)
+    plot_normalized_line_profiles_in_pairs(line_profile_dict, key_order, save_only=True)
 
 
 @task
@@ -286,13 +284,11 @@ def plot_and_save_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DI
     if not output_dir_path.exists():
         output_dir.mkdir(parents=True)
 
-    line_profile_campaign_dict = import_line_profile_data(normalized=True)
+    line_profile_dict = import_line_profile_data(normalized=True)
 
     key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015','HeII4685', 'OI8446']
 
-    for campaign, data in line_profile_campaign_dict.items():
-
-        plot_normalized_line_profiles_together(data, campaign, key_order)
+    plot_normalized_line_profiles_together(line_profile_dict, key_order)
 
 
 @task
@@ -302,15 +298,15 @@ def plot_and_save_normalized_line_profiles_types_together(output_dir=DEFAULT_OUT
     if not output_dir_path.exists():
         output_dir.mkdir(parents=True)
 
-    line_profile_campaign_dict = import_line_profile_data(normalized=True)
+    line_profile_dict = import_line_profile_data(normalized=True)
 
-    # key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015','HeII4685', 'OI8446']
+    key_order = ['HeI5875', 'HeI7065', 'HeII4685', ]
 
-    key_order = ['HAlpha', 'HBeta']
+    # key_order = ['HAlpha', 'HBeta', 'HGamma']
 
-    for campaign, data in line_profile_campaign_dict.items():
+    # key_order = ['HAlpha', 'HBeta']
 
-        plot_normalized_line_profiles_type_together(data, campaign, key_order)
+    plot_normalized_line_profiles_type_together(line_profile_dict, key_order)
 
 
 @task
@@ -320,13 +316,11 @@ def save_line_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DIR):
     if not output_dir_path.exists():
         output_dir.mkdir(parents=True)
 
-    line_profile_campaign_dict = import_line_profile_data(normalized=True)
+    line_profile_dict = import_line_profile_data(normalized=True)
 
     key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015','HeII4685', 'OI8446']
 
-    for campaign, data in line_profile_campaign_dict.items():
-
-        plot_normalized_line_profiles_together(data, campaign, key_order, save_only=True)
+    plot_normalized_line_profiles_together(line_profile_dict, key_order, save_only=True)
 
 
 @task
@@ -342,7 +336,8 @@ def substract_pseudo_continua_from_spectra(output_dir=DEFAULT_OUTPUT_DIR):
     avg_data = np.array(fits_data['NGC4593_avg.fits']['data'][0])
     rms_data = np.array(fits_data['NGC4593_rms.fits']['data'][0])
 
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta']
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015','HeII4685', 'OI8446']
+
 
     for line in key_order:
         process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=True)

@@ -24,12 +24,12 @@ central_wave_length = {
     'HBeta': 4861.33,
     'HGamma': 4340.47,
     'HDelta': 4101.74,
-    #'HeI5875': {'blue': (6107, 6129), 'red': (6861, 6900)},
-    #'HeI7065': {'blue': (6107, 6129), 'red': (6861, 6900)},
-    #'HeI4471': {'blue': (6107, 6129), 'red': (6861, 6900)},
-    #'HeI5015': {'blue': (6107, 6129), 'red': (6861, 6900)},
-    #'HeII4685': {'blue': (6107, 6129), 'red': (6861, 6900)},
-    #'OI8446': {'blue': (6107, 6129), 'red': (6861, 6900)}
+    'HeI5875': 5875.6,
+    'HeI7065': 7065.2,
+    'HeI4471': 4471.48,
+    'HeI5015': 5015.67,
+    'HeII4685': 4685.7,
+    'OI8446': 8446.35
 }
 
 
@@ -39,12 +39,12 @@ pseudo_conts_for_line_avg = {
     'HBeta': {'blue': (4762, 4774), 'red': (5085, 5112)},
     'HGamma': {'blue': (4197, 4220), 'red': (4435, 4450)},
     'HDelta': {'blue': (4026, 4033), 'red': (4197, 4220)},
-    #'HeI5875': {'blue': (6107, 6129), 'red': (6861, 6900)},
-    #'HeI7065': {'blue': (6107, 6129), 'red': (6861, 6900)},
-    #'HeI4471': {'blue': (6107, 6129), 'red': (6861, 6900)},
-    #'HeI5015': {'blue': (6107, 6129), 'red': (6861, 6900)},
-    #'HeII4685': {'blue': (6107, 6129), 'red': (6861, 6900)},
-    #'OI8446': {'blue': (6107, 6129), 'red': (6861, 6900)}
+    'HeI5875': {'blue': (5645, 5653), 'red': (6044, 6057)},
+    'HeI7065': {'blue': (6934, 6941), 'red': (7331, 7357)},
+    'HeI4471': {'blue': (4210, 4225), 'red': (4762, 4774)},
+    'HeI5015': {'blue': (4976, 4981), 'red': (5085, 5112)},
+    'HeII4685': {'blue': (4198, 4225), 'red': (4762, 4774)},
+    'OI8446': {'blue': (7999, 8025), 'red': (8775, 8798)}
 }
 
 pseudo_conts_for_line_rms = {
@@ -53,16 +53,16 @@ pseudo_conts_for_line_rms = {
     'HBeta': {'blue': (4435, 4450), 'red': (4980, 4987)},
     'HGamma': {'blue': (4197, 4220), 'red': (4435, 4450)},
     'HDelta': {'blue': (3939, 3950), 'red': (4197, 4220)},
-    #'HeI5875': 'He I 5875',
-    #'HeI7065': 'He I 7065',
-    #'HeI4471': 'He I 4471',
-    #'HeI5015': 'He I 5015',
-    #'HeII4685': 'He II 4685',
-    #'OI8446': 'O I 8446'
+    'HeI5875': {'blue': (5649, 5660), 'red': (6068, 6081)},
+    'HeI7065': {'blue': (6934, 6941), 'red': (7335, 7349)},
+    'HeI4471': {'blue': (4210, 4225), 'red': (4762, 4774)},
+    'HeI5015': {'blue': (4976, 4981), 'red': (5119, 5133)},
+    'HeII4685': {'blue': (4198, 4225), 'red': (4770, 4787)},
+    'OI8446': {'blue': (8222, 8238), 'red': (8748, 8767)}
 }
 
 
-def plot_normalized_line_profiles_in_pairs(data, campaign, key_order=None, output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
+def plot_normalized_line_profiles_in_pairs(data, key_order=None, output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     x_keys = 'velocity space (km/s)'
     y_keys = 'normalized flux'
 
@@ -86,7 +86,7 @@ def plot_normalized_line_profiles_in_pairs(data, campaign, key_order=None, outpu
         x_limit = (-10000, 10000)
 
         fig, axes = plt.subplots(2, 1, figsize=(6, 16))  # Höheres Format für gestreckte Y-Achse
-        fig.suptitle(f'{campaign}\n\nLine Profile: {line}', fontsize=16)
+        fig.suptitle(f'Line Profile: {line}', fontsize=16)
 
 
         axes[0].vlines(0, y_limit_avg[0], y_limit_avg[1], linestyles='dashed', color='black')
@@ -115,8 +115,8 @@ def plot_normalized_line_profiles_in_pairs(data, campaign, key_order=None, outpu
         plt.tight_layout(rect=[0, 0, 1, 0.96])
 
         # **Speichern oder Anzeigen**
-        save_path_png = save_path_dir / f"{campaign}_{line}.png"
-        save_path_pdf = save_path_dir / f"{campaign}_{line}.pdf"
+        save_path_png = save_path_dir / f"{line}.png"
+        save_path_pdf = save_path_dir / f"{line}.pdf"
 
         plt.savefig(save_path_png, dpi=500)
         plt.savefig(save_path_pdf, dpi=500)
@@ -125,7 +125,7 @@ def plot_normalized_line_profiles_in_pairs(data, campaign, key_order=None, outpu
         plt.close(fig)
 
 
-def plot_normalized_line_profiles_type_together(data, campaign, key_order=None, output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
+def plot_normalized_line_profiles_type_together(data, key_order=None, output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     x_keys = 'velocity space (km/s)'
     y_keys = 'normalized flux'
 
@@ -136,7 +136,7 @@ def plot_normalized_line_profiles_type_together(data, campaign, key_order=None, 
     save_path_dir.mkdir(parents=True, exist_ok=True)
 
     fig, axes = plt.subplots(2, 1, figsize=(6, 16))  # Höheres Format für gestreckte Y-Achse
-    fig.suptitle(f'{campaign}\n\nLine Profile: {"/".join(key_order)}', fontsize=16)
+    fig.suptitle(f'Line Profile: {"/".join(key_order)}', fontsize=16)
 
     for line in key_order:
         avg_data = data["avg"][line]
@@ -149,7 +149,7 @@ def plot_normalized_line_profiles_type_together(data, campaign, key_order=None, 
         y_limit_avg = (-0.1, 1.5)
         y_limit_rms = (-0.1, 1.5)
 
-        x_limit = (-10000, 10000)
+        x_limit = (-15000, 15000)
 
 
 
@@ -180,8 +180,8 @@ def plot_normalized_line_profiles_type_together(data, campaign, key_order=None, 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
 
         # **Speichern oder Anzeigen**
-    save_path_png = save_path_dir / f"{campaign}_{line}_type_together.png"
-    save_path_pdf = save_path_dir / f"{campaign}_{line}_type_together.pdf"
+    save_path_png = save_path_dir / f"{'-'.join(key_order)}_type_together.png"
+    save_path_pdf = save_path_dir / f"{'-'.join(key_order)}_type_together.pdf"
 
     plt.savefig(save_path_png, dpi=500)
     plt.savefig(save_path_pdf, dpi=500)
@@ -190,7 +190,7 @@ def plot_normalized_line_profiles_type_together(data, campaign, key_order=None, 
     plt.close(fig)
 
 
-def plot_normalized_line_profiles_together(data, campaign, key_order=None, output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
+def plot_normalized_line_profiles_together(data, key_order=None, output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     x_keys = 'velocity space (km/s)'
     y_keys = 'normalized flux'
 
@@ -211,7 +211,7 @@ def plot_normalized_line_profiles_together(data, campaign, key_order=None, outpu
         x_limit = (-10000, 10000)
 
         fig, ax = plt.subplots(figsize=(8, 6))  # Gemeinsamer Plot
-        fig.suptitle(f'{campaign}\n\nLine Profile: {line}', fontsize=16)
+        fig.suptitle(f'Line Profile: {line}', fontsize=16)
 
         # Vertikale Linie bei 0
         ax.vlines(0, y_limit[0], y_limit[1], linestyles='dashed', color='black', label="0 km/s")
@@ -229,8 +229,8 @@ def plot_normalized_line_profiles_together(data, campaign, key_order=None, outpu
         plt.tight_layout()
 
         # **Speichern oder Anzeigen**
-        save_path_png = save_path_dir / f"{campaign}_{line}_compared.png"
-        save_path_pdf = save_path_dir / f"{campaign}_{line}_compared.pdf"
+        save_path_png = save_path_dir / f"{line}_compared.png"
+        save_path_pdf = save_path_dir / f"{line}_compared.pdf"
 
         plt.savefig(save_path_png, dpi=500)
         plt.savefig(save_path_pdf, dpi=500)
@@ -239,7 +239,7 @@ def plot_normalized_line_profiles_together(data, campaign, key_order=None, outpu
         plt.close(fig)
 
 
-def plot_line_profiles_in_pairs(data, campaign, key_order=None, output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
+def plot_line_profiles_in_pairs(data, key_order=None, output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     x_keys = 'velocity space (km/s)'
     y_keys = 'flux ergs/s/cm2/A'
 
@@ -294,7 +294,7 @@ def plot_line_profiles_in_pairs(data, campaign, key_order=None, output_dir=DEFAU
         y_limit_rms = (-0.1, 1.1)
 
         fig, axes = plt.subplots(2, 1, figsize=(6, 16))  # Höheres Format für gestreckte Y-Achse
-        fig.suptitle(f'{campaign}\n\nLine Profile: {line}', fontsize=16)
+        fig.suptitle(f'Line Profile: {line}', fontsize=16)
 
         # **Plot AVG**
         axes[0].plot(avg_x, avg_y_norm, label='AVG', color='blue')
@@ -317,8 +317,8 @@ def plot_line_profiles_in_pairs(data, campaign, key_order=None, output_dir=DEFAU
         plt.tight_layout(rect=[0, 0, 1, 0.96])
 
         # **Speichern oder Anzeigen**
-        save_path_png = save_path_dir / f"{campaign}_{line}.png"
-        save_path_pdf = save_path_dir / f"{campaign}_{line}.pdf"
+        save_path_png = save_path_dir / f"{line}.png"
+        save_path_pdf = save_path_dir / f"{line}.pdf"
 
         plt.savefig(save_path_png, dpi=500)
         plt.savefig(save_path_pdf, dpi=500)
@@ -410,7 +410,7 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
 
     np.savetxt(str(output_dir / f"{line_name}_{spec_type}_corrected_spectrum.txt"), np.column_stack((wavelength, corrected_intensity, continuum)),
                header="Wavelength (Å)  Intensity  Continuum")
-    np.savetxt(str(output_dir /f"{line_name}_{spec_type}_velocity_spectrum.txt"), np.column_stack((velocity, corrected_intensity)),
+    np.savetxt(str(output_dir /f"{line_name}_normalized_{spec_type}_line_profile-{blue_pseudo_cont}-{red_pseudo_cont}.txt"), np.column_stack((velocity, corrected_intensity)),
                header="# velocity space (km/s) 	 normalized flux")
 
     if plot:
