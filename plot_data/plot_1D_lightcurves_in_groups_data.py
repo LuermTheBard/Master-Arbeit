@@ -21,10 +21,12 @@ def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, compar
     x_key = 'timestamps [MJD]'
     y_key = 'fluxes [ergs/s/cm2/A]'
 
-    save_folder = output_dir / "plot_1d_lightcurves"
-    save_folder.mkdir(parents=True, exist_ok=True)
 
     for campaign, data_dict in galaxie_campaigns_dict.items():
+
+        save_folder = output_dir / campaign / "plot_1d_lightcurves"
+        save_folder.mkdir(parents=True, exist_ok=True)
+
         # Plot for lines
         super_title = f"{campaign} Lines"
         compare_cont_data = {compare_cont: data_dict["continua"][compare_cont]}

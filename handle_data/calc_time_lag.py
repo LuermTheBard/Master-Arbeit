@@ -201,9 +201,9 @@ def printTable(filename, linelist, continuum):
 from pathlib import Path
 import numpy as np
 
-def calc_centroid_malte_code(continuum):
+def calc_centroid_malte_code(campaign, continuum):
     base_path = Path(
-        rf'C:\Users\lukas\Desktop\Python\Master-Arbeit\data\campaigns\NGC4593_CR\calc_time_lag_ccfs\{continuum}')
+        rf'C:\Users\lukas\Desktop\Python\Master-Arbeit\data\campaigns\{campaign}\calc_time_lag_ccfs\{continuum}')
 
     # Definiere die Liniennamen
     lines = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685', 'OI8446']
@@ -255,7 +255,7 @@ def calc_centroid_malte_code(continuum):
             line_objects.append(line_obj)
 
     # Speichere die Ergebnisse mit dynamischem Dateinamen
-    output_filename = f'CCF_lags_{continuum}.tex'
+    output_filename = f'CCF_lags_{campaign}_{continuum}.tex'
     print(f"✅ Speichere Ergebnisse in Datei: {output_filename}")
     printTable(output_filename, line_objects, continuum)
 
@@ -263,5 +263,7 @@ def calc_centroid_malte_code(continuum):
 
 
 
-#calc_centroid_malte_code("Cont1150")
-#calc_centroid_malte_code("Cont5100")
+calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150")
+calc_centroid_malte_code("NGC4593_Line_Center", "Cont1150")
+calc_centroid_malte_code("NGC4593_Full_Line", "Cont5100")
+calc_centroid_malte_code("NGC4593_Line_Center", "Cont5100")

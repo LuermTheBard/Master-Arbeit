@@ -13,9 +13,6 @@ def plot_all_1d_ccfs_in_groups_for_cont(galaxie_campaigns_correlation_data_dict,
     x_key = "time shift (tau)"
     y_key = cont_name
 
-    save_folder = output_dir / "plot_1d_ccfs" / cont_name
-    save_folder.mkdir(parents=True, exist_ok=True)
-
     def sort_keys(key):
         for idx, prefix in enumerate(key_order):
             if key.startswith(prefix):
@@ -23,10 +20,14 @@ def plot_all_1d_ccfs_in_groups_for_cont(galaxie_campaigns_correlation_data_dict,
         return len(key_order)
 
     for campaign, data_dict in galaxie_campaigns_correlation_data_dict.items():
+
+        save_folder = output_dir / campaign / "plot_1d_ccfs" / cont_name
+        save_folder.mkdir(parents=True, exist_ok=True)
+
         sorted_data_dict = dict(sorted(data_dict[cont_name].items(), key=lambda item: sort_keys(item[0])))
 
         plot_ccfs_in_groups(sorted_data_dict, x_key, y_key, cont_name, xlabel, ylabel,
-                            title=f"CCFs between Emission Lines and {cont_name}",
+                            title=f"CCFs between Emission Lines and {cont_name} for {campaign}",
                             save_only=save_only, output_dir=save_folder, shared_y=True)
 
 
@@ -132,7 +133,7 @@ def configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_va
             ax.plot(
                 x_values, y_values, label=f'{line_name}', color=color
             )
-
+        ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
         ax.legend(fontsize=8, loc='upper right')
 
     if col == 0:
