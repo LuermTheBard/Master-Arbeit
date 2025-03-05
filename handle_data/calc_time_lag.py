@@ -175,19 +175,21 @@ def printTable(filename, linelist, continuum):
         outfile.write(r'\centering' + '\n')
         outfile.write(fr'\caption{{Centroid and Peak Time Lag for {continuum}.}}' + '\n')
         outfile.write(fr'\label{{tab:lags_{continuum}}}' + '\n')
-        outfile.write(r'\begin{tabular}{l c c}' + '\n')  # Standard-Tabellenformat
+        outfile.write(r'\begin{tabular}{l c c c c}' + '\n')  # Neue Spalte für M_kg
         outfile.write(r'\toprule' + '\n')
 
         # Spaltenüberschriften
-        outfile.write(r'Name & $\tau_{\text{cent}}$ [d] & $\tau_{\text{peak}}$ [d] \\' + '\n')
+        outfile.write(r'Name & $\tau_{\text{cent}}$ [d] & $\tau_{\text{peak}}$ [d] & $M_{\text{BH}} [M_\odot]$ & $M_{\text{BH}} [\text{kg}]$ \\' + '\n')
         outfile.write(r'\midrule' + '\n')
 
         # Tabelleninhalt mit Fehlerdarstellung
         for line in linelist:
             tau_cent_str = f"{line.tau_cent:.1f} \\ensuremath{{_{{-{abs(line.tau_cent_err[0] - line.tau_cent):.1f}}}^{{+{abs(line.tau_cent_err[1] - line.tau_cent):.1f}}}}}"
             tau_peak_str = f"{line.tau_peak:.1f} \\ensuremath{{_{{-{abs(line.tau_peak_err[0] - line.tau_peak):.1f}}}^{{+{abs(line.tau_peak_err[1] - line.tau_peak):.1f}}}}}"
+            mass_str = f"{line.M_Mo:.2f}_{{{line.M_Mo_err[0] - line.M_Mo:.2f}}}^{{+{line.M_Mo_err[1] - line.M_Mo:.2f}}}"
+            mass_kg_str = f"{line.M_kg:.2e}"
 
-            outfile.write(f"{line.name} & ${tau_cent_str}$ & ${tau_peak_str}$ \\\\" + '\n')
+            outfile.write(f"{line.name} & ${tau_cent_str}$ & ${tau_peak_str}$ & ${mass_str}$ & ${mass_kg_str}$ \\\\" + '\n')
 
         # Tabellenabschluss
         outfile.write(r'\bottomrule' + '\n')
@@ -198,12 +200,24 @@ def printTable(filename, linelist, continuum):
         outfile.write(r'\end{document}' + '\n')
 
 
-from pathlib import Path
-import numpy as np
+
+# Definiere die Default-Listen für FWHM (rms) und sigma (rms)
+default_fwhm_rms = {
+    'HAlpha': 3050.0, 'HBeta': 3160.0, 'HGamma': 3130.0, 'HDelta': 4940.0,
+    'HeI5875': 1500.0, 'HeI7065': 1500.0, 'HeI4471': 1500.0, 'HeI5015': 1500.0,
+    'HeII4685': 1500.0, 'OI8446': 1500.0
+}
+
+default_sigma_rms = {
+    'HAlpha': 1180.0, 'HBeta': 1190.0, 'HGamma': 1240.0, 'HDelta': 1560.0,
+    'HeI5875': 250.0, 'HeI7065': 250.0, 'HeI4471': 250.0, 'HeI5015': 250.0,
+    'HeII4685': 250.0, 'OI8446': 250.0
+}
 
 def calc_centroid_malte_code(campaign, continuum):
     base_path = Path(
-        rf'C:\Users\lukas\Desktop\Python\Master-Arbeit\data\campaigns\{campaign}\calc_time_lag_ccfs\{continuum}')
+        rf'C:\Users\lukas\Desktop\Python\Master-Arbeit\data\campaigns\{campaign}\calc_time_lag_ccfs\{continuum}'
+    )
 
     # Definiere die Liniennamen
     lines = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685', 'OI8446']
@@ -218,7 +232,6 @@ def calc_centroid_malte_code(campaign, continuum):
 
     # Lade alle Zentroid- und Peak-Daten in ein Dictionary
     data = {}
-
     for line in lines:
         try:
             cents_path = base_path / f"calculatedCentroids{continuum}_{line}_ICCF.txt"
@@ -246,8 +259,8 @@ def calc_centroid_malte_code(campaign, continuum):
         if line in index_map and data[line]["centroids"] is not None and data[line]["peaks"] is not None:
             line_obj = Line(
                 line,  # Name der Linie
-                1500,  # Beispielwert für eine Eigenschaft (anpassen falls nötig)
-                250,  # Beispielwert für eine Eigenschaft (anpassen falls nötig)
+                default_fwhm_rms.get(line, 0.0),  # FWHM (rms)
+                default_sigma_rms.get(line, 0.0),  # Sigma (rms)
                 np.vstack((lineCorrelations[:, 0], lineCorrelations[:, index_map[line]])).T,
                 data[line]["centroids"],
                 data[line]["peaks"]
@@ -258,6 +271,7 @@ def calc_centroid_malte_code(campaign, continuum):
     output_filename = f'CCF_lags_{campaign}_{continuum}.tex'
     print(f"✅ Speichere Ergebnisse in Datei: {output_filename}")
     printTable(output_filename, line_objects, continuum)
+
 
 
 
