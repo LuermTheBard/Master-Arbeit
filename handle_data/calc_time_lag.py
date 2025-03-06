@@ -175,11 +175,11 @@ def printTable(filename, linelist, continuum):
         outfile.write(r'\centering' + '\n')
         outfile.write(fr'\caption{{Centroid and Peak Time Lag for {continuum}.}}' + '\n')
         outfile.write(fr'\label{{tab:lags_{continuum}}}' + '\n')
-        outfile.write(r'\begin{tabular}{l c c c c}' + '\n')  # Neue Spalte für M_kg
+        outfile.write(r'\begin{tabular}{l c c c}' + '\n')
         outfile.write(r'\toprule' + '\n')
 
         # Spaltenüberschriften
-        outfile.write(r'Name & $\tau_{\text{cent}}$ [d] & $\tau_{\text{peak}}$ [d] & $M_{\text{BH}} [M_\odot]$ & $M_{\text{BH}} [\text{kg}]$ \\' + '\n')
+        outfile.write(r'Name & $\tau_{\text{cent}}$ [d] & $\tau_{\text{peak}}$ [d] & $M_{\text{BH}} [10^7 M_\odot]$ \\' + '\n')
         outfile.write(r'\midrule' + '\n')
 
         # Tabelleninhalt mit Fehlerdarstellung
@@ -187,9 +187,8 @@ def printTable(filename, linelist, continuum):
             tau_cent_str = f"{line.tau_cent:.1f} \\ensuremath{{_{{-{abs(line.tau_cent_err[0] - line.tau_cent):.1f}}}^{{+{abs(line.tau_cent_err[1] - line.tau_cent):.1f}}}}}"
             tau_peak_str = f"{line.tau_peak:.1f} \\ensuremath{{_{{-{abs(line.tau_peak_err[0] - line.tau_peak):.1f}}}^{{+{abs(line.tau_peak_err[1] - line.tau_peak):.1f}}}}}"
             mass_str = f"{line.M_Mo:.2f}_{{{line.M_Mo_err[0] - line.M_Mo:.2f}}}^{{+{line.M_Mo_err[1] - line.M_Mo:.2f}}}"
-            mass_kg_str = f"{line.M_kg:.2e}"
 
-            outfile.write(f"{line.name} & ${tau_cent_str}$ & ${tau_peak_str}$ & ${mass_str}$ & ${mass_kg_str}$ \\\\" + '\n')
+            outfile.write(f"{line.name} & ${tau_cent_str}$ & ${tau_peak_str}$ & ${mass_str}$ \\\\" + '\n')
 
         # Tabellenabschluss
         outfile.write(r'\bottomrule' + '\n')
@@ -198,6 +197,7 @@ def printTable(filename, linelist, continuum):
 
         # LaTeX Dokument-Abschluss
         outfile.write(r'\end{document}' + '\n')
+
 
 
 
