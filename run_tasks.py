@@ -1,5 +1,5 @@
-import sys
 import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -9,13 +9,14 @@ from handle_data.handle_data import sort_1d_corr_data_for_lines, get_continua_wi
     get_weighted_best_continua
 from import_data.import_data import import_1d_correlation_data, import_1d_lightcurve_data, import_fits_data, \
     import_line_profile_data
-from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua
 from plot_data.plot_1D_ccfs_in_groups_data import plot_all_1d_ccfs_in_groups_for_cont
-from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_lightcurves_with_offset
+from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua
 from plot_data.plot_1D_lightcurves_in_groups_data import plot_all_1d_lightcurves_in_groups
+from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_lightcurves_with_offset
 from plot_data.plot_fits_data import plot_avg_rms
-from plot_data.plot_line_profiles import plot_line_profiles_in_pairs, plot_normalized_line_profiles_in_pairs, \
-    plot_normalized_line_profiles_together, process_spectrum, plot_normalized_line_profiles_type_together
+from plot_data.plot_line_profiles import plot_normalized_line_profiles_in_pairs, \
+    plot_normalized_line_profiles_together, process_spectrum, plot_normalized_line_profiles_type_together, \
+    transform_wavelength_to_velocity_and_cut
 from settings import DEFAULT_OUTPUT_DIR
 
 # Dictionary to store registered tasks
@@ -249,51 +250,49 @@ def plot_avg_rms_spec(file_name="avg_rms_spec", output_dir=DEFAULT_OUTPUT_DIR):
 
 @task
 def plot_and_save_normalized_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
-
     output_dir_path = Path(output_dir)
     if not output_dir_path.exists():
         output_dir.mkdir(parents=True)
 
     line_profile_campaign_dict = import_line_profile_data(normalized=True)
 
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015','HeII4685', 'OI8446']
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685',
+                 'OI8446']
 
     for campaign, data in line_profile_campaign_dict.items():
-
         plot_normalized_line_profiles_in_pairs(data, campaign, key_order)
 
 
 @task
 def save_line_normalized_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
-
     output_dir_path = Path(output_dir)
     if not output_dir_path.exists():
         output_dir.mkdir(parents=True)
 
     line_profile_dict = import_line_profile_data(normalized=True)
 
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015','HeII4685', 'OI8446']
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685',
+                 'OI8446']
 
     plot_normalized_line_profiles_in_pairs(line_profile_dict, key_order, save_only=True)
 
 
 @task
 def plot_and_save_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DIR):
-
     output_dir_path = Path(output_dir)
     if not output_dir_path.exists():
         output_dir.mkdir(parents=True)
 
     line_profile_dict = import_line_profile_data(normalized=True)
 
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015','HeII4685', 'OI8446']
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685',
+                 'OI8446']
 
     plot_normalized_line_profiles_together(line_profile_dict, key_order)
 
 
 @task
 def plot_and_save_normalized_line_profiles_types_together(output_dir=DEFAULT_OUTPUT_DIR):
-
     output_dir_path = Path(output_dir)
     if not output_dir_path.exists():
         output_dir.mkdir(parents=True)
@@ -311,21 +310,20 @@ def plot_and_save_normalized_line_profiles_types_together(output_dir=DEFAULT_OUT
 
 @task
 def save_line_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DIR):
-
     output_dir_path = Path(output_dir)
     if not output_dir_path.exists():
         output_dir.mkdir(parents=True)
 
     line_profile_dict = import_line_profile_data(normalized=True)
 
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015','HeII4685', 'OI8446']
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685',
+                 'OI8446']
 
     plot_normalized_line_profiles_together(line_profile_dict, key_order, save_only=True)
 
 
 @task
 def substract_pseudo_continua_from_spectra(output_dir=DEFAULT_OUTPUT_DIR):
-
     output_dir_path = Path(output_dir)
     if not output_dir_path.exists():
         output_dir.mkdir(parents=True)
@@ -336,12 +334,85 @@ def substract_pseudo_continua_from_spectra(output_dir=DEFAULT_OUTPUT_DIR):
     avg_data = np.array(fits_data['NGC4593_avg.fits']['data'][0])
     rms_data = np.array(fits_data['NGC4593_rms.fits']['data'][0])
 
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015','HeII4685', 'OI8446']
-
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685',
+                 'OI8446']
 
     for line in key_order:
         process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=True)
         process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=True)
+
+
+@task
+def cut_out_and_plot_line_profiles_from_fits(output_dir=DEFAULT_OUTPUT_DIR):
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir_path.mkdir(parents=True, exist_ok=True)
+
+    output_path = output_dir_path / "Line_Profiles_intercaly_pseudo_substracted"
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    fits_data_H_Alpha = import_fits_data("Halpha_pseudo_cont_substracted")
+    fits_data_H_Beta = import_fits_data("Hbeta_pseudo_cont_substracted")
+
+    H_Alpha_wavelenghts = np.array(fits_data_H_Alpha['avg_HAlpha_Line_Profile.fits']['x_axis'][0])
+    H_Alpha_avg_data = np.array(fits_data_H_Alpha['avg_HAlpha_Line_Profile.fits']['data'][0])
+    H_Alpha_rms_data = np.array(fits_data_H_Alpha['rms_HAlpha_Line_Profile.fits']['data'][0])
+
+    H_Beta_wavelenghts = np.array(fits_data_H_Beta['avg_HBeta_Line_Profile.fits']['x_axis'][0])
+    H_Beta_avg_data = np.array(fits_data_H_Beta['avg_HBeta_Line_Profile.fits']['data'][0])
+    H_Beta_rms_data = np.array(fits_data_H_Beta['rms_HBeta_Line_Profile.fits']['data'][0])
+
+    H_Alpha_avg_velocity, H_Alpha_avg_intensity = transform_wavelength_to_velocity_and_cut(H_Alpha_wavelenghts,
+                                                                                           H_Alpha_avg_data,
+                                                                                           "HAlpha",
+                                                                                           (-20000, 20000),
+                                                                                           output_path / "H_Alpha_AVG_Line_Profile.txt")
+
+    H_Alpha_rms_velocity, H_Alpha_rms_intensity = transform_wavelength_to_velocity_and_cut(H_Alpha_wavelenghts,
+                                                                                           H_Alpha_rms_data, "HAlpha",
+                                                                                           (-20000, 20000),
+                                                                                           output_path / "H_Alpha_RMS_Line_Profile.txt")
+
+    H_Beta_avg_velocity, H_Beta_avg_intensity = transform_wavelength_to_velocity_and_cut(H_Beta_wavelenghts,
+                                                                                         H_Beta_avg_data, "HBeta",
+                                                                                         (-20000, 20000),
+                                                                                         output_path / "H_Beta_AVG_Line_Profile.txt")
+
+    H_Beta_rms_velocity, H_Beta_rms_intensity = transform_wavelength_to_velocity_and_cut(H_Beta_wavelenghts,
+                                                                                         H_Beta_rms_data, "HBeta",
+                                                                                         (-20000, 20000),
+                                                                                         output_path / "H_Beta_RMS_Line_Profile.txt")
+
+    line_profile_dict = {"avg":
+                             {"HAlpha":
+                                  {"data_dict":
+                                       {'velocity space (km/s)':
+                                            H_Alpha_avg_velocity,
+                                        'normalized flux': H_Alpha_avg_intensity}
+                                   },
+                              "HBeta":
+                                  {"data_dict":
+                                       {'velocity space (km/s)':
+                                            H_Beta_avg_velocity,
+                                        'normalized flux':
+                                            H_Beta_avg_intensity}}},
+                         "rms":
+                             {"HAlpha":
+                                  {"data_dict":
+                                       {'velocity space (km/s)':
+                                            H_Alpha_rms_velocity,
+                                        'normalized flux': H_Alpha_rms_intensity}},
+                              "HBeta":
+                                  {"data_dict":
+                                       {'velocity space (km/s)':
+                                            H_Beta_rms_velocity,
+                                        'normalized flux':
+                                            H_Beta_rms_intensity}}},
+                         }
+
+    key_order = ['HAlpha', 'HBeta']
+
+    plot_normalized_line_profiles_type_together(line_profile_dict, key_order)
 
 
 @task

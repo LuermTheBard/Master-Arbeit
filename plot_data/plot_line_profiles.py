@@ -371,17 +371,21 @@ def convert_to_velocity(wavelength, line_wavelength):
     return (wavelength - line_wavelength) / line_wavelength * c_km_s
 
 
-def transform_wavelength_to_velocity(wavelength, intensity, line_wavelength, velocity_range=None, filename=None):
+def transform_wavelength_to_velocity_and_cut(wavelength, intensity, line_name, velocity_range=None, filename=None):
     """
-    Transformiert die Wellenlängenachse in den Geschwindigkeitsraum und schneidet optional die Daten auf einen Bereich um 0.
+    Transformiert die Wellenlängenachse in den Geschwindigkeitsraum, normalisiert die Intensität
+    auf das Maximum und schneidet optional die Daten auf einen Bereich um 0.
 
     :param wavelength: Array der Wellenlängen
     :param intensity: Array der Intensitätswerte
-    :param line_wavelength: Zentrale Wellenlänge der Linie
+    :param line_name: Zentrale Wellenlänge der Linie
     :param velocity_range: Tupel (min, max) zur Begrenzung des Geschwindigkeitsbereichs; min muss negativ, max positiv sein
     :param filename: Falls definiert, wird das Ergebnis in eine Datei gespeichert
-    :return: (Geschwindigkeiten, Intensität)
+    :return: (Geschwindigkeiten, normalisierte Intensität)
     """
+
+    line_wavelength = central_wave_length[line_name]
+
     # Transformation der Wellenlängen in den Geschwindigkeitsraum
     velocity = convert_to_velocity(wavelength, line_wavelength)
 
@@ -394,9 +398,13 @@ def transform_wavelength_to_velocity(wavelength, intensity, line_wavelength, vel
         velocity = velocity[mask]
         intensity = intensity[mask]
 
+    # Normalisierung der Intensität auf das Maximum
+    if np.max(intensity) != 0:
+        intensity = intensity / np.max(intensity)
+
     # Falls eine Datei angegeben ist, speichern
     if filename is not None:
-        with open(filename, 'w') as file:
+        with open(str(filename), 'w') as file:
             file.write("# velocity space (km/s) \t normalized flux\n")
             for v, i in zip(velocity, intensity):
                 file.write(f"{v}\t{i}\n")

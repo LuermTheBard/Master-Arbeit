@@ -149,7 +149,7 @@ def import_1d_lightcurve_data():
     return galaxie_campaigns_dict
 
 
-def import_fits_data():
+def import_fits_data(fits_folder=None):
     """
     Importiert FITS-Daten aus einem Verzeichnis und erstellt ein verschachteltes Dictionary.
     Gibt Warnungen aus, falls Daten oder notwendige Header-Parameter fehlen.
@@ -157,8 +157,17 @@ def import_fits_data():
     Returns:
         dict: Ein Dictionary mit den Daten, Headern und x-Achsen-Werten aller FITS-Dateien im Verzeichnis.
     """
+
     data_path = find_prime_data_folder()
-    fits_folder = data_path / "fits"
+
+    if fits_folder is None:
+
+        fits_folder = data_path / "fits"
+
+    else:
+
+        fits_folder = data_path / Path(fits_folder)
+
     fits_files = list(fits_folder.glob("*.fits"))
 
     fits_data_dict = {}
