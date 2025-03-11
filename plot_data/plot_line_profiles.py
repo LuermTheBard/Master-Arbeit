@@ -371,6 +371,53 @@ def convert_to_velocity(wavelength, line_wavelength):
     return (wavelength - line_wavelength) / line_wavelength * c_km_s
 
 
+def transform_wavelength_to_velocity(wavelength, intensity, line_wavelength, velocity_range=None, filename=None):
+    """
+    Transformiert die Wellenlängenachse in den Geschwindigkeitsraum und schneidet optional die Daten auf einen Bereich um 0.
+
+    :param wavelength: Array der Wellenlängen
+    :param intensity: Array der Intensitätswerte
+    :param line_wavelength: Zentrale Wellenlänge der Linie
+    :param velocity_range: Tupel (min, max) zur Begrenzung des Geschwindigkeitsbereichs; min muss negativ, max positiv sein
+    :param filename: Falls definiert, wird das Ergebnis in eine Datei gespeichert
+    :return: (Geschwindigkeiten, Intensität)
+    """
+    # Transformation der Wellenlängen in den Geschwindigkeitsraum
+    velocity = convert_to_velocity(wavelength, line_wavelength)
+
+    # Falls ein Bereich gegeben ist, schneide die Daten zurecht
+    if velocity_range is not None:
+        min_v, max_v = velocity_range
+        min_v = min(min_v, -abs(max_v))  # Sicherstellen, dass min negativ ist
+        max_v = max(max_v, abs(min_v))  # Sicherstellen, dass max positiv ist
+        mask = (velocity >= min_v) & (velocity <= max_v)
+        velocity = velocity[mask]
+        intensity = intensity[mask]
+
+    # Falls eine Datei angegeben ist, speichern
+    if filename is not None:
+        with open(filename, 'w') as file:
+            file.write("# velocity space (km/s) \t normalized flux\n")
+            for v, i in zip(velocity, intensity):
+                file.write(f"{v}\t{i}\n")
+
+    return velocity, intensity
+
+
+def save_velocity_data_to_txt(filename, velocity, intensity):
+    """
+    Speichert die Geschwindigkeits- und Intensitätswerte in eine TXT-Datei im gewünschten Format.
+
+    :param filename: Name der Datei, in die gespeichert werden soll
+    :param velocity: Array der Geschwindigkeitswerte
+    :param intensity: Array der Intensitätswerte
+    """
+    with open(filename, 'w') as file:
+        file.write("# velocity space (km/s) \t normalized flux\n")
+        for v, i in zip(velocity, intensity):
+            file.write(f"{v}\t{i}\n")
+
+
 def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_dir=DEFAULT_OUTPUT_DIR,  plot=False):
     """
     Berechnet das kontaminumsubtrahierte Spektrum und speichert die Daten in Dateien.
