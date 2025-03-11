@@ -420,7 +420,7 @@ def save_velocity_data_to_txt(filename, velocity, intensity):
 
 def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_dir=DEFAULT_OUTPUT_DIR,  plot=False):
     """
-    Berechnet das kontaminumsubtrahierte Spektrum und speichert die Daten in Dateien.
+    Berechnet das pseudo-continum-subtrahierte Spektrum und speichert die Daten in Dateien.
     """
     line_wavelength = central_wave_length[line_name]
 
