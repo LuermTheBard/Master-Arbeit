@@ -354,6 +354,9 @@ def cut_out_and_plot_line_profiles_from_fits(output_dir=DEFAULT_OUTPUT_DIR):
     fits_data_H_Alpha = import_fits_data("Halpha_pseudo_cont_substracted")
     fits_data_H_Beta = import_fits_data("Hbeta_pseudo_cont_substracted")
 
+    line_profile_dict = import_line_profile_data(normalized=True)
+
+
     H_Alpha_wavelenghts = np.array(fits_data_H_Alpha['avg_HAlpha_Line_Profile.fits']['x_axis'][0])
     H_Alpha_avg_data = np.array(fits_data_H_Alpha['avg_HAlpha_Line_Profile.fits']['data'][0])
     H_Alpha_rms_data = np.array(fits_data_H_Alpha['rms_HAlpha_Line_Profile.fits']['data'][0])
@@ -361,6 +364,9 @@ def cut_out_and_plot_line_profiles_from_fits(output_dir=DEFAULT_OUTPUT_DIR):
     H_Beta_wavelenghts = np.array(fits_data_H_Beta['avg_HBeta_Line_Profile.fits']['x_axis'][0])
     H_Beta_avg_data = np.array(fits_data_H_Beta['avg_HBeta_Line_Profile.fits']['data'][0])
     H_Beta_rms_data = np.array(fits_data_H_Beta['rms_HBeta_Line_Profile.fits']['data'][0])
+
+
+
 
     H_Alpha_avg_velocity, H_Alpha_avg_intensity = transform_wavelength_to_velocity_and_cut(H_Alpha_wavelenghts,
                                                                                            H_Alpha_avg_data,
@@ -383,26 +389,28 @@ def cut_out_and_plot_line_profiles_from_fits(output_dir=DEFAULT_OUTPUT_DIR):
                                                                                          (-20000, 20000),
                                                                                          output_path / "H_Beta_RMS_Line_Profile.txt")
 
-    line_profile_dict = {"avg":
-                             {"HAlpha":
+    line_profile_dict = import_line_profile_data(normalized=True)
+
+    line_profile_dict_add = {"avg":
+                             {"HAlpha_substracted_first":
                                   {"data_dict":
                                        {'velocity space (km/s)':
                                             H_Alpha_avg_velocity,
                                         'normalized flux': H_Alpha_avg_intensity}
                                    },
-                              "HBeta":
+                              "HBeta_substracted_first":
                                   {"data_dict":
                                        {'velocity space (km/s)':
                                             H_Beta_avg_velocity,
                                         'normalized flux':
                                             H_Beta_avg_intensity}}},
                          "rms":
-                             {"HAlpha":
+                             {"HAlpha_substracted_first":
                                   {"data_dict":
                                        {'velocity space (km/s)':
                                             H_Alpha_rms_velocity,
                                         'normalized flux': H_Alpha_rms_intensity}},
-                              "HBeta":
+                              "HBeta_substracted_first":
                                   {"data_dict":
                                        {'velocity space (km/s)':
                                             H_Beta_rms_velocity,
@@ -410,9 +418,36 @@ def cut_out_and_plot_line_profiles_from_fits(output_dir=DEFAULT_OUTPUT_DIR):
                                             H_Beta_rms_intensity}}},
                          }
 
-    key_order = ['HAlpha', 'HBeta']
+    merged_dict = merge_dicts(line_profile_dict, line_profile_dict_add)
 
-    plot_normalized_line_profiles_type_together(line_profile_dict, key_order)
+    key_order = ['HAlpha', 'HAlpha_substracted_first']
+
+    plot_normalized_line_profiles_type_together(merged_dict, key_order)
+
+    key_order = ['HBeta', 'HBeta_substracted_first']
+
+    plot_normalized_line_profiles_type_together(merged_dict, key_order)
+
+    key_order = ['HAlpha_substracted_first', 'HBeta_substracted_first']
+
+    plot_normalized_line_profiles_type_together(merged_dict, key_order)
+
+
+def merge_dicts(d1, d2):
+    """
+    Rekursive Funktion zum Zusammenführen zweier geschachtelter Dictionaries.
+    Falls Werte existieren, werden sie beibehalten oder überschrieben, falls notwendig.
+    """
+    for key, value in d2.items():
+        if key in d1:
+            if isinstance(d1[key], dict) and isinstance(value, dict):
+                merge_dicts(d1[key], value)  # Rekursiver Aufruf für geschachtelte Dicts
+            else:
+                d1[key] = value  # Überschreiben, falls kein Dict
+        else:
+            d1[key] = value  # Falls Key nicht existiert, direkt übernehmen
+    return d1
+
 
 
 @task

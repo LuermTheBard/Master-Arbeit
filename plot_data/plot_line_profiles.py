@@ -389,6 +389,18 @@ def transform_wavelength_to_velocity_and_cut(wavelength, intensity, line_name, v
     # Transformation der Wellenlängen in den Geschwindigkeitsraum
     velocity = convert_to_velocity(wavelength, line_wavelength)
 
+    # Normalisierung der Intensität auf das Maximum
+    if np.max(intensity) != 0:
+        # Bestimme das Maximum innerhalb des Bereichs ±10 um line_wavelength
+        norm_range = (line_wavelength - 10, line_wavelength + 10)
+        norm_mask = (wavelength > norm_range[0]) & (wavelength < norm_range[1])
+        if np.any(norm_mask):
+            max_value = np.max(intensity[norm_mask])
+        else:
+            max_value = np.max(intensity)  # Falls der Bereich leer ist, fallback auf das globale Maximum
+
+        intensity /= max_value
+
     # Falls ein Bereich gegeben ist, schneide die Daten zurecht
     if velocity_range is not None:
         min_v, max_v = velocity_range
@@ -398,9 +410,6 @@ def transform_wavelength_to_velocity_and_cut(wavelength, intensity, line_name, v
         velocity = velocity[mask]
         intensity = intensity[mask]
 
-    # Normalisierung der Intensität auf das Maximum
-    if np.max(intensity) != 0:
-        intensity = intensity / np.max(intensity)
 
     # Falls eine Datei angegeben ist, speichern
     if filename is not None:
