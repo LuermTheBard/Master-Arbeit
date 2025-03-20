@@ -44,7 +44,8 @@ pseudo_conts_for_line_avg = {
     'HeI4471': {'blue': (4210, 4225), 'red': (4762, 4774)},
     'HeI5015': {'blue': (4976, 4981), 'red': (5085, 5112)},
     'HeII4685': {'blue': (4198, 4225), 'red': (4762, 4774)},
-    'OI8446': {'blue': (7999, 8025), 'red': (8775, 8798)}
+    'OI8446': {'blue': (7999, 8025), 'red': (8775, 8798)},
+    'OIII5007': {'blue': (4762, 4774), 'red': (5085, 5112)},
 }
 
 pseudo_conts_for_line_rms = {
@@ -389,6 +390,21 @@ def transform_wavelength_to_velocity_and_cut(wavelength, intensity, line_name, v
     # Transformation der Wellenlängen in den Geschwindigkeitsraum
     velocity = convert_to_velocity(wavelength, line_wavelength)
 
+    intensity = normalize_to_maximum(intensity, line_wavelength, wavelength)
+
+    intensity, velocity = cut_line_out(intensity, velocity, velocity_range)
+
+    # Falls eine Datei angegeben ist, speichern
+    if filename is not None:
+        with open(str(filename), 'w') as file:
+            file.write("# velocity space (km/s) \t normalized flux\n")
+            for v, i in zip(velocity, intensity):
+                file.write(f"{v}\t{i}\n")
+
+    return velocity, intensity
+
+
+def normalize_to_maximum(intensity, line_wavelength, wavelength):
     # Normalisierung der Intensität auf das Maximum
     if np.max(intensity) != 0:
         # Bestimme das Maximum innerhalb des Bereichs ±10 um line_wavelength
@@ -400,7 +416,10 @@ def transform_wavelength_to_velocity_and_cut(wavelength, intensity, line_name, v
             max_value = np.max(intensity)  # Falls der Bereich leer ist, fallback auf das globale Maximum
 
         intensity /= max_value
+    return intensity
 
+
+def cut_line_out(intensity, velocity, velocity_range):
     # Falls ein Bereich gegeben ist, schneide die Daten zurecht
     if velocity_range is not None:
         min_v, max_v = velocity_range
@@ -409,16 +428,7 @@ def transform_wavelength_to_velocity_and_cut(wavelength, intensity, line_name, v
         mask = (velocity >= min_v) & (velocity <= max_v)
         velocity = velocity[mask]
         intensity = intensity[mask]
-
-
-    # Falls eine Datei angegeben ist, speichern
-    if filename is not None:
-        with open(str(filename), 'w') as file:
-            file.write("# velocity space (km/s) \t normalized flux\n")
-            for v, i in zip(velocity, intensity):
-                file.write(f"{v}\t{i}\n")
-
-    return velocity, intensity
+    return intensity, velocity
 
 
 def save_velocity_data_to_txt(filename, velocity, intensity):
