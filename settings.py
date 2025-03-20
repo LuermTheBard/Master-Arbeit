@@ -128,3 +128,17 @@ All_LINE_GROUPS = {
               "show_in_rms": True},
 
 }
+CENTRAL_WAVELENGTH = {
+
+    'HAlpha': 6562.82,
+    'HBeta': 4861.33,
+    'HGamma': 4340.47,
+    'HDelta': 4101.74,
+    'HeI5875': 5875.6,
+    'HeI7065': 7065.2,
+    'HeI4471': 4471.48,
+    'HeI5015': 5015.67,
+    'HeII4685': 4685.7,
+    'OI8446': 8446.35,
+    'OIII5007': 5007,
+}

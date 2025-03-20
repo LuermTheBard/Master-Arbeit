@@ -260,8 +260,11 @@ def process_line_profile_data(line_profiles_list, line_profile_path):
 
         line_name = item.split("_", 1)[0]
 
-        base, cont1, cont2 = item.rsplit("-", 2)
-        pseudo_conts = (cont1, cont2.removesuffix(".txt"))
+        if "-" in item:
+            base, cont1, cont2 = item.rsplit("-", 2)
+            pseudo_conts = (cont1, cont2.removesuffix(".txt"))
+        else:
+            pseudo_conts = None
 
         file_path = str(line_profile_path / item)
 

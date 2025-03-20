@@ -3,7 +3,7 @@ import numpy as np
 from astropy.constants.codata2018 import c
 from scipy.interpolate import interp1d
 
-from settings import VALUES_CONTINUA, All_LINES, DEFAULT_OUTPUT_DIR
+from settings import VALUES_CONTINUA, All_LINES, DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
 
 line_mapping = {
     'HAlpha': 'Hα',
@@ -17,21 +17,6 @@ line_mapping = {
     'HeII4685': 'He II 4685',
     'OI8446': 'O I 8446'
 }
-
-central_wave_length = {
-
-    'HAlpha': 6562.82,
-    'HBeta': 4861.33,
-    'HGamma': 4340.47,
-    'HDelta': 4101.74,
-    'HeI5875': 5875.6,
-    'HeI7065': 7065.2,
-    'HeI4471': 4471.48,
-    'HeI5015': 5015.67,
-    'HeII4685': 4685.7,
-    'OI8446': 8446.35
-}
-
 
 pseudo_conts_for_line_avg = {
 
@@ -59,7 +44,8 @@ pseudo_conts_for_line_rms = {
     'HeI4471': {'blue': (4210, 4225), 'red': (4762, 4774)},
     'HeI5015': {'blue': (4976, 4981), 'red': (5119, 5133)},
     'HeII4685': {'blue': (4198, 4225), 'red': (4770, 4787)},
-    'OI8446': {'blue': (8222, 8238), 'red': (8748, 8767)}
+    'OI8446': {'blue': (8222, 8238), 'red': (8748, 8767)},
+    'OIII5007': {'blue': (4762, 4774), 'red': (5085, 5112)},
 }
 
 
@@ -385,14 +371,14 @@ def transform_wavelength_to_velocity_and_cut(wavelength, intensity, line_name, v
     :return: (Geschwindigkeiten, normalisierte Intensität)
     """
 
-    line_wavelength = central_wave_length[line_name]
+    line_wavelength = CENTRAL_WAVELENGTH[line_name]
 
     # Transformation der Wellenlängen in den Geschwindigkeitsraum
     velocity = convert_to_velocity(wavelength, line_wavelength)
 
     intensity = normalize_to_maximum(intensity, line_wavelength, wavelength)
 
-    intensity, velocity = cut_line_out(intensity, velocity, velocity_range)
+    intensity, velocity = cut_out(intensity, velocity, velocity_range)
 
     # Falls eine Datei angegeben ist, speichern
     if filename is not None:
@@ -419,7 +405,7 @@ def normalize_to_maximum(intensity, line_wavelength, wavelength):
     return intensity
 
 
-def cut_line_out(intensity, velocity, velocity_range):
+def cut_normalized_line_out(intensity, velocity, velocity_range):
     # Falls ein Bereich gegeben ist, schneide die Daten zurecht
     if velocity_range is not None:
         min_v, max_v = velocity_range
@@ -429,6 +415,16 @@ def cut_line_out(intensity, velocity, velocity_range):
         velocity = velocity[mask]
         intensity = intensity[mask]
     return intensity, velocity
+
+
+def cut_line_out(intensity, wavelength, wavelength_range):
+    # Falls ein Bereich gegeben ist, schneide die Daten zurecht
+    if wavelength_range is not None:
+        min_v, max_v = wavelength_range
+        mask = (wavelength >= min_v) & (wavelength <= max_v)
+        wavelength = wavelength[mask]
+        intensity = intensity[mask]
+    return intensity, wavelength
 
 
 def save_velocity_data_to_txt(filename, velocity, intensity):
@@ -449,7 +445,7 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
     """
     Berechnet das pseudo-continum-subtrahierte Spektrum und speichert die Daten in Dateien.
     """
-    line_wavelength = central_wave_length[line_name]
+    line_wavelength = CENTRAL_WAVELENGTH[line_name]
 
     if spec_type == "avg":
         pseudo_conts_for_line = pseudo_conts_for_line_avg

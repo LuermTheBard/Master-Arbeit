@@ -3,6 +3,8 @@ import sys
 from pathlib import Path
 
 import numpy as np
+from fontTools.ttLib.tables.G_S_U_B_ import table_G_S_U_B_
+from matplotlib import pyplot as plt
 
 from handle_data.calc_time_lag import get_time_lags
 from handle_data.handle_data import sort_1d_corr_data_for_lines, get_continua_with_highest_corr_coef, \
@@ -16,8 +18,8 @@ from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_ligh
 from plot_data.plot_fits_data import plot_avg_rms
 from plot_data.plot_line_profiles import plot_normalized_line_profiles_in_pairs, \
     plot_normalized_line_profiles_together, process_spectrum, plot_normalized_line_profiles_type_together, \
-    transform_wavelength_to_velocity_and_cut
-from settings import DEFAULT_OUTPUT_DIR
+    transform_wavelength_to_velocity_and_cut, save_velocity_data_to_txt, cut_normalized_line_out, cut_line_out
+from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
 
 # Dictionary to store registered tasks
 registered_tasks = {}
@@ -447,6 +449,100 @@ def merge_dicts(d1, d2):
         else:
             d1[key] = value  # Falls Key nicht existiert, direkt übernehmen
     return d1
+
+
+@task
+def cut_normalized_line_profile(line_name, range=(-10000, 10000),  plot=False, output_dir=DEFAULT_OUTPUT_DIR):
+    if isinstance(range, str):
+        range = tuple(map(int, range.strip("() ").split(',')))
+
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir_path.mkdir(parents=True, exist_ok=True)
+
+    output_path = output_dir_path / "Line_Profiles_cut_out"
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    line_profile_dict = import_line_profile_data(normalized=True)
+
+    line_data_avg = line_profile_dict["avg"][line_name]["data_dict"]
+    line_data_rms = line_profile_dict["rms"][line_name]["data_dict"]
+
+    velocitys = line_data_avg["velocity space (km/s)"]
+    intensities_avg = line_data_avg["normalized flux"]
+    intensities_rms = line_data_rms["normalized flux"]
+
+    intensity_avg, velocity_avg = cut_normalized_line_out(intensities_avg, velocitys, range)
+    intensity_rms, velocity_rms = cut_normalized_line_out(intensities_rms, velocitys, range)
+
+    range_str = f"{range[0]}_{range[1]}"
+
+    save_velocity_data_to_txt(output_path / f"{line_name}_norm_avg_profile_{range_str}.txt", velocity_avg, intensity_avg)
+    save_velocity_data_to_txt(output_path / f"{line_name}_norm_rms_profile_{range_str}.txt", velocity_rms, intensity_rms)
+
+    if plot:
+        fig, axs = plt.subplots(2, 1, sharex=True, figsize=(8, 6))
+
+        axs[0].plot(velocity_avg, intensity_avg, linestyle='-', marker='o', color='b')
+        axs[0].set_ylabel("Avg Profile")
+        axs[0].grid(True)
+
+        axs[1].plot(velocity_rms, intensity_rms, linestyle='--', marker='s', color='r')
+        axs[1].set_xlabel("Velocity (km/s)")
+        axs[1].set_ylabel("RMS Profile")
+        axs[1].grid(True)
+
+        plt.suptitle(f"Line Profile: {line_name}")
+        plt.show()
+
+
+@task
+def cut_line_profile(line_name, cut_out_range=(-100, 100),  plot=False, output_dir=DEFAULT_OUTPUT_DIR):
+    if isinstance(cut_out_range, str):
+        cut_out_range = tuple(map(int, cut_out_range.strip("() ").split(',')))
+
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir_path.mkdir(parents=True, exist_ok=True)
+
+    output_path = output_dir_path / "Line_Profiles_cut_out"
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    central_wave_length = CENTRAL_WAVELENGTH[line_name]
+
+    cut_out_range = (central_wave_length + cut_out_range[0], central_wave_length + cut_out_range[1])
+
+    line_profile_dict = import_line_profile_data()
+
+    line_data_avg = line_profile_dict["avg"][line_name]["data_dict"]
+    line_data_rms = line_profile_dict["rms"][line_name]["data_dict"]
+
+    wavelengths = line_data_avg["velocity space (km/s)"]
+    intensities_avg = line_data_avg['flux ergs/s/cm2/A']
+    intensities_rms = line_data_rms['flux ergs/s/cm2/A']
+
+    intensity_avg, velocity_avg = cut_line_out(intensities_avg, wavelengths, cut_out_range)
+    intensity_rms, velocity_rms = cut_line_out(intensities_rms, wavelengths, cut_out_range)
+
+    range_str = f"{cut_out_range[0]}_{cut_out_range[1]}"
+
+    save_velocity_data_to_txt(output_path / f"{line_name}_avg_profile_{range_str}.txt", velocity_avg, intensity_avg)
+    save_velocity_data_to_txt(output_path / f"{line_name}_rms_profile_{range_str}.txt", velocity_rms, intensity_rms)
+
+    if plot:
+        fig, axs = plt.subplots(2, 1, sharex=True, figsize=(8, 6))
+
+        axs[0].plot(velocity_avg, intensity_avg, linestyle='-', marker='o', color='b')
+        axs[0].set_ylabel("Avg Profile")
+        axs[0].grid(True)
+
+        axs[1].plot(velocity_rms, intensity_rms, linestyle='--', marker='s', color='r')
+        axs[1].set_xlabel("Velocity (km/s)")
+        axs[1].set_ylabel("RMS Profile")
+        axs[1].grid(True)
+
+        plt.suptitle(f"Line Profile: {line_name}")
+        plt.show()
 
 
 
