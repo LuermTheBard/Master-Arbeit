@@ -74,76 +74,49 @@ def compare_and_save_all_1d_corr(output_dir=DEFAULT_OUTPUT_DIR):
     compare_plots_across_continua(one_dim_correlation_plot_data, output_dir=output_dir, save_only=True)
 
 
+def run_1d_lightcurves_task(output_dir=DEFAULT_OUTPUT_DIR, save_only=False, with_offset=False):
+    ensure_output_dir(output_dir)
+    data = import_1d_lightcurve_data()
+    if with_offset:
+        plot_1d_lightcurves_with_offset(data, output_dir, save_only=save_only, y_offset=0.15)
+    else:
+        plot_1d_lightcurves(data, output_dir, save_only=save_only)
+
+
+def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
+    ensure_output_dir(output_dir)
+    data = import_1d_lightcurve_data()
+
+    for cont in ["Cont1150", "Cont5100"]:
+        key_order = [cont, 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
+        plot_all_1d_lightcurves_in_groups(data, output_dir, compare_cont=cont, key_order=key_order, save_only=save_only)
+
+
+
 @task
 def plot_and_save_1d_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
-    """
-    save all 1D correlations.
-    """
-    ensure_output_dir(output_dir)
-    one_dim_lightcurve_data = import_1d_lightcurve_data()
-    plot_1d_lightcurves(one_dim_lightcurve_data, output_dir)
+    run_1d_lightcurves_task(output_dir=output_dir)
+
+@task
+def save_1d_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
+    run_1d_lightcurves_task(output_dir=output_dir, save_only=True)
+
+@task
+def plot_and_save_1d_lightcurves_with_offset(output_dir=DEFAULT_OUTPUT_DIR):
+    run_1d_lightcurves_task(output_dir=output_dir, with_offset=True)
+
+@task
+def save_1d_lightcurves_with_offset(output_dir=DEFAULT_OUTPUT_DIR):
+    run_1d_lightcurves_task(output_dir=output_dir, with_offset=True, save_only=True)
 
 
 @task
 def plot_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
-    """
-    save all 1D correlations.
-    """
-    ensure_output_dir(output_dir)
-    one_dim_lightcurve_data = import_1d_lightcurve_data()
-
-    key_order = ["Cont1150", 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
-    plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir, compare_cont="Cont1150", key_order=key_order)
-
-    key_order = ["Cont5100", 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
-    plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir, compare_cont="Cont5100", key_order=key_order)
-
+    run_1d_lightcurves_groups(output_dir)
 
 @task
 def save_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
-    """
-    save all 1D correlations.
-    """
-    ensure_output_dir(output_dir)
-    one_dim_lightcurve_data = import_1d_lightcurve_data()
-
-    key_order = ["Cont1150", 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
-    plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir, compare_cont="Cont1150", key_order=key_order,
-                                      save_only=True)
-
-    key_order = ["Cont5100", 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
-    plot_all_1d_lightcurves_in_groups(one_dim_lightcurve_data, output_dir, compare_cont="Cont5100", key_order=key_order,
-                                      save_only=True)
-
-
-@task
-def save_1d_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
-    """
-    save all 1D correlations.
-    """
-    ensure_output_dir(output_dir)
-    one_dim_lightcurve_data = import_1d_lightcurve_data()
-    plot_1d_lightcurves(one_dim_lightcurve_data, output_dir, save_only=True)
-
-
-@task
-def plot_and_save_1d_lightcurves_with_offset(output_dir=DEFAULT_OUTPUT_DIR):
-    """
-    save all 1D correlations.
-    """
-    ensure_output_dir(output_dir)
-    one_dim_lightcurve_data = import_1d_lightcurve_data()
-    plot_1d_lightcurves_with_offset(one_dim_lightcurve_data, output_dir)
-
-
-@task
-def save_1d_lightcurves_with_offset(output_dir=DEFAULT_OUTPUT_DIR):
-    """
-    save all 1D correlations.
-    """
-    ensure_output_dir(output_dir)
-    one_dim_lightcurve_data = import_1d_lightcurve_data()
-    plot_1d_lightcurves_with_offset(one_dim_lightcurve_data, output_dir, save_only=True, y_offset=0.15)
+    run_1d_lightcurves_groups(output_dir, save_only=True)
 
 
 @task
@@ -219,29 +192,27 @@ def plot_avg_rms_spec(file_name="avg_rms_spec", output_dir=DEFAULT_OUTPUT_DIR):
     plot_avg_rms(fits_data, save_path=avg_rms_spec_file)
 
 
+def run_normalized_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
+    ensure_output_dir(output_dir)
+    data = import_line_profile_data(normalized=True)
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685', 'OI8446']
+
+    if "avg" in data and "rms" in data:
+        # global dictionary
+        plot_normalized_line_profiles_in_pairs(data, key_order, save_only=save_only)
+    else:
+        for campaign, d in data.items():
+            plot_normalized_line_profiles_in_pairs(d, campaign, key_order, save_only=save_only)
+
+
 @task
 def plot_and_save_normalized_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
-    ensure_output_dir(output_dir)
-
-    line_profile_campaign_dict = import_line_profile_data(normalized=True)
-
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685',
-                 'OI8446']
-
-    for campaign, data in line_profile_campaign_dict.items():
-        plot_normalized_line_profiles_in_pairs(data, campaign, key_order)
+    run_normalized_profiles_in_pairs(output_dir)
 
 
 @task
-def save_line_normalized_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
-    ensure_output_dir(output_dir)
-
-    line_profile_dict = import_line_profile_data(normalized=True)
-
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685',
-                 'OI8446']
-
-    plot_normalized_line_profiles_in_pairs(line_profile_dict, key_order, save_only=True)
+def save_normalized_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
+    run_normalized_profiles_in_pairs(output_dir, save_only=True)
 
 
 @task
