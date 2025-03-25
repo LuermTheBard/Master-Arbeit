@@ -5,9 +5,8 @@ from pathlib import Path
 import numpy as np
 from matplotlib import pyplot as plt
 
-from handle_data.calc_time_lag import get_time_lags
 from handle_data.handle_data import sort_1d_corr_data_for_lines, get_continua_with_highest_corr_coef, \
-    get_weighted_best_continua
+    get_weighted_best_continua, prepare_cut_data
 from import_data.import_data import import_1d_correlation_data, import_1d_lightcurve_data, import_fits_data, \
     import_line_profile_data
 from plot_data.plot_1D_ccfs_in_groups_data import plot_all_1d_ccfs_in_groups_for_cont
@@ -17,7 +16,7 @@ from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_ligh
 from plot_data.plot_fits_data import plot_avg_rms
 from plot_data.plot_line_profiles import plot_normalized_line_profiles_in_pairs, \
     plot_normalized_line_profiles_together, process_spectrum, plot_normalized_line_profiles_type_together, \
-    transform_wavelength_to_velocity_and_cut, save_velocity_data_to_txt, cut_normalized_line_out, cut_line_out
+    save_velocity_data_to_txt, cut_normalized_line_out, cut_line_out
 from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
 
 # Dictionary to store registered tasks
@@ -336,7 +335,7 @@ def substract_pseudo_continua_from_spectra(output_dir=DEFAULT_OUTPUT_DIR):
 
 
 @task
-def cut_out_and_plot_line_profiles_from_fits(output_dir=DEFAULT_OUTPUT_DIR):
+def cut_out_line_profiles_from_fits(output_dir=DEFAULT_OUTPUT_DIR):
     output_dir_path = Path(output_dir)
     if not output_dir_path.exists():
         output_dir_path.mkdir(parents=True, exist_ok=True)
@@ -347,69 +346,7 @@ def cut_out_and_plot_line_profiles_from_fits(output_dir=DEFAULT_OUTPUT_DIR):
     fits_data_H_Alpha = import_fits_data("Halpha_pseudo_cont_substracted")
     fits_data_H_Beta = import_fits_data("Hbeta_pseudo_cont_substracted")
 
-
-    H_Alpha_wavelenghts = np.array(fits_data_H_Alpha['avg_HAlpha_Line_Profile.fits']['x_axis'][0])
-    H_Alpha_avg_data = np.array(fits_data_H_Alpha['avg_HAlpha_Line_Profile.fits']['data'][0])
-    H_Alpha_rms_data = np.array(fits_data_H_Alpha['rms_HAlpha_Line_Profile.fits']['data'][0])
-
-    H_Beta_wavelenghts = np.array(fits_data_H_Beta['avg_HBeta_Line_Profile.fits']['x_axis'][0])
-    H_Beta_avg_data = np.array(fits_data_H_Beta['avg_HBeta_Line_Profile.fits']['data'][0])
-    H_Beta_rms_data = np.array(fits_data_H_Beta['rms_HBeta_Line_Profile.fits']['data'][0])
-
-
-
-
-    H_Alpha_avg_velocity, H_Alpha_avg_intensity = transform_wavelength_to_velocity_and_cut(H_Alpha_wavelenghts,
-                                                                                           H_Alpha_avg_data,
-                                                                                           "HAlpha",
-                                                                                           (-20000, 20000),
-                                                                                           output_path / "H_Alpha_AVG_Line_Profile.txt")
-
-    H_Alpha_rms_velocity, H_Alpha_rms_intensity = transform_wavelength_to_velocity_and_cut(H_Alpha_wavelenghts,
-                                                                                           H_Alpha_rms_data, "HAlpha",
-                                                                                           (-20000, 20000),
-                                                                                           output_path / "H_Alpha_RMS_Line_Profile.txt")
-
-    H_Beta_avg_velocity, H_Beta_avg_intensity = transform_wavelength_to_velocity_and_cut(H_Beta_wavelenghts,
-                                                                                         H_Beta_avg_data, "HBeta",
-                                                                                         (-20000, 20000),
-                                                                                         output_path / "H_Beta_AVG_Line_Profile.txt")
-
-    H_Beta_rms_velocity, H_Beta_rms_intensity = transform_wavelength_to_velocity_and_cut(H_Beta_wavelenghts,
-                                                                                         H_Beta_rms_data, "HBeta",
-                                                                                         (-20000, 20000),
-                                                                                         output_path / "H_Beta_RMS_Line_Profile.txt")
-
-    line_profile_dict = import_line_profile_data(normalized=True)
-
-    line_profile_dict_add = {"avg":
-                             {"HAlpha_substracted_first":
-                                  {"data_dict":
-                                       {'velocity space (km/s)':
-                                            H_Alpha_avg_velocity,
-                                        'normalized flux': H_Alpha_avg_intensity}
-                                   },
-                              "HBeta_substracted_first":
-                                  {"data_dict":
-                                       {'velocity space (km/s)':
-                                            H_Beta_avg_velocity,
-                                        'normalized flux':
-                                            H_Beta_avg_intensity}}},
-                         "rms":
-                             {"HAlpha_substracted_first":
-                                  {"data_dict":
-                                       {'velocity space (km/s)':
-                                            H_Alpha_rms_velocity,
-                                        'normalized flux': H_Alpha_rms_intensity}},
-                              "HBeta_substracted_first":
-                                  {"data_dict":
-                                       {'velocity space (km/s)':
-                                            H_Beta_rms_velocity,
-                                        'normalized flux':
-                                            H_Beta_rms_intensity}}},
-                         }
-
-    merged_dict = merge_dicts(line_profile_dict, line_profile_dict_add)
+    merged_dict = prepare_cut_data(fits_data_H_Alpha, fits_data_H_Beta, output_path)
 
     key_order = ['HAlpha', 'HAlpha_substracted_first']
 
@@ -422,22 +359,6 @@ def cut_out_and_plot_line_profiles_from_fits(output_dir=DEFAULT_OUTPUT_DIR):
     key_order = ['HAlpha_substracted_first', 'HBeta_substracted_first']
 
     plot_normalized_line_profiles_type_together(merged_dict, key_order)
-
-
-def merge_dicts(d1, d2):
-    """
-    Rekursive Funktion zum Zusammenführen zweier geschachtelter Dictionaries.
-    Falls Werte existieren, werden sie beibehalten oder überschrieben, falls notwendig.
-    """
-    for key, value in d2.items():
-        if key in d1:
-            if isinstance(d1[key], dict) and isinstance(value, dict):
-                merge_dicts(d1[key], value)  # Rekursiver Aufruf für geschachtelte Dicts
-            else:
-                d1[key] = value  # Überschreiben, falls kein Dict
-        else:
-            d1[key] = value  # Falls Key nicht existiert, direkt übernehmen
-    return d1
 
 
 @task

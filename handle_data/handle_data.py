@@ -1,4 +1,7 @@
 import numpy as np
+
+from import_data.import_data import import_line_profile_data
+from plot_data.plot_line_profiles import transform_wavelength_to_velocity_and_cut
 from settings import F_MEAN, F_SIGMA
 
 
@@ -130,3 +133,74 @@ def calc_error_of_function(func, params, errors):
     # Propagated error calculation
     propagated_error = np.sqrt(np.sum((partial_derivatives * errors) ** 2))
     return propagated_error
+
+
+def prepare_cut_data(fits_data_H_Alpha, fits_data_H_Beta, output_path):
+    H_Alpha_wavelenghts = np.array(fits_data_H_Alpha['avg_HAlpha_Line_Profile.fits']['x_axis'][0])
+    H_Alpha_avg_data = np.array(fits_data_H_Alpha['avg_HAlpha_Line_Profile.fits']['data'][0])
+    H_Alpha_rms_data = np.array(fits_data_H_Alpha['rms_HAlpha_Line_Profile.fits']['data'][0])
+    H_Beta_wavelenghts = np.array(fits_data_H_Beta['avg_HBeta_Line_Profile.fits']['x_axis'][0])
+    H_Beta_avg_data = np.array(fits_data_H_Beta['avg_HBeta_Line_Profile.fits']['data'][0])
+    H_Beta_rms_data = np.array(fits_data_H_Beta['rms_HBeta_Line_Profile.fits']['data'][0])
+    H_Alpha_avg_velocity, H_Alpha_avg_intensity = transform_wavelength_to_velocity_and_cut(H_Alpha_wavelenghts,
+                                                                                           H_Alpha_avg_data,
+                                                                                           "HAlpha",
+                                                                                           (-20000, 20000),
+                                                                                           output_path / "H_Alpha_AVG_Line_Profile.txt")
+    H_Alpha_rms_velocity, H_Alpha_rms_intensity = transform_wavelength_to_velocity_and_cut(H_Alpha_wavelenghts,
+                                                                                           H_Alpha_rms_data, "HAlpha",
+                                                                                           (-20000, 20000),
+                                                                                           output_path / "H_Alpha_RMS_Line_Profile.txt")
+    H_Beta_avg_velocity, H_Beta_avg_intensity = transform_wavelength_to_velocity_and_cut(H_Beta_wavelenghts,
+                                                                                         H_Beta_avg_data, "HBeta",
+                                                                                         (-20000, 20000),
+                                                                                         output_path / "H_Beta_AVG_Line_Profile.txt")
+    H_Beta_rms_velocity, H_Beta_rms_intensity = transform_wavelength_to_velocity_and_cut(H_Beta_wavelenghts,
+                                                                                         H_Beta_rms_data, "HBeta",
+                                                                                         (-20000, 20000),
+                                                                                         output_path / "H_Beta_RMS_Line_Profile.txt")
+    line_profile_dict = import_line_profile_data(normalized=True)
+    line_profile_dict_add = {"avg":
+                                 {"HAlpha_substracted_first":
+                                      {"data_dict":
+                                           {'velocity space (km/s)':
+                                                H_Alpha_avg_velocity,
+                                            'normalized flux': H_Alpha_avg_intensity}
+                                       },
+                                  "HBeta_substracted_first":
+                                      {"data_dict":
+                                           {'velocity space (km/s)':
+                                                H_Beta_avg_velocity,
+                                            'normalized flux':
+                                                H_Beta_avg_intensity}}},
+                             "rms":
+                                 {"HAlpha_substracted_first":
+                                      {"data_dict":
+                                           {'velocity space (km/s)':
+                                                H_Alpha_rms_velocity,
+                                            'normalized flux': H_Alpha_rms_intensity}},
+                                  "HBeta_substracted_first":
+                                      {"data_dict":
+                                           {'velocity space (km/s)':
+                                                H_Beta_rms_velocity,
+                                            'normalized flux':
+                                                H_Beta_rms_intensity}}},
+                             }
+    merged_dict = merge_dicts(line_profile_dict, line_profile_dict_add)
+    return merged_dict
+
+
+def merge_dicts(d1, d2):
+    """
+    Rekursive Funktion zum Zusammenführen zweier geschachtelter Dictionaries.
+    Falls Werte existieren, werden sie beibehalten oder überschrieben, falls notwendig.
+    """
+    for key, value in d2.items():
+        if key in d1:
+            if isinstance(d1[key], dict) and isinstance(value, dict):
+                merge_dicts(d1[key], value)  # Rekursiver Aufruf für geschachtelte Dicts
+            else:
+                d1[key] = value  # Überschreiben, falls kein Dict
+        else:
+            d1[key] = value  # Falls Key nicht existiert, direkt übernehmen
+    return d1
