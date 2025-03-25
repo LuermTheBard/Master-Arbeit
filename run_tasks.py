@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from fontTools.ttLib.tables.G_S_U_B_ import table_G_S_U_B_
 from matplotlib import pyplot as plt
 
 from handle_data.calc_time_lag import get_time_lags
@@ -35,14 +34,6 @@ def task(func):
 def dummy_task():
     subprocess.run(["python", "-m", "scrap.scripts.dummy_script", "calc_2_plus_2"], check=True)
 
-
-@task
-def calc_time_lag():
-    one_dim_correlation_data = import_1d_correlation_data()
-    result_dict = get_time_lags(one_dim_correlation_data, baseline=0, selected_continua=["Cont1150", "Cont5100"],
-                                plot=True)
-
-    print(result_dict)
 
 
 @task
@@ -355,8 +346,6 @@ def cut_out_and_plot_line_profiles_from_fits(output_dir=DEFAULT_OUTPUT_DIR):
 
     fits_data_H_Alpha = import_fits_data("Halpha_pseudo_cont_substracted")
     fits_data_H_Beta = import_fits_data("Hbeta_pseudo_cont_substracted")
-
-    line_profile_dict = import_line_profile_data(normalized=True)
 
 
     H_Alpha_wavelenghts = np.array(fits_data_H_Alpha['avg_HAlpha_Line_Profile.fits']['x_axis'][0])
