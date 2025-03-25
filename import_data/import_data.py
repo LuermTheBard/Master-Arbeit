@@ -238,7 +238,7 @@ def import_line_profile_data(normalized=False):
         avg_line_profiles = [f.name for f in line_profile_path.glob('*_avg_*')]
         rms_line_profiles = [f.name for f in line_profile_path.glob('*_rms_*')]
 
-        if normalized:
+        if normalized is True:
             avg_line_profiles = [f for f in avg_line_profiles if "normalized" in f]
             rms_line_profiles = [f for f in rms_line_profiles if "normalized" in f]
         else:
