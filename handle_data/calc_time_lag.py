@@ -160,7 +160,7 @@ def get_centroid_of_peak(x_values, y_values, baseline=None, threshold=0.8):
     return centroid, x_selected, y_selected, baseline, y_threshold
 
 
-def printTable(filename, linelist, continuum):
+def printTable(filename, linelist, continuum, include_mass=True):
     with open(filename, 'w') as outfile:
         # LaTeX Dokument-Kopf
         outfile.write(r'\documentclass{article}' + '\n')
@@ -173,22 +173,37 @@ def printTable(filename, linelist, continuum):
         # LaTeX Tabelle mit Continuum-Info
         outfile.write(r'\begin{table}[!htb]' + '\n')
         outfile.write(r'\centering' + '\n')
-        outfile.write(fr'\caption{{Centroid and Peak Time Lag for {continuum}.}}' + '\n')
+        escaped_continuum = continuum.replace('_', r'\_')
+        outfile.write(fr'\caption{{Centroid and Peak Time Lag for {escaped_continuum}.}}' + '\n')
         outfile.write(fr'\label{{tab:lags_{continuum}}}' + '\n')
-        outfile.write(r'\begin{tabular}{l c c c}' + '\n')
+
+        # Tabellenformat abhängig von include_mass
+        if include_mass:
+            outfile.write(r'\begin{tabular}{l c c c}' + '\n')
+        else:
+            outfile.write(r'\begin{tabular}{l c c}' + '\n')
+
         outfile.write(r'\toprule' + '\n')
 
         # Spaltenüberschriften
-        outfile.write(r'Name & $\tau_{\text{cent}}$ [d] & $\tau_{\text{peak}}$ [d] & $M_{\text{BH}} [10^7 M_\odot]$ \\' + '\n')
+        if include_mass:
+            outfile.write(r'Name & $\tau_{\text{cent}}$ [d] & $\tau_{\text{peak}}$ [d] & $M_{\text{BH}} [10^7 M_\odot]$ \\' + '\n')
+        else:
+            outfile.write(r'Name & $\tau_{\text{cent}}$ [d] & $\tau_{\text{peak}}$ [d] \\' + '\n')
+
         outfile.write(r'\midrule' + '\n')
 
         # Tabelleninhalt mit Fehlerdarstellung
         for line in linelist:
-            tau_cent_str = f"{line.tau_cent:.1f} \\ensuremath{{_{{-{abs(line.tau_cent_err[0] - line.tau_cent):.1f}}}^{{+{abs(line.tau_cent_err[1] - line.tau_cent):.1f}}}}}"
-            tau_peak_str = f"{line.tau_peak:.1f} \\ensuremath{{_{{-{abs(line.tau_peak_err[0] - line.tau_peak):.1f}}}^{{+{abs(line.tau_peak_err[1] - line.tau_peak):.1f}}}}}"
-            mass_str = f"{line.M_Mo:.2f}_{{{line.M_Mo_err[0] - line.M_Mo:.2f}}}^{{+{line.M_Mo_err[1] - line.M_Mo:.2f}}}"
+            tau_cent_str = f"{line.tau_cent:.1f} \\ensuremath{{_{{{line.tau_cent_err[0] - line.tau_cent:.1f}}}^{{+{line.tau_cent_err[1] - line.tau_cent:.1f}}}}}"
+            tau_peak_str = f"{line.tau_peak:.1f} \\ensuremath{{_{{{line.tau_peak_err[0] - line.tau_peak:.1f}}}^{{+{line.tau_peak_err[1] - line.tau_peak:.1f}}}}}"
+            name = line.name.replace('_', r'\_')
 
-            outfile.write(f"{line.name} & ${tau_cent_str}$ & ${tau_peak_str}$ & ${mass_str}$ \\\\" + '\n')
+            if include_mass:
+                mass_str = f"{line.M_Mo:.2f} \\ensuremath{{_{{{line.M_Mo_err[0] - line.M_Mo:.2f}}}^{{+{line.M_Mo_err[1] - line.M_Mo:.2f}}}}}"
+                outfile.write(f"{name} & ${tau_cent_str}$ & ${tau_peak_str}$ & ${mass_str}$ \\\\" + '\n')
+            else:
+                outfile.write(f"{name} & ${tau_cent_str}$ & ${tau_peak_str}$ \\\\" + '\n')
 
         # Tabellenabschluss
         outfile.write(r'\bottomrule' + '\n')
@@ -201,34 +216,48 @@ def printTable(filename, linelist, continuum):
 
 
 
+
 # Definiere die Default-Listen für FWHM (rms) und sigma (rms)
 default_fwhm_rms = {
-    'HAlpha': 3050.0, 'HBeta': 3160.0, 'HGamma': 3130.0, 'HDelta': 4940.0,
+    'HAlpha': 3054.0, 'HBeta': 3160.0, 'HGamma': 3130.0, 'HDelta': 4940.0,
     'HeI5875': 1500.0, 'HeI7065': 1500.0, 'HeI4471': 1500.0, 'HeI5015': 1500.0,
-    'HeII4685': 1500.0, 'OI8446': 1500.0
+    'HeII4685': 1500.0, 'OI8446': 1500.0, 'LyAlpha': 3384
 }
 
 default_sigma_rms = {
-    'HAlpha': 1180.0, 'HBeta': 1190.0, 'HGamma': 1240.0, 'HDelta': 1560.0,
+    'HAlpha': 1175.0, 'HBeta': 1190.0, 'HGamma': 1240.0, 'HDelta': 1560.0,
     'HeI5875': 250.0, 'HeI7065': 250.0, 'HeI4471': 250.0, 'HeI5015': 250.0,
-    'HeII4685': 250.0, 'OI8446': 250.0
+    'HeII4685': 250.0, 'OI8446': 250.0, 'LyAlpha': 1752
 }
 
-def calc_centroid_malte_code(campaign, continuum):
+def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True):
     base_path = Path(
         rf'C:\Users\lukas\Desktop\Python\Master-Arbeit\data\campaigns\{campaign}\calc_time_lag_ccfs\{continuum}'
     )
-
-    # Definiere die Liniennamen
-    lines = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685', 'OI8446']
+    if lines is None:
+        # Definiere die Liniennamen
+        lines = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685', 'OI8446']
 
     # Lade die lineCorrelations-Daten
     line_correlations_path = base_path / "lineCorrelations_ICCF.txt"
+    lightcurve_correlations_path = base_path / "lightcurveCorrelations_ICCF.txt"
     try:
         lineCorrelations = np.loadtxt(line_correlations_path)
     except Exception as e:
         print(f"❌ Fehler beim Laden der Datei {line_correlations_path}: {e}")
         return
+
+    if lightcurve_correlations_path.exists():
+        try:
+            lightcurveCorrelations = np.loadtxt(lightcurve_correlations_path)
+            combined = np.hstack((lineCorrelations, lightcurveCorrelations[:, 1:]))
+        except Exception as e:
+            print(f"⚠️ Datei {lightcurve_correlations_path} konnte nicht verarbeitet werden: {e}")
+            print("➡️ Verwende nur lineCorrelations.")
+            combined = lineCorrelations
+    else:
+        print(f"ℹ️ Datei {lightcurve_correlations_path} nicht gefunden. Verwende nur lineCorrelations.")
+        combined = lineCorrelations
 
     # Lade alle Zentroid- und Peak-Daten in ein Dictionary
     data = {}
@@ -246,11 +275,15 @@ def calc_centroid_malte_code(campaign, continuum):
             print(f"⚠️ Warnung: Fehler beim Laden der Dateien für {line}: {e}")
             continue  # Statt `return`, damit andere Linien geladen werden
 
-    # Index-Mapping für die Spalten von lineCorrelations
+    # Index-Mapping für die Spalten von combined
     index_map = {
         'HDelta': 1, 'HGamma': 2, 'HeII4685': 3, 'HBeta': 4,
         'HeI5875': 5, 'HAlpha': 6, 'HeI5015': 7, 'OI8446': 8,
-        'HeI4471': 9, 'HeI7065': 10, 'OIII5007': 11
+        'HeI4471': 9, 'HeI7065': 10, 'OIII5007': 11, "LyAlpha": 12,
+        "UVW2": 13, "Cont1150_not_optical_calibrated": 14,
+        "LyAlpha_not_optical_calibrated": 15,
+        "HBeta_not_optical_calibrated": 16,
+        "OI8446_not_optical_calibrated": 17
     }
 
     # Erstelle die Line-Objekte
@@ -261,7 +294,7 @@ def calc_centroid_malte_code(campaign, continuum):
                 line,  # Name der Linie
                 default_fwhm_rms.get(line, 0.0),  # FWHM (rms)
                 default_sigma_rms.get(line, 0.0),  # Sigma (rms)
-                np.vstack((lineCorrelations[:, 0], lineCorrelations[:, index_map[line]])).T,
+                np.vstack((combined[:, 0], combined[:, index_map[line]])).T,
                 data[line]["centroids"],
                 data[line]["peaks"]
             )
@@ -270,14 +303,14 @@ def calc_centroid_malte_code(campaign, continuum):
     # Speichere die Ergebnisse mit dynamischem Dateinamen
     output_filename = f'CCF_lags_{campaign}_{continuum}.tex'
     print(f"✅ Speichere Ergebnisse in Datei: {output_filename}")
-    printTable(output_filename, line_objects, continuum)
+    printTable(output_filename, line_objects, continuum, include_mass=include_mass)
 
 
 
 
 
 
-#calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150")
-#calc_centroid_malte_code("NGC4593_Line_Center", "Cont1150")
-#calc_centroid_malte_code("NGC4593_Full_Line", "Cont5100")
-#calc_centroid_malte_code("NGC4593_Line_Center", "Cont5100")
+#calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150_not_optical_calibrated", lines=["HBeta", "LyAlpha", "OI8446", "HBeta_not_optical_calibrated", "LyAlpha_not_optical_calibrated", "OI8446_not_optical_calibrated"], include_mass=False)
+#calc_centroid_malte_code("NGC4593_Full_Line", "LyAlpha_not_optical_calibrated", lines=["HBeta", "OI8446", "HBeta_not_optical_calibrated", "OI8446_not_optical_calibrated"], include_mass=False)
+#calc_centroid_malte_code("NGC4593_Full_Line", "LyAlpha", lines=["HBeta", "OI8446"], include_mass=False)
+#calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150", lines=["HBeta", "OI8446", "LyAlpha"], include_mass=False)

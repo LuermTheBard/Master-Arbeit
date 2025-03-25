@@ -141,4 +141,5 @@ CENTRAL_WAVELENGTH = {
     'HeII4685': 4685.7,
     'OI8446': 8446.35,
     'OIII5007': 5007,
+    'LyAlpha': 1219
 }
