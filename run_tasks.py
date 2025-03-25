@@ -28,10 +28,18 @@ def task(func):
     return func
 
 
+# Reusable helper to ensure directory exists
+
+def ensure_output_dir(output_dir):
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir_path.mkdir(parents=True, exist_ok=True)
+    return output_dir_path
+
+
 @task
 def dummy_task():
     subprocess.run(["python", "-m", "scrap.scripts.dummy_script", "calc_2_plus_2"], check=True)
-
 
 
 @task
@@ -49,10 +57,7 @@ def save_all_1d_corr(output_dir=DEFAULT_OUTPUT_DIR):
     """
     save all 1D correlations.
     """
-
-    if not output_dir.exists():
-        output_dir.mkdir(parents=True)
-
+    ensure_output_dir(output_dir)
     one_dim_correlation_data = import_1d_correlation_data()
     one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     process_1d_correlations(one_dim_correlation_plot_data, output_dir=output_dir, save_only=True)
@@ -63,10 +68,7 @@ def compare_and_save_all_1d_corr(output_dir=DEFAULT_OUTPUT_DIR):
     """
     save all 1D correlations.
     """
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
-
+    ensure_output_dir(output_dir)
     one_dim_correlation_data = import_1d_correlation_data()
     one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
     compare_plots_across_continua(one_dim_correlation_plot_data, output_dir=output_dir, save_only=True)
@@ -77,10 +79,7 @@ def plot_and_save_1d_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
     """
     save all 1D correlations.
     """
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
-
+    ensure_output_dir(output_dir)
     one_dim_lightcurve_data = import_1d_lightcurve_data()
     plot_1d_lightcurves(one_dim_lightcurve_data, output_dir)
 
@@ -90,10 +89,7 @@ def plot_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     """
     save all 1D correlations.
     """
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
-
+    ensure_output_dir(output_dir)
     one_dim_lightcurve_data = import_1d_lightcurve_data()
 
     key_order = ["Cont1150", 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
@@ -108,10 +104,7 @@ def save_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     """
     save all 1D correlations.
     """
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
-
+    ensure_output_dir(output_dir)
     one_dim_lightcurve_data = import_1d_lightcurve_data()
 
     key_order = ["Cont1150", 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
@@ -128,10 +121,7 @@ def save_1d_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
     """
     save all 1D correlations.
     """
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
-
+    ensure_output_dir(output_dir)
     one_dim_lightcurve_data = import_1d_lightcurve_data()
     plot_1d_lightcurves(one_dim_lightcurve_data, output_dir, save_only=True)
 
@@ -141,10 +131,7 @@ def plot_and_save_1d_lightcurves_with_offset(output_dir=DEFAULT_OUTPUT_DIR):
     """
     save all 1D correlations.
     """
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
-
+    ensure_output_dir(output_dir)
     one_dim_lightcurve_data = import_1d_lightcurve_data()
     plot_1d_lightcurves_with_offset(one_dim_lightcurve_data, output_dir)
 
@@ -154,10 +141,7 @@ def save_1d_lightcurves_with_offset(output_dir=DEFAULT_OUTPUT_DIR):
     """
     save all 1D correlations.
     """
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
-
+    ensure_output_dir(output_dir)
     one_dim_lightcurve_data = import_1d_lightcurve_data()
     plot_1d_lightcurves_with_offset(one_dim_lightcurve_data, output_dir, save_only=True, y_offset=0.15)
 
@@ -192,9 +176,7 @@ def plot_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
     if not cont_name:
         raise ValueError("Please specify a line name in the following form: plot_line_1d_corr::line_name")
 
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
+    ensure_output_dir(output_dir)
 
     key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI7065', 'HeI5875', 'HeII4685', 'OI8446']
 
@@ -214,9 +196,7 @@ def save_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
     if not cont_name:
         raise ValueError("Please specify a line name in the following form: plot_line_1d_corr::line_name")
 
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
+    ensure_output_dir(output_dir)
 
     key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI7065', 'HeI5875', 'HeII4685', 'OI8446']
     # key_order = ["time shift (tau)", 'HeI5015', 'HeI5875', 'HeI4471', 'HeI7065', 'HeII4685','HAlpha', 'HBeta', 'HGamma', 'HDelta',  'OI8446']
@@ -241,9 +221,7 @@ def plot_avg_rms_spec(file_name="avg_rms_spec", output_dir=DEFAULT_OUTPUT_DIR):
 
 @task
 def plot_and_save_normalized_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
+    ensure_output_dir(output_dir)
 
     line_profile_campaign_dict = import_line_profile_data(normalized=True)
 
@@ -256,9 +234,7 @@ def plot_and_save_normalized_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DI
 
 @task
 def save_line_normalized_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
+    ensure_output_dir(output_dir)
 
     line_profile_dict = import_line_profile_data(normalized=True)
 
@@ -270,9 +246,7 @@ def save_line_normalized_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
 
 @task
 def plot_and_save_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DIR):
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
+    ensure_output_dir(output_dir)
 
     line_profile_dict = import_line_profile_data(normalized=True)
 
@@ -284,9 +258,7 @@ def plot_and_save_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DI
 
 @task
 def plot_and_save_normalized_line_profiles_types_together(output_dir=DEFAULT_OUTPUT_DIR):
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
+    ensure_output_dir(output_dir)
 
     line_profile_dict = import_line_profile_data(normalized=True)
 
@@ -301,9 +273,7 @@ def plot_and_save_normalized_line_profiles_types_together(output_dir=DEFAULT_OUT
 
 @task
 def save_line_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DIR):
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
+    ensure_output_dir(output_dir)
 
     line_profile_dict = import_line_profile_data(normalized=True)
 
@@ -315,9 +285,7 @@ def save_line_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DIR):
 
 @task
 def substract_pseudo_continua_from_spectra(output_dir=DEFAULT_OUTPUT_DIR):
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir.mkdir(parents=True)
+    ensure_output_dir(output_dir)
 
     fits_data = import_fits_data()
 
@@ -335,9 +303,7 @@ def substract_pseudo_continua_from_spectra(output_dir=DEFAULT_OUTPUT_DIR):
 
 @task
 def cut_out_line_profiles_from_fits(output_dir=DEFAULT_OUTPUT_DIR):
-    output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
-        output_dir_path.mkdir(parents=True, exist_ok=True)
+    output_dir_path = ensure_output_dir(output_dir)
 
     output_path = output_dir_path / "Line_Profiles_intercaly_pseudo_substracted"
     output_path.mkdir(parents=True, exist_ok=True)
@@ -371,12 +337,14 @@ def cut_line_profile(
     if isinstance(cut_out_range, str):
         cut_out_range = tuple(map(int, cut_out_range.strip("() ").split(',')))
 
-    output_dir_path = Path(output_dir)
-    output_dir_path.mkdir(parents=True, exist_ok=True)
+    # Sicherstellen, dass Hauptausgabeverzeichnis existiert
+    output_dir_path = ensure_output_dir(output_dir)
 
+    # Sicherstellen, dass Unterordner existiert
     output_path = output_dir_path / "Line_Profiles_cut_out"
     output_path.mkdir(parents=True, exist_ok=True)
 
+    # Daten importieren
     line_profile_dict = import_line_profile_data(normalized=normalized)
     line_data_avg = line_profile_dict["avg"][line_name]["data_dict"]
     line_data_rms = line_profile_dict["rms"][line_name]["data_dict"]
@@ -399,6 +367,7 @@ def cut_line_profile(
         intensity_avg, velocity_avg = cut_line_out(intensities_avg, wavelengths, cut_range_absolute)
         intensity_rms, velocity_rms = cut_line_out(intensities_rms, wavelengths, cut_range_absolute)
 
+    # Plotten/Speichern
     plot_cut_out_line_profile(
         cut_out_range, intensity_avg, intensity_rms, line_name,
         output_path, plot, velocity_avg, velocity_rms
