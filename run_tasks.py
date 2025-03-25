@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 from handle_data.handle_data import sort_1d_corr_data_for_lines, get_continua_with_highest_corr_coef, \
     get_weighted_best_continua, prepare_cut_data
@@ -16,7 +15,7 @@ from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_ligh
 from plot_data.plot_fits_data import plot_avg_rms
 from plot_data.plot_line_profiles import plot_normalized_line_profiles_in_pairs, \
     plot_normalized_line_profiles_together, process_spectrum, plot_normalized_line_profiles_type_together, \
-    save_velocity_data_to_txt, cut_normalized_line_out, cut_line_out
+    cut_normalized_line_out, cut_line_out, plot_cut_out_line_profile
 from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
 
 # Dictionary to store registered tasks
@@ -404,28 +403,6 @@ def cut_line_profile(
         cut_out_range, intensity_avg, intensity_rms, line_name,
         output_path, plot, velocity_avg, velocity_rms
     )
-
-
-
-def plot_cut_out_line_profile(cut_out_range, intensity_avg, intensity_rms, line_name, output_path, plot, velocity_avg,
-                              velocity_rms):
-    range_str = f"{cut_out_range[0]}_{cut_out_range[1]}"
-    save_velocity_data_to_txt(output_path / f"{line_name}_avg_profile_{range_str}.txt", velocity_avg, intensity_avg)
-    save_velocity_data_to_txt(output_path / f"{line_name}_rms_profile_{range_str}.txt", velocity_rms, intensity_rms)
-    if plot:
-        fig, axs = plt.subplots(2, 1, sharex=True, figsize=(8, 6))
-
-        axs[0].plot(velocity_avg, intensity_avg, linestyle='-', marker='o', color='b')
-        axs[0].set_ylabel("Avg Profile")
-        axs[0].grid(True)
-
-        axs[1].plot(velocity_rms, intensity_rms, linestyle='--', marker='s', color='r')
-        axs[1].set_xlabel("Velocity (km/s)")
-        axs[1].set_ylabel("RMS Profile")
-        axs[1].grid(True)
-
-        plt.suptitle(f"Line Profile: {line_name}")
-        plt.show()
 
 
 @task
