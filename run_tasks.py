@@ -215,43 +215,41 @@ def save_normalized_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
     run_normalized_profiles_in_pairs(output_dir, save_only=True)
 
 
+def run_normalized_profiles_together(
+    output_dir=DEFAULT_OUTPUT_DIR,
+    key_order=None,
+    save_only=False,
+    plot_type="together",  # oder: "type"
+    profile_data=None,
+):
+    ensure_output_dir(output_dir)
+
+    if profile_data is None:
+        profile_data = import_line_profile_data(normalized=True)
+
+    if key_order is None:
+        key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685', 'OI8446']
+
+    if plot_type == "type":
+        plot_normalized_line_profiles_type_together(profile_data, key_order)
+    else:
+        plot_normalized_line_profiles_together(profile_data, key_order, save_only=save_only)
+
 @task
 def plot_and_save_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DIR):
-    ensure_output_dir(output_dir)
-
-    line_profile_dict = import_line_profile_data(normalized=True)
-
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685',
-                 'OI8446']
-
-    plot_normalized_line_profiles_together(line_profile_dict, key_order)
-
-
-@task
-def plot_and_save_normalized_line_profiles_types_together(output_dir=DEFAULT_OUTPUT_DIR):
-    ensure_output_dir(output_dir)
-
-    line_profile_dict = import_line_profile_data(normalized=True)
-
-    key_order = ['HeI5875', 'HeI7065', 'HeII4685', ]
-
-    # key_order = ['HAlpha', 'HBeta', 'HGamma']
-
-    # key_order = ['HAlpha', 'HBeta']
-
-    plot_normalized_line_profiles_type_together(line_profile_dict, key_order)
-
+    run_normalized_profiles_together(output_dir=output_dir)
 
 @task
 def save_line_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DIR):
-    ensure_output_dir(output_dir)
+    run_normalized_profiles_together(output_dir=output_dir, save_only=True)
 
-    line_profile_dict = import_line_profile_data(normalized=True)
-
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685',
-                 'OI8446']
-
-    plot_normalized_line_profiles_together(line_profile_dict, key_order, save_only=True)
+@task
+def plot_and_save_normalized_line_profiles_types_together(output_dir=DEFAULT_OUTPUT_DIR):
+    run_normalized_profiles_together(
+        output_dir=output_dir,
+        key_order=['HeI5875', 'HeI7065', 'HeII4685'],
+        plot_type="type"
+    )
 
 
 @task
