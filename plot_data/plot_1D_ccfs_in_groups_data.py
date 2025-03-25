@@ -24,7 +24,11 @@ def plot_all_1d_ccfs_in_groups_for_cont(galaxie_campaigns_correlation_data_dict,
         save_folder = output_dir / campaign / "plot_1d_ccfs" / cont_name
         save_folder.mkdir(parents=True, exist_ok=True)
 
-        sorted_data_dict = dict(sorted(data_dict[cont_name].items(), key=lambda item: sort_keys(item[0])))
+        try:
+            sorted_data_dict = dict(sorted(data_dict[cont_name].items(), key=lambda item: sort_keys(item[0])))
+        except KeyError:
+            print(f"[Warning] Continuum name '{cont_name}' not found in campaign '{campaign}'. Skipping.")
+            continue
 
         plot_ccfs_in_groups(sorted_data_dict, x_key, y_key, cont_name, xlabel, ylabel,
                             title=f"CCFs between Emission Lines and {cont_name} for {campaign}",

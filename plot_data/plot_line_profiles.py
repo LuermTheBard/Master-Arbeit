@@ -378,7 +378,7 @@ def transform_wavelength_to_velocity_and_cut(wavelength, intensity, line_name, v
 
     intensity = normalize_to_maximum(intensity, line_wavelength, wavelength)
 
-    intensity, velocity = cut_out(intensity, velocity, velocity_range)
+    intensity, velocity = cut_normalized_line_out(intensity, velocity, velocity_range)
 
     # Falls eine Datei angegeben ist, speichern
     if filename is not None:

@@ -277,7 +277,7 @@ def calc_centroid_malte_code(campaign, continuum):
 
 
 
-calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150")
-calc_centroid_malte_code("NGC4593_Line_Center", "Cont1150")
-calc_centroid_malte_code("NGC4593_Full_Line", "Cont5100")
-calc_centroid_malte_code("NGC4593_Line_Center", "Cont5100")
+#calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150")
+#calc_centroid_malte_code("NGC4593_Line_Center", "Cont1150")
+#calc_centroid_malte_code("NGC4593_Full_Line", "Cont5100")
+#calc_centroid_malte_code("NGC4593_Line_Center", "Cont5100")
