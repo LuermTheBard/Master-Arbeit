@@ -181,12 +181,12 @@ def save_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
 
 
 @task
-def plot_avg_rms_spec(file_name="avg_rms_spec", output_dir=DEFAULT_OUTPUT_DIR):
+def plot_avg_rms_spec(output_dir=DEFAULT_OUTPUT_DIR):
     avg_rms_spec_dir = output_dir / "avg_rms_spec"
 
     avg_rms_spec_dir.mkdir(parents=True, exist_ok=True)
 
-    avg_rms_spec_file = avg_rms_spec_dir / f"{file_name}.pdf"
+    avg_rms_spec_file = avg_rms_spec_dir
 
     fits_data = import_fits_data()
     plot_avg_rms(fits_data, save_path=avg_rms_spec_file)

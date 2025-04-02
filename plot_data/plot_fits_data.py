@@ -1,3 +1,5 @@
+from turtle import pd
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -31,15 +33,15 @@ def validate_fits_data(fits_data):
 
 def plot_avg_rms(fits_data, save_path=None, log_scale=False):
     """
-    Plots the average (AVG) and RMS flux for a given galaxy spectrum.
+    Plots the average (AVG) and RMS flux for a given galaxy spectrum and saves the data to files.
 
     Parameters:
     - fits_data: dict
         A dictionary containing FITS-like data. Expected keys are:
         - "<galaxy_name>_avg": dict
         - "<galaxy_name>_rms": dict
-    - save_path: str or None
-        Path to save the plot as a file. If None, the plot will only be displayed.
+    - save_path: Path object or None
+        Path to save the plot and data files. If None, only the plot is displayed.
     - log_scale: bool
         If True, use a logarithmic y-scale for the plots.
     """
@@ -81,12 +83,22 @@ def plot_avg_rms(fits_data, save_path=None, log_scale=False):
         rms_title,
         galaxy_name,
         lines=All_LINES,
-        save_path=save_path,
+        save_path=save_path / f"avg_rms_spec.pdf" if save_path else None,
         log_scale=log_scale,
         xlim=(3800, 8900),
-        ylim=(0,14)
+        ylim=(0, 14)
     )
 
+    if save_path:
+        avg_data = np.column_stack((wavelengths, avg_flux))
+        rms_data = np.column_stack((wavelengths, rms_flux))
+
+        header_line = 'wavelength flux [ergs/s/cm2/A]'
+
+        np.savetxt(save_path / f"{galaxy_name}_avg_flux.txt", avg_data,
+                   delimiter=" ", header=header_line, comments='')
+        np.savetxt(save_path / f"{galaxy_name}_rms_flux.txt", rms_data,
+                   delimiter=" ", header=header_line, comments='')
 
 def plot_avg_rms_spectra(
         x, y1, y2, xlabel, ylabel, title1, title2, super_title, lines, save_path=None, log_scale=False,
