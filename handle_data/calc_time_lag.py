@@ -220,14 +220,14 @@ def printTable(filename, linelist, continuum, include_mass=True):
 # Definiere die Default-Listen für FWHM (rms) und sigma (rms)
 default_fwhm_rms = {
     'HAlpha': 3054.0, 'HBeta': 3160.0, 'HGamma': 3130.0, 'HDelta': 4940.0,
-    'HeI5875': 1500.0, 'HeI7065': 1500.0, 'HeI4471': 1500.0, 'HeI5015': 1500.0,
-    'HeII4685': 1500.0, 'OI8446': 1500.0, 'LyAlpha': 3384
+    'HeI5875': 3588, 'HeI7065': 2542, 'HeI4471': 999, 'HeI5015': np.nan,
+    'HeII4685': 5711, 'OI8446': 2608, 'LyAlpha': 3384
 }
 
 default_sigma_rms = {
     'HAlpha': 1175.0, 'HBeta': 1190.0, 'HGamma': 1240.0, 'HDelta': 1560.0,
-    'HeI5875': 250.0, 'HeI7065': 250.0, 'HeI4471': 250.0, 'HeI5015': 250.0,
-    'HeII4685': 250.0, 'OI8446': 250.0, 'LyAlpha': 1752
+    'HeI5875': 1218, 'HeI7065': np.nan, 'HeI4471': 155, 'HeI5015': np.nan,
+    'HeII4685': 1998, 'OI8446': 846, 'LyAlpha': 1752
 }
 
 def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True):
@@ -310,7 +310,10 @@ def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True)
 
 
 
-#calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150_not_optical_calibrated", lines=["HBeta", "LyAlpha", "OI8446", "HBeta_not_optical_calibrated", "LyAlpha_not_optical_calibrated", "OI8446_not_optical_calibrated"], include_mass=False)
+#calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150_not_optical_calibrated", lines=["HBeta", "LyAlpha", "OI8446", "HBeta_not_optical_calibrated", "LyAlpha_not_optical_calibrated", "OI8446_not_optical_calibrated"], include_mass=True)
+#calc_centroid_malte_code("NGC4593_Full_Line", "Cont1450_not_optical_calibrated", lines=["HBeta", "LyAlpha", "OI8446", "HBeta_not_optical_calibrated", "LyAlpha_not_optical_calibrated", "OI8446_not_optical_calibrated"], include_mass=True)
 #calc_centroid_malte_code("NGC4593_Full_Line", "LyAlpha_not_optical_calibrated", lines=["HBeta", "OI8446", "HBeta_not_optical_calibrated", "OI8446_not_optical_calibrated"], include_mass=False)
 #calc_centroid_malte_code("NGC4593_Full_Line", "LyAlpha", lines=["HBeta", "OI8446"], include_mass=False)
-#calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150", lines=["HBeta", "OI8446", "LyAlpha"], include_mass=False)
+#calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150", lines=['HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685'], include_mass=True)
+#calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150_not_optical_calibrated", lines=['HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685'], include_mass=True)
+#calc_centroid_malte_code("NGC4593_Full_Line", "Cont5100", lines=['HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685'], include_mass=True)
