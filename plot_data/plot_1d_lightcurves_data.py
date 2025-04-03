@@ -18,7 +18,9 @@ def plot_lightcurve(data, xlabel, ylabel, yerr_name, ax):
         y = y / max_y
         y_err = y_err / max_y  # Fehler ebenfalls normieren
 
-        ax.errorbar(x, y, y_err, label=f"{key}", linestyle="--")
+        lable = key.replace('Cont', 'Continua ')
+
+        ax.errorbar(x, y, y_err, label=f"{lable}", linestyle="--")
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel("fluxes (normalized)")
