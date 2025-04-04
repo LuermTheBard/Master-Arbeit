@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from Malte_get_BH_mass import Line
+from import_data.import_data import find_prime_data_folder
 
 
 def plot_ccf_with_centroid(x_values, y_values, x_selected, y_selected, centroid, baseline, threshold, line_name, cont_name):
@@ -200,7 +201,7 @@ def printTable(filename, linelist, continuum, include_mass=True):
             name = line.name.replace('_', r'\_')
 
             if include_mass:
-                mass_str = f"{line.M_Mo:.2f} \\ensuremath{{_{{{line.M_Mo_err[0] - line.M_Mo:.2f}}}^{{+{line.M_Mo_err[1] - line.M_Mo:.2f}}}}}"
+                mass_str = f"{line.M_Mo:.1f} \\ensuremath{{_{{{line.M_Mo_err[0] - line.M_Mo:.1f}}}^{{+{line.M_Mo_err[1] - line.M_Mo:.1f}}}}}"
                 outfile.write(f"{name} & ${tau_cent_str}$ & ${tau_peak_str}$ & ${mass_str}$ \\\\" + '\n')
             else:
                 outfile.write(f"{name} & ${tau_cent_str}$ & ${tau_peak_str}$ \\\\" + '\n')
@@ -212,8 +213,6 @@ def printTable(filename, linelist, continuum, include_mass=True):
 
         # LaTeX Dokument-Abschluss
         outfile.write(r'\end{document}' + '\n')
-
-
 
 
 
@@ -231,8 +230,10 @@ default_sigma_rms = {
 }
 
 def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True):
+
+    data_folder = find_prime_data_folder()
     base_path = Path(
-        rf'C:\Users\lukas\Desktop\Python\Master-Arbeit\data\campaigns\{campaign}\calc_time_lag_ccfs\{continuum}'
+        rf'{data_folder}\campaigns\{campaign}\calc_time_lag_ccfs\{continuum}'
     )
     if lines is None:
         # Definiere die Liniennamen
@@ -318,3 +319,4 @@ def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True)
 #calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150_not_optical_calibrated", lines=['HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685'], include_mass=True)
 calc_centroid_malte_code("NGC4593_Full_Line", "HBeta", lines=["OI8446", "OI8446_not_optical_calibrated"], include_mass=True)
 calc_centroid_malte_code("NGC4593_Full_Line", "HBeta_not_optical_calibrated", lines=["OI8446", "OI8446_not_optical_calibrated"], include_mass=True)
+calc_centroid_malte_code("NGC4593_Full_Line", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446'], include_mass=True)
