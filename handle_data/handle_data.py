@@ -204,3 +204,158 @@ def merge_dicts(d1, d2):
         else:
             d1[key] = value  # Falls Key nicht existiert, direkt übernehmen
     return d1
+
+
+def print_table_for_one_reference(filename, linelist, continuum, include_mass=True):
+    with open(filename, 'w') as outfile:
+        # LaTeX Dokument-Kopf
+        outfile.write(r'\documentclass{article}' + '\n')
+        outfile.write(r'\usepackage{booktabs}' + '\n')  # Schöne Tabellen
+        outfile.write(r'\usepackage{siunitx}' + '\n')   # Zahlenformatierung
+        outfile.write(r'\usepackage{amsmath}' + '\n')   # _{-x}^{+y}-Notation
+        outfile.write(r'\usepackage{graphicx}' + '\n')  # Falls notwendig
+        outfile.write(r'\begin{document}' + '\n\n')
+
+        # LaTeX Tabelle mit Continuum-Info
+        outfile.write(r'\begin{table}[!htb]' + '\n')
+        outfile.write(r'\centering' + '\n')
+        escaped_continuum = continuum.replace('_', r'\_')
+        outfile.write(fr'\caption{{Centroid and Peak Time Lag for {escaped_continuum}.}}' + '\n')
+        outfile.write(fr'\label{{tab:lags_{continuum}}}' + '\n')
+
+        # Tabellenformat abhängig von include_mass
+        if include_mass:
+            outfile.write(r'\begin{tabular}{l c c c}' + '\n')
+        else:
+            outfile.write(r'\begin{tabular}{l c c}' + '\n')
+
+        outfile.write(r'\toprule' + '\n')
+
+        # Spaltenüberschriften
+        if include_mass:
+            outfile.write(r'Name & $\tau_{\text{cent}}$ [d] & $\tau_{\text{peak}}$ [d] & $M_{\text{BH}} [10^7 M_\odot]$ \\' + '\n')
+        else:
+            outfile.write(r'Name & $\tau_{\text{cent}}$ [d] & $\tau_{\text{peak}}$ [d] \\' + '\n')
+
+        outfile.write(r'\midrule' + '\n')
+
+        # Tabelleninhalt mit Fehlerdarstellung
+        for line in linelist:
+            tau_cent_str = f"{line.tau_cent:.1f} \\ensuremath{{_{{{line.tau_cent_err[0] - line.tau_cent:.1f}}}^{{+{line.tau_cent_err[1] - line.tau_cent:.1f}}}}}"
+            tau_peak_str = f"{line.tau_peak:.1f} \\ensuremath{{_{{{line.tau_peak_err[0] - line.tau_peak:.1f}}}^{{+{line.tau_peak_err[1] - line.tau_peak:.1f}}}}}"
+            name = line.name.replace('_', r'\_')
+
+            if include_mass:
+                mass_str = f"{line.M_Mo:.1f} \\ensuremath{{_{{{line.M_Mo_err[0] - line.M_Mo:.1f}}}^{{+{line.M_Mo_err[1] - line.M_Mo:.1f}}}}}"
+                outfile.write(f"{name} & ${tau_cent_str}$ & ${tau_peak_str}$ & ${mass_str}$ \\\\" + '\n')
+            else:
+                outfile.write(f"{name} & ${tau_cent_str}$ & ${tau_peak_str}$ \\\\" + '\n')
+
+        # Tabellenabschluss
+        outfile.write(r'\bottomrule' + '\n')
+        outfile.write(r'\end{tabular}' + '\n')
+        outfile.write(r'\end{table}' + '\n\n')
+
+        # LaTeX Dokument-Abschluss
+        outfile.write(r'\end{document}' + '\n')
+
+
+def print_table_for_multiple_reference(filename, reference_light_curve_lines_dict, include_mass=True):
+    with open(filename, 'w') as outfile:
+        # LaTeX Dokument-Kopf
+        outfile.write(r'\documentclass{article}' + '\n')
+        outfile.write(r'\usepackage{booktabs}' + '\n')  # Schöne Tabellen
+        outfile.write(r'\usepackage{siunitx}' + '\n')   # Zahlenformatierung
+        outfile.write(r'\usepackage{amsmath}' + '\n')   # _{-x}^{+y}-Notation
+        outfile.write(r'\usepackage{graphicx}' + '\n')  # Falls notwendig
+        outfile.write(r'\begin{document}' + '\n\n')
+
+        # LaTeX Tabelle mit Continuum-Info
+        outfile.write(r'\begin{table}[!htb]' + '\n')
+        outfile.write(r'\centering' + '\n')
+        outfile.write(fr'\caption{{Centroid and Peak Time Lag for multiple references}}' + '\n')
+        outfile.write(fr'\label{{tab:lags_multiple_references}}' + '\n')
+
+        # Tabellenformat abhängig von include_mass
+        if include_mass:
+            outfile.write(r'\begin{tabular}{l c c c}' + '\n')
+        else:
+            outfile.write(r'\begin{tabular}{l c c}' + '\n')
+
+        outfile.write(r'\toprule' + '\n')
+
+        # Spaltenüberschriften
+        if include_mass:
+            outfile.write(r'Name & $\tau_{\text{cent}}$ [d] & $\tau_{\text{peak}}$ [d] & $M_{\text{BH}} [10^7 M_\odot]$ \\' + '\n')
+        else:
+            outfile.write(r'Name & $\tau_{\text{cent}}$ [d] & $\tau_{\text{peak}}$ [d] \\' + '\n')
+
+        outfile.write(r'\midrule' + '\n')
+
+        # Tabelleninhalt mit Fehlerdarstellung
+        for reference, lines in reference_light_curve_lines_dict.items():
+            # Zwischenüberschrift für jede Referenz
+            num_cols = 4 if include_mass else 3
+            escaped_ref = format_label(reference)
+
+            outfile.write(r'\midrule' + '\n')
+            outfile.write(fr'\multicolumn{{{num_cols}}}{{l}}{{\textbf{{Reference: {escaped_ref}}}}} \\' + '\n')
+            outfile.write(r'\midrule' + '\n')
+
+            for line in lines:
+                tau_cent_str = f"{line.tau_cent:.1f} \\ensuremath{{_{{{line.tau_cent_err[0] - line.tau_cent:.1f}}}^{{+{line.tau_cent_err[1] - line.tau_cent:.1f}}}}}"
+                tau_peak_str = f"{line.tau_peak:.1f} \\ensuremath{{_{{{line.tau_peak_err[0] - line.tau_peak:.1f}}}^{{+{line.tau_peak_err[1] - line.tau_peak:.1f}}}}}"
+                name = format_label(line.name)
+
+                if include_mass:
+                    mass_str = f"{line.M_Mo:.1f} \\ensuremath{{_{{{line.M_Mo_err[0] - line.M_Mo:.1f}}}^{{+{line.M_Mo_err[1] - line.M_Mo:.1f}}}}}"
+                    outfile.write(f"{name} & ${tau_cent_str}$ & ${tau_peak_str}$ & ${mass_str}$ \\\\" + '\n')
+                else:
+                    outfile.write(f"{name} & ${tau_cent_str}$ & ${tau_peak_str}$ \\\\" + '\n')
+
+        # Tabellenabschluss
+        outfile.write(r'\bottomrule' + '\n')
+        outfile.write(r'\end{tabular}' + '\n')
+        outfile.write(r'\end{table}' + '\n\n')
+
+        # LaTeX Dokument-Abschluss
+        outfile.write(r'\end{document}' + '\n')
+
+
+def format_label(name):
+    name = name.replace('_', r'\_')  # LaTeX-escaping für Unterstriche
+
+    # Prüfen, ob der Name auf ein Continuum hinweist
+    if "Cont" in name:
+        is_not_calibrated = "not\_optical\_calibrated" in name
+        # Continuum-Zahl extrahieren (z. B. 1150)
+        num_part = ''.join(filter(str.isdigit, name))
+        label = f"Continuum {num_part}" if num_part else name
+        if is_not_calibrated:
+            label += r" (no optical calib.)"
+        return label
+
+    # Sonst: Spektrallinienbehandlung
+    is_not_calibrated = "not\_optical\_calibrated" in name
+    base_name = name.split(r"\_")[0]
+
+    replacements = {
+        "HAlpha": r"H$\alpha$",
+        "HBeta": r"H$\beta$",
+        "HGamma": r"H$\gamma$",
+        "HDelta": r"H$\delta$",
+        "HeI5875": r"He\,\textsc{i}\,5875",
+        "HeI7065": r"He\,\textsc{i}\,7065",
+        "HeI4471": r"He\,\textsc{i}\,4471",
+        "HeI5015": r"He\,\textsc{i}\,5015",
+        "HeII4685": r"He\,\textsc{ii}\,4685",
+        "OI8446": r"O\,\textsc{i}\,8446",
+        "LyAlpha": r"Lyman $\alpha$",
+    }
+
+    formatted = replacements.get(base_name, base_name)
+
+    if is_not_calibrated:
+        formatted += r" (no optical calib.)"
+
+    return formatted
