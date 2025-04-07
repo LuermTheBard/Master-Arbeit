@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 
-from handle_data.handle_data import sort_1d_corr_data_for_lines, get_continua_with_highest_corr_coef, \
+from handle_data.handle_data_file import sort_1d_corr_data_for_lines, get_continua_with_highest_corr_coef, \
     get_weighted_best_continua, prepare_cut_data
 from import_data.import_data import import_1d_correlation_data, import_1d_lightcurve_data, import_fits_data, \
     import_line_profile_data

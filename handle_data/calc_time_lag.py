@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from Malte_get_BH_mass import Line
-from handle_data.handle_data import print_table_for_one_reference, print_table_for_multiple_reference
+from handle_data.handle_data_file import print_table_for_one_reference, print_table_for_multiple_reference
 from import_data.import_data import find_prime_data_folder
 
 

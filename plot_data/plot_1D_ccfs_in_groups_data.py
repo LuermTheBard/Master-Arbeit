@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 
+from handle_data.handle_data_file import format_label
 from plot_data.general_plot import prepare_data, finalize_figure, format_yaxis
 
 
@@ -131,11 +132,11 @@ def configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_va
                 x_values,
                 y_values,
                 yerr=yerr_values,
-                fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color
+                fmt='.:', capsize=3, markersize=4, label=f'{format_label(line_name, as_latex=False)}', color=color
             )
         else:
             ax.plot(
-                x_values, y_values, label=f'{line_name}', color=color
+                x_values, y_values, label=f'{format_label(line_name, as_latex=False)}', color=color
             )
         ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
         ax.legend(fontsize=8, loc='upper right')
