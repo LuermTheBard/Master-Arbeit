@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.ticker import MultipleLocator, FuncFormatter
+from matplotlib.ticker import MultipleLocator, FuncFormatter, AutoMinorLocator
 
 from handle_data.handle_data_file import format_label
 from plot_data.general_plot import prepare_data, finalize_figure, format_yaxis
@@ -32,7 +32,7 @@ def plot_all_1d_ccfs_in_groups_for_cont(galaxie_campaigns_correlation_data_dict,
             continue
 
         plot_ccfs_in_groups(sorted_data_dict, x_key, y_key, cont_name, xlabel, ylabel,
-                            title=f"CCFs between Emission Lines and {cont_name} for {campaign}",
+                            title=f"CCFs between Emission Lines and {format_label(cont_name)} for {campaign.split('_')[0]}",
                             save_only=save_only, output_dir=save_folder, shared_y=True)
 
 
@@ -143,19 +143,23 @@ def configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_va
 
     if col == 0:
         ax.set_ylabel(ylabel, fontsize=12)
-        ax.yaxis.set_label_coords(-0.19, 0.5)
+        ax.yaxis.set_label_coords(-0.15, 0.5)
     else:
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
-        ax.set_ylabel(ylabel, fontsize=12)
-        ax.yaxis.set_label_coords(1.19, 0.5)
+        ax_right = ax.secondary_yaxis('right')
+        ax_right.yaxis.set_major_locator(MultipleLocator(0.2))
+        ax_right.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
 
     if row < 3:
         ax.set_xticklabels([])
 
     ax.yaxis.set_major_locator(MultipleLocator(0.2))
     ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
-    ax.set_xlim(-10, 15)
+
+
+
+    ax.set_xlim(-10, 14.999)
     ax.set_ylim(-0.1, 0.9)
 
     if row == 0:
