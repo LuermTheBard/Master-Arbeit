@@ -41,7 +41,7 @@ def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, compar
         sorted_line_data_dict = dict(sorted(compare_cont_data.items(), key=lambda item: sort_keys(item[0], key_order_lines)))
 
         plot_lightcurves_in_groups(sorted_line_data_dict, x_key, y_key, compare_cont, xlabel, ylabel_line, yerr_name=yerr_name, title=super_title,
-                               save_only=save_only, output_dir=save_folder)
+                               save_only=save_only, output_dir=save_folder, line_light_curves=True)
 
         # Plot for continua (with custom color dictionary if needed)
         super_title = f"{campaign.split('_')[0]} Continua"
@@ -56,7 +56,7 @@ def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, compar
 
 def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
                                yerr_name=None, title=None, save_only=False,
-                               output_dir=None, color_dict=None, rows=4, cols=2):
+                               output_dir=None, color_dict=None, rows=4, cols=2, line_light_curves=False):
     """
     Plots 1D-Daten in Gruppen für Lightcurves.
 
@@ -125,13 +125,13 @@ def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis'
             y_values = y_values / exponent
             yerr_values = yerr_values / exponent
 
-            configure_lightcurves_axis(ax, row, col, new_ylabel, color, x_values, y_values, yerr_values, line_name)
+            configure_lightcurves_axis(ax, row, col, new_ylabel, color, x_values, y_values, yerr_values, line_name, line_light_curves)
 
         finalize_figure(fig, axes, x_label=xlabel, title=title, group_index=group_index,
                         save_only=save_only, output_dir=output_dir, compare_cont=compare_cont)
 
 
-def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name):
+def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name, line_lightcurves=False):
     """
     Konfiguriert die Achse für Lightcurves.
 
@@ -177,13 +177,18 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
         ax.legend(fontsize=8, loc='upper right')
 
     if col == 0:
-        ax.set_ylabel(ylabel, fontsize=12)
-        ax.yaxis.set_label_coords(-0.19, 0.5)
+        if row == 0 and line_lightcurves:
+            ax.set_ylabel((r"$F_{\lambda}$ $[\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, \mathrm{\AA}^{-1}]$"), fontsize=12)
+        else:
+            ax.set_ylabel(ylabel, fontsize=12)
+        ax.yaxis.set_label_coords(-0.15, 0.5)
+
+
     else:
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
         ax.set_ylabel(ylabel, fontsize=12)
-        ax.yaxis.set_label_coords(1.19, 0.5)
+        ax.yaxis.set_label_coords(1.15, 0.5)
 
     if row < 3:
         ax.set_xticklabels([])
