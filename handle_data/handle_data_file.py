@@ -330,7 +330,7 @@ def format_label(name, as_latex=True):
     if "Cont" in name:
         is_not_calibrated = ("not\\_optical\\_calibrated" in name if as_latex else "not_optical_calibrated" in name)
         num_part = ''.join(filter(str.isdigit, name))
-        label = f"Continuum {num_part}" if num_part else name
+        label = f"Cont. {num_part}" if num_part else name
         if is_not_calibrated:
             label += " (no optical calib.)"
         return label
