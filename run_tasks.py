@@ -88,8 +88,9 @@ def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     data = import_1d_lightcurve_data()
 
     for cont in ["Cont1150", "Cont5100"]:
-        key_order = [cont, 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
-        plot_all_1d_lightcurves_in_groups(data, output_dir, compare_cont=cont, key_order=key_order, save_only=save_only)
+        key_order_lines = [cont, 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
+        key_order_conts = ["Cont1150","Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015", "Cont8900"]
+        plot_all_1d_lightcurves_in_groups(data, output_dir, compare_cont=cont, key_order_lines=key_order_lines, key_order_conts=key_order_conts, save_only=save_only)
 
 
 

@@ -2,12 +2,12 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, MaxNLocator, FuncFormatter
 
-from handle_data.handle_data_file import calculate_standard_error_for_lightcurves
+from handle_data.handle_data_file import calculate_standard_error_for_lightcurves, format_label
 from plot_data.general_plot import prepare_data, finalize_figure, format_relative_days, format_yaxis, format_month_day
 from settings import BASE_MJD, COLORCODE_CONTINUA_NORMALIZED
 
 
-def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, compare_cont, key_order=None, save_only=False):
+def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, compare_cont, key_order_lines=None, key_order_conts=None, save_only=False):
     base_mjd = BASE_MJD
 
     xlabel = f"MJD - {base_mjd:.2f}"
@@ -28,24 +28,28 @@ def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, compar
         save_folder.mkdir(parents=True, exist_ok=True)
 
         # Plot for lines
-        super_title = f"{campaign} Lines"
+        super_title = f"{campaign.split('_')[0]} Lines"
         compare_cont_data = {compare_cont: data_dict["continua"][compare_cont]}
         compare_cont_data.update(data_dict["lines"])
 
-        def sort_keys(key):
+        def sort_keys(key, key_order):
             for idx, prefix in enumerate(key_order):
                 if key.startswith(prefix):
                     return idx
             return len(key_order)
 
-        sorted_line_data_dict = dict(sorted(compare_cont_data.items(), key=lambda item: sort_keys(item[0])))
+        sorted_line_data_dict = dict(sorted(compare_cont_data.items(), key=lambda item: sort_keys(item[0], key_order_lines)))
 
         plot_lightcurves_in_groups(sorted_line_data_dict, x_key, y_key, compare_cont, xlabel, ylabel_line, yerr_name=yerr_name, title=super_title,
                                save_only=save_only, output_dir=save_folder)
 
         # Plot for continua (with custom color dictionary if needed)
-        super_title = f"{campaign} Continua"
-        plot_lightcurves_in_groups(data_dict["continua"], x_key, y_key, compare_cont, xlabel, ylabel_cont, yerr_name=yerr_name,
+        super_title = f"{campaign.split('_')[0]} Continua"
+
+        sorted_cont_data_dict = dict(
+            sorted(data_dict["continua"].items(), key=lambda item: sort_keys(item[0], key_order_conts)))
+
+        plot_lightcurves_in_groups(sorted_cont_data_dict, x_key, y_key, compare_cont, xlabel, ylabel_cont, yerr_name=yerr_name,
                                title=super_title, save_only=save_only, output_dir=save_folder,
                                color_dict=COLORCODE_CONTINUA_NORMALIZED)
 
@@ -162,12 +166,12 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
                 format_relative_days(x_values),
                 y_values,
                 yerr=yerr_values,
-                fmt='.:', capsize=3, markersize=4, label=f'{line_name}', color=color
+                fmt='.:', capsize=3, markersize=4, label=f'{format_label(line_name, as_latex=False)}', color=color
             )
         else:
             ax.plot(
                 format_relative_days(x_values),
-                y_values, label=f'{line_name}', color=color
+                y_values, label=f'{format_label(line_name, as_latex=False)}', color=color
             )
 
         ax.legend(fontsize=8, loc='upper right')
