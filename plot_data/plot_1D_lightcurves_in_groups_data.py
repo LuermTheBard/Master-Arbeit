@@ -190,7 +190,6 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
 
     ax.xaxis.set_major_locator(MultipleLocator(5))
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-    ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
 
     if row == 0:
         ax_top = ax.secondary_xaxis('top')
