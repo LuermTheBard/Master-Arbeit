@@ -371,7 +371,7 @@ def highest_corr_coef():
 
 def run_task(commands):
     for command in commands:
-        #try:
+        try:
             parts = command.split("::")
             name_of_task = parts[0]
             task_args = parts[1:] if len(parts) > 1 else []
@@ -379,10 +379,10 @@ def run_task(commands):
             print(f"Running {name_of_task} with arguments {task_args}...")
 
             registered_tasks[name_of_task](*task_args)
-        #except KeyError:
-            #print(f"Task '{command}' is not available.")
-        #except Exception as e:
-           # print(f"An error occurred while running '{command}': {e}")
+        except KeyError:
+            print(f"Task '{command}' is not available.")
+        except Exception as e:
+            print(f"An error occurred while running '{command}': {e}")
 
 
 if __name__ == "__main__":
