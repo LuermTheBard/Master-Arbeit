@@ -73,7 +73,7 @@ def format_yaxis(value, _):
 # -----------------------------------------------------------------------------
 
 
-def check_for_empty_rows(axes, fig, x_label):
+def check_for_empty_rows(axes, fig, x_label, line_profile=False):
     """
     Prüft, ob in der Figure leere Subplot-Zeilen existieren, und entfernt diese gegebenenfalls.
     Außerdem wird die X-Achsenbeschriftung und -Formatierung für die verbleibenden Reihen gesetzt.
@@ -103,7 +103,10 @@ def check_for_empty_rows(axes, fig, x_label):
         for row in remaining_rows:
             for col in range(2):
                 if axes[row, col].has_data():  # Stelle sicher, dass die Achse existiert und Daten hat
-                    axes[row, col].xaxis.set_major_locator(MultipleLocator(5))  # Ticks festlegen
+                    if line_profile:
+                        pass
+                    else:
+                        axes[row, col].xaxis.set_major_locator(MultipleLocator(5))  # Ticks festlegen
 
                     axes[row, col].xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
 
@@ -159,7 +162,7 @@ def prepare_data(data, rows, cols):
         yield current_data, group_index
 
 
-def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_label, compare_cont):
+def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_label, compare_cont=None, line_profile=False):
     """
     Finalisiert das Layout der Figure und speichert bzw. zeigt sie an.
 
@@ -186,7 +189,7 @@ def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_labe
     -----------
     None
     """
-    check_for_empty_rows(axes, fig, x_label=x_label)
+    check_for_empty_rows(axes, fig, x_label=x_label, line_profile=line_profile)
 
     if title:
         if group_index > 0:

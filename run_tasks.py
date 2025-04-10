@@ -16,6 +16,7 @@ from plot_data.plot_fits_data import plot_avg_rms
 from plot_data.plot_line_profiles import plot_normalized_line_profiles_in_pairs, \
     plot_normalized_line_profiles_together, process_spectrum, plot_normalized_line_profiles_type_together, \
     cut_normalized_line_out, cut_line_out, plot_cut_out_line_profile
+from plot_data.plot_line_profiles_in_groups import plot_normalized_line_profiles_in_groups
 from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
 
 # Dictionary to store registered tasks
@@ -237,6 +238,18 @@ def run_normalized_profiles_together(
         plot_normalized_line_profiles_together(profile_data, key_order, save_only=save_only)
 
 @task
+def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
+    ensure_output_dir(output_dir)
+
+    profile_data = import_line_profile_data(normalized=True)
+
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685', 'OI8446']
+
+
+    plot_normalized_line_profiles_in_groups(profile_data, key_order=key_order)
+
+
+@task
 def plot_and_save_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DIR):
     run_normalized_profiles_together(output_dir=output_dir)
 
@@ -358,7 +371,7 @@ def highest_corr_coef():
 
 def run_task(commands):
     for command in commands:
-        try:
+        #try:
             parts = command.split("::")
             name_of_task = parts[0]
             task_args = parts[1:] if len(parts) > 1 else []
@@ -366,10 +379,10 @@ def run_task(commands):
             print(f"Running {name_of_task} with arguments {task_args}...")
 
             registered_tasks[name_of_task](*task_args)
-        except KeyError:
-            print(f"Task '{command}' is not available.")
-        except Exception as e:
-            print(f"An error occurred while running '{command}': {e}")
+        #except KeyError:
+            #print(f"Task '{command}' is not available.")
+        #except Exception as e:
+           # print(f"An error occurred while running '{command}': {e}")
 
 
 if __name__ == "__main__":
