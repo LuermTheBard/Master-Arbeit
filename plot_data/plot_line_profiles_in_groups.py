@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, MaxNLocator, FuncFormatter
 
+from handle_data.handle_data_file import format_label
 from plot_data.general_plot import finalize_figure, prepare_data, format_month_day
 from settings import DEFAULT_OUTPUT_DIR
 
@@ -129,14 +130,17 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
     -----------
     None
     """
-    ax.vlines(0, -0.1, 1.5, linestyles='dashed', color='black', label='0 km/s')
-    ax.plot(avg_x, avg_y, label='AVG', color='blue')
-    ax.plot(rms_x, rms_y, label='RMS', color='red')
 
-    ax.set_xlim(-10000, 10000)
-    ax.set_ylim(-0.1, 1.5)
-    ax.set_title(line_name, fontsize=10)
-    ax.tick_params(axis='both', labelsize=8)
+    ax.plot(avg_x, avg_y, label=f'AVG', color='black')
+    ax.plot(rms_x, rms_y, label=f'RMS', color='red')
+    ax.vlines(0, -0.1, 1.5, linestyles='dashed', color='black', label='$v_0$')
+    ax.text(0.95, 0.95, f'{format_label(line_name, as_latex=False)}', transform=ax.transAxes,
+            ha='right', va='top', fontsize=11)
+
+    ax.set_xlim(-7000, 7000)
+    ax.set_ylim(-0.1, 1.2)
+    ax.tick_params(axis='both', labelsize=9)
+    ax.legend(loc='upper left')
 
     if col == 0:
         if row == 0 and line_lightcurves:
@@ -157,11 +161,11 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
     if row < 3:
         ax.set_xticklabels([])
 
-    #ax.xaxis.set_major_locator(MultipleLocator(5))
+    ax.xaxis.set_major_locator(MultipleLocator(2000))
     #ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
 
     if row == 0:
         ax_top = ax.secondary_xaxis('top')
-        #ax_top.xaxis.set_major_locator(MultipleLocator(5))
+        ax_top.xaxis.set_major_locator(MultipleLocator(2000))
         #ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
-        ax_top.tick_params(axis='x', rotation=45, labelsize=10)
+        ax_top.tick_params(axis='x', rotation=45, labelsize=9)
