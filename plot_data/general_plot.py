@@ -197,11 +197,12 @@ def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_labe
         else:
             fig.suptitle(f'{title}', fontsize=14)
 
-    if save_only and output_dir:
+    if output_dir:
         save_path = output_dir / f"{title.replace(' ', '_')}_compare_cont_{compare_cont}_group_{group_index + 1}.pdf"
         plt.savefig(save_path, bbox_inches='tight')
         save_path = output_dir / f"{title.replace(' ', '_')}_compare_cont_{compare_cont}_group_{group_index + 1}.png"
         plt.savefig(save_path, bbox_inches='tight')
-        plt.close(fig)
-    else:
+
+    elif not save_only:
         plt.show()
+    plt.close(fig)

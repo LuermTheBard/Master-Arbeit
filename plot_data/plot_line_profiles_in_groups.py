@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, MaxNLocator, FuncFormatter
 
 from plot_data.general_plot import finalize_figure, prepare_data, format_month_day
+from settings import DEFAULT_OUTPUT_DIR
 
 
 def plot_normalized_line_profiles_in_groups(data, save_only=False, output_dir=None,
@@ -41,7 +42,7 @@ def plot_normalized_line_profiles_in_groups(data, save_only=False, output_dir=No
     ylabel = 'normalized flux (km/s)'
 
     if output_dir is None:
-        output_dir = Path("plots") / "plot_line_profiles"
+        output_dir = DEFAULT_OUTPUT_DIR / "plot_line_profiles"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if key_order is None:
