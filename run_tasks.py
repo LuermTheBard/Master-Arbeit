@@ -243,7 +243,7 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
     profile_data = import_line_profile_data(normalized=True)
 
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685', 'OI8446']
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI7065', 'HeI5875', 'HeII4685', 'OI8446']
 
 
     plot_normalized_line_profiles_in_groups(profile_data, key_order=key_order)
