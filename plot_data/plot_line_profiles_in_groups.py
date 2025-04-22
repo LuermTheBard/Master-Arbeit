@@ -62,7 +62,7 @@ def plot_normalized_line_profiles_in_groups(data, save_only=False, output_dir=No
         }
 
     for current_data, group_index in prepare_data(plot_data, rows, cols):
-        fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=True, sharey=shared_y)
+        fig, axes = plt.subplots(rows, cols, figsize=(6, 12), sharex=True, sharey=shared_y)
         fig.subplots_adjust(hspace=0, wspace=0)
 
         for i, (line_name, line_data) in enumerate(current_data):
@@ -135,7 +135,7 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
     ax.text(0.95, 0.95, f'{format_label(line_name, as_latex=False)}', transform=ax.transAxes,
             ha='right', va='top', fontsize=11)
 
-    ax.set_xlim(-7000, 7000)
+    ax.set_xlim(-6200, 5999)
     ax.set_ylim(-0.1, 1.2)
     ax.tick_params(axis='both', labelsize=9)
     ax.legend(loc='upper left')
