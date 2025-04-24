@@ -312,4 +312,4 @@ def get_fluoreszenz_table():
 #calc_centroid_malte_code("NGC4593_Full_Line", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'LyAlpha', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446'], include_mass=True)
 
 
-get_fluoreszenz_table()
+#get_fluoreszenz_table()
