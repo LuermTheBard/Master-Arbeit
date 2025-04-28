@@ -16,7 +16,7 @@ def plot_all_1d_ccfs_in_groups_for_cont(galaxie_campaigns_correlation_data_dict,
 
     def sort_keys(key):
         for idx, prefix in enumerate(key_order):
-            if key.startswith(prefix):
+            if key == prefix:
                 return idx
         return len(key_order)
 

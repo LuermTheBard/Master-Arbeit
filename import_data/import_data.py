@@ -4,6 +4,8 @@ import numpy as np
 
 from astropy.io import fits
 
+from plot_data.plot_line_profiles import line_mapping
+
 try:
     import tomllib
 except ImportError:
@@ -51,18 +53,38 @@ def import_1d_correlation_data():
 
             for continuum in continua:
 
-                text_file_path = str(one_dim_correlation_path / continuum / "lineCorrelations_ICCF.txt")
-                # Line and Continuum names should not have spaces
-                with open(text_file_path, "r") as file:
-                    header = file.readline().strip().split(" ")
-                    correlation_data = np.loadtxt(text_file_path).T
+                line_correlation_file_path = one_dim_correlation_path / continuum / "lineCorrelations_ICCF.txt"
 
-                continua_lines = ["time shift (tau)"] + header[5:]
+                lightcurve_correlation_file_path = one_dim_correlation_path / continuum / "lightcurveCorrelations_ICCF.txt"
+
+                with open(str(line_correlation_file_path), "r") as file:
+                    header_line = file.readline().strip().split(" ")
+                    line_correlation_data = np.loadtxt(line_correlation_file_path).T
+
+
+                if lightcurve_correlation_file_path.exists():
+
+                    with open(str(lightcurve_correlation_file_path), "r") as file:
+                        header_lightcurve = file.readline().strip().split(" ")
+                        lightcurve_correlation_data = np.loadtxt(lightcurve_correlation_file_path).T
+                else:
+                    print(f"SKIPPED: lightcurveCorrelations file not found: {str(lightcurve_correlation_file_path)}")
+
+                continua_lines = ["time shift (tau)"] + header_line[5:]
+
+                continua_lightcurves = header_lightcurve[4:]
 
                 correlation_data_dict = dict()
 
                 for i, name in enumerate(continua_lines):
-                    correlation_data_dict[name] = correlation_data[i]
+                    correlation_data_dict[name] = line_correlation_data[i]
+
+                for i, name in enumerate(continua_lightcurves):
+                    if i == 0:
+                        continue
+                    correlation_data_dict[name] = lightcurve_correlation_data[i]
+
+
 
                 continua_dict[str(continuum)] = correlation_data_dict
 
