@@ -37,7 +37,7 @@ pseudo_conts_for_line_avg = {
 pseudo_conts_for_line_rms = {
 
     'HAlpha': {'blue': (6201, 6223), 'red': (6970, 6994)},
-    'HBeta': {'blue': (4435, 4450), 'red': (4980, 4987)},
+    'HBeta': {'blue': (4762, 4774), 'red': (4970, 4990)},
     'HGamma': {'blue': (4197, 4220), 'red': (4435, 4450)},
     'HDelta': {'blue': (3939, 3950), 'red': (4197, 4220)},
     'HeI5875': {'blue': (5649, 5660), 'red': (6068, 6081)},
@@ -338,8 +338,8 @@ def subtract_continuum(wavelength, intensity, line_wavelength, left_range, right
 
     corrected_intensity = intensity - continuum
 
-    # Bestimme das Maximum innerhalb des Bereichs ±10 um line_wavelength
-    norm_range = (line_wavelength - 10, line_wavelength + 10)
+    # Bestimme das Maximum innerhalb des Bereichs ±50 um line_wavelength
+    norm_range = (line_wavelength - 50, line_wavelength + 50)
     norm_mask = (wavelength > norm_range[0]) & (wavelength < norm_range[1])
     if np.any(norm_mask):
         max_value = np.max(corrected_intensity[norm_mask])
@@ -469,12 +469,6 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
 
     velocity = convert_to_velocity(wavelength, line_wavelength)
 
-    mask_x_lim = (velocity >= -20000) & (velocity <= 20000)
-    max_intensity = np.max(corrected_intensity[mask_x_lim])
-    min_intensity = np.min(corrected_intensity[mask_x_lim])
-
-    y_lim_velocity = (min_intensity * 0.9, max_intensity * 1.1)
-
     output_dir = output_dir / "substracted_pseudocont_data"
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -482,28 +476,33 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
     np.savetxt(str(output_dir / f"{line_name}_{spec_type}_corrected_spectrum.txt"), np.column_stack((wavelength, corrected_intensity, continuum)),
                header="Wavelength (Å)  Intensity  Continuum")
     np.savetxt(str(output_dir /f"{line_name}_normalized_{spec_type}_line_profile-{blue_pseudo_cont}-{red_pseudo_cont}.txt"), np.column_stack((velocity, corrected_intensity)),
-               header="# velocity space (km/s) 	 normalized flux")
+               header="velocity space (km/s) \t normalized flux")
 
-    if plot:
+    if plot is True:
         plt.figure(figsize=(8, 5))
         plt.plot(wavelength, intensity, label="Originalspektrum")
         plt.plot(wavelength, continuum, label="Interpoliertes Kontinuum", linestyle="dashed")
         plt.axvline(line_wavelength, color="r", linestyle=":", label="Linienzentrum")
+        plt.axvspan(blue_pseudo_cont[0], blue_pseudo_cont[1], alpha=0.2, color="r")
+        plt.axvspan(red_pseudo_cont[0], red_pseudo_cont[1], alpha=0.2, color="r")
         plt.xlim(wavelength_x_lim)
         plt.ylim(y_lim_original)
         plt.legend()
         plt.xlabel("Wellenlänge (Å)")
         plt.ylabel("Intensität")
+        plt.title(line_name + " AVG")
         plt.show()
 
         plt.figure(figsize=(8, 5))
         plt.plot(velocity, corrected_intensity, label="Linienprofil im Geschwindigkeitsraum")
         plt.axvline(0, color="r", linestyle=":", label="v = 0 km/s (Zentrum)")
-        plt.xlim(-20000,20000)
-        plt.ylim(y_lim_velocity)
+        plt.xlim(-10000,10000)
+        plt.ylim(-0.1, 1.2)
+        plt.axhline(0, color="black", linestyle=":")
         plt.legend()
         plt.xlabel("Geschwindigkeit (km/s)")
         plt.ylabel("Intensität")
+        plt.title(line_name + " RMS")
         plt.show()
 
 

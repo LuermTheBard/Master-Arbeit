@@ -87,10 +87,9 @@ def run_1d_lightcurves_task(output_dir=DEFAULT_OUTPUT_DIR, save_only=False, with
 def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     ensure_output_dir(output_dir)
     data = import_1d_lightcurve_data()
-
-    for cont in ["Cont1150", "Cont5100"]:
-        key_order_lines = [cont, 'HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
-        key_order_conts = ["Cont1150","Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015", "Cont8900"]
+    for cont in ["Cont1150_not_optical_calibrated", "Cont5100"]:
+        key_order_lines = [cont, 'HAlpha', 'HBeta', 'HGamma', 'LyAlpha_not_optical_calibrated', 'HeI5875', 'HeII4685', 'OI8446']
+        key_order_conts = ["Cont1150_not_optical_calibrated", "Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015", "Cont8900"]
         plot_all_1d_lightcurves_in_groups(data, output_dir, compare_cont=cont, key_order_lines=key_order_lines, key_order_conts=key_order_conts, save_only=save_only)
 
 
@@ -153,8 +152,8 @@ def plot_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
 
     ensure_output_dir(output_dir)
 
-    key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI7065', 'HeI5875', 'HeII4685', 'OI8446']
-
+    key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875',  'HeII4685', 'OI8446']
+    # todo: Lyman Alpha uncalibriert in import data hinzufügen
     one_dim_correlation_data = import_1d_correlation_data()
 
     plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data, cont_name=cont_name, output_dir=output_dir,
@@ -173,9 +172,9 @@ def save_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
 
     ensure_output_dir(output_dir)
 
-    key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI7065', 'HeI5875', 'HeII4685', 'OI8446']
+    key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
     # key_order = ["time shift (tau)", 'HeI5015', 'HeI5875', 'HeI4471', 'HeI7065', 'HeII4685','HAlpha', 'HBeta', 'HGamma', 'HDelta',  'OI8446']
-
+    # todo: Lyman Alpha uncalibriert in import data hinzufügen
     one_dim_correlation_data = import_1d_correlation_data()
 
     plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data, cont_name=cont_name, output_dir=output_dir,
@@ -243,8 +242,9 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
     profile_data = import_line_profile_data(normalized=True)
 
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446']
-
+    # key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeII4685',
+                 'OI8446']
 
     plot_normalized_line_profiles_in_groups(profile_data, key_order=key_order)
 
@@ -265,9 +265,9 @@ def plot_and_save_normalized_line_profiles_types_together(output_dir=DEFAULT_OUT
         plot_type="type"
     )
 
-
+# todo: cut out line profiles for uncalibrated LyAlpha
 @task
-def substract_pseudo_continua_from_spectra(output_dir=DEFAULT_OUTPUT_DIR):
+def substract_pseudo_continua_from_spectra(plot=True, output_dir=DEFAULT_OUTPUT_DIR):
     ensure_output_dir(output_dir)
 
     fits_data = import_fits_data()
@@ -280,8 +280,8 @@ def substract_pseudo_continua_from_spectra(output_dir=DEFAULT_OUTPUT_DIR):
                  'OI8446']
 
     for line in key_order:
-        process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=True)
-        process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=True)
+        process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot)
+        process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=plot)
 
 
 @task
@@ -371,7 +371,7 @@ def highest_corr_coef():
 
 def run_task(commands):
     for command in commands:
-        try:
+        #try:
             parts = command.split("::")
             name_of_task = parts[0]
             task_args = parts[1:] if len(parts) > 1 else []
@@ -379,10 +379,10 @@ def run_task(commands):
             print(f"Running {name_of_task} with arguments {task_args}...")
 
             registered_tasks[name_of_task](*task_args)
-        except KeyError:
-            print(f"Task '{command}' is not available.")
-        except Exception as e:
-            print(f"An error occurred while running '{command}': {e}")
+        #except KeyError:
+        #    print(f"Task '{command}' is not available.")
+        #except Exception as e:
+        #    print(f"An error occurred while running '{command}': {e}")
 
 
 if __name__ == "__main__":

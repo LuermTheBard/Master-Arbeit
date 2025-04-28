@@ -93,7 +93,7 @@ def plot_normalized_line_profiles_in_groups(data, save_only=False, output_dir=No
             group_index=group_index,
             save_only=save_only,
             output_dir=output_dir,
-            x_label="Velocity Space (km/s)",
+            x_label="Velocity (km/s)",
             line_profile=True
         )
 
@@ -131,11 +131,11 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
 
     ax.plot(avg_x, avg_y, label=f'AVG', color='black')
     ax.plot(rms_x, rms_y, label=f'RMS', color='red')
-    ax.vlines(0, -0.1, 1.5, linestyles='dashed', color='black', label='$v_0$')
+    ax.vlines(0, -0.1, 1.5, linestyles='dashed', color='black')
     ax.text(0.95, 0.95, f'{format_label(line_name, as_latex=False)}', transform=ax.transAxes,
             ha='right', va='top', fontsize=11)
 
-    ax.set_xlim(-6200, 5999)
+    ax.set_xlim(-9000, 8999)
     ax.set_ylim(-0.1, 1.2)
     ax.tick_params(axis='both', labelsize=9)
     ax.legend(loc='upper left')
@@ -159,11 +159,11 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
     if row < 3:
         ax.set_xticklabels([])
 
-    ax.xaxis.set_major_locator(MultipleLocator(2000))
+    ax.xaxis.set_major_locator(MultipleLocator(2500))
     #ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
 
     if row == 0:
         ax_top = ax.secondary_xaxis('top')
-        ax_top.xaxis.set_major_locator(MultipleLocator(2000))
+        ax_top.xaxis.set_major_locator(MultipleLocator(2500))
         #ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
         ax_top.tick_params(axis='x', rotation=45, labelsize=9)

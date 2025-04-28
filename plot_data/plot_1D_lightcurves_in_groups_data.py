@@ -174,7 +174,7 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
                 y_values, label=f'{format_label(line_name, as_latex=False)}', color=color
             )
 
-        ax.legend(fontsize=8, loc='upper right')
+        ax.legend(fontsize=7.5, loc='upper right')
 
     if col == 0:
         if row == 0 and line_lightcurves:

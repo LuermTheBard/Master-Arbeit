@@ -160,7 +160,7 @@ def configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_va
 
 
     ax.set_xlim(-10, 14.999)
-    ax.set_ylim(-0.1, 0.9)
+    ax.set_ylim(-0.1, 1)
 
     if row == 0:
         ax_top = ax.secondary_xaxis('top')
