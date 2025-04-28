@@ -162,7 +162,7 @@ def prepare_data(data, rows, cols):
         yield current_data, group_index
 
 
-def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_label, compare_cont=None, line_profile=False):
+def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_label, compare_cont=None, line_profile=False, file_name=None):
     """
     Finalisiert das Layout der Figure und speichert bzw. zeigt sie an.
 
@@ -198,10 +198,16 @@ def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_labe
             fig.suptitle(f'{title}', fontsize=14)
 
     if output_dir:
-        save_path = output_dir / f"{title.replace(' ', '_')}_compare_cont_{compare_cont}_group_{group_index + 1}.pdf"
-        plt.savefig(save_path, bbox_inches='tight')
-        save_path = output_dir / f"{title.replace(' ', '_')}_compare_cont_{compare_cont}_group_{group_index + 1}.png"
-        plt.savefig(save_path, bbox_inches='tight')
+        if file_name:
+            save_path = output_dir / f"{file_name}_group_{group_index + 1}.pdf"
+            plt.savefig(save_path, bbox_inches='tight')
+            save_path = output_dir / f"{file_name}_group_{group_index + 1}.png"
+            plt.savefig(save_path, bbox_inches='tight')
+        else:
+            save_path = output_dir / f"{title.replace(' ', '_')}_compare_cont_{compare_cont}_group_{group_index + 1}.pdf"
+            plt.savefig(save_path, bbox_inches='tight')
+            save_path = output_dir / f"{title.replace(' ', '_')}_compare_cont_{compare_cont}_group_{group_index + 1}.png"
+            plt.savefig(save_path, bbox_inches='tight')
 
     if not save_only:
         plt.show()
