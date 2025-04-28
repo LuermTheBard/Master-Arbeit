@@ -181,6 +181,31 @@ def save_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
 
 
 @task
+def save_1d_corr_in_groups_bowen_fluorescence_for_cont(output_dir=DEFAULT_OUTPUT_DIR):
+
+    ensure_output_dir(output_dir)
+
+    output_dir = output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    key_order_cont1150 = ["time shift (tau)", 'HAlpha', 'HBeta', "LyAlpha_not_optical_calibrated", 'OI8446']
+    key_order_cont1460 = ["time shift (tau)", 'HAlpha', 'HBeta', "LyAlpha_not_optical_calibrated", 'OI8446']
+    key_order_lyalpha = ["time shift (tau)", 'HAlpha', 'HBeta', 'OI8446']
+    key_order_halpha = ["time shift (tau)", 'OI8446']
+    key_order_hbeta= ["time shift (tau)", 'OI8446']
+
+    keyorders = {"Cont1150_not_optical_calibrated": key_order_cont1150,
+                 "Cont1460_not_optical_calibrated": key_order_cont1460,
+                 "LyAlpha_not_optical_calibrated": key_order_lyalpha,
+                 "HAlpha": key_order_halpha,
+                 "HBeta": key_order_hbeta}
+
+    one_dim_correlation_data = import_1d_correlation_data()
+    for reference_lightcurve, key_order in keyorders.items():
+        plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data, cont_name=reference_lightcurve, output_dir=output_dir,
+                                            key_order=key_order, save_only=True, file_name=f"{reference_lightcurve}_bowen_fluorescence_ccfs", only_key_order=True)
+
+@task
 def plot_avg_rms_spec(output_dir=DEFAULT_OUTPUT_DIR):
     avg_rms_spec_dir = output_dir / "avg_rms_spec"
 

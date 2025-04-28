@@ -7,7 +7,7 @@ from plot_data.general_plot import prepare_data, finalize_figure, format_yaxis
 
 
 def plot_all_1d_ccfs_in_groups_for_cont(galaxie_campaigns_correlation_data_dict, cont_name, output_dir, key_order=None,
-                                        save_only=False):
+                                        save_only=False, file_name=None, only_key_order=False):
     xlabel = "Time Lag $\\tau$ [d]"
     ylabel = "Correlation Coefficient"
 
@@ -27,17 +27,22 @@ def plot_all_1d_ccfs_in_groups_for_cont(galaxie_campaigns_correlation_data_dict,
 
         try:
             sorted_data_dict = dict(sorted(data_dict[cont_name].items(), key=lambda item: sort_keys(item[0])))
+
+            if only_key_order is True:
+                keys_to_keep = key_order + ["time shift (tau)"]
+                sorted_data_dict = {k: v for k, v in sorted_data_dict.items() if k in keys_to_keep}
+
         except KeyError:
             print(f"[Warning] Continuum name '{cont_name}' not found in campaign '{campaign}'. Skipping.")
             continue
 
         plot_ccfs_in_groups(sorted_data_dict, x_key, y_key, cont_name, xlabel, ylabel,
                             title=f"CCFs between Emission Lines and {format_label(cont_name)} for {campaign.split('_')[0]}",
-                            save_only=save_only, output_dir=save_folder, shared_y=True)
+                            save_only=save_only, output_dir=save_folder, shared_y=True, file_name=file_name)
 
 
 def plot_ccfs_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
-                        title=None, save_only=False, output_dir=None, color_dict=None, rows=4, cols=2):
+                        title=None, save_only=False, output_dir=None, color_dict=None, rows=4, cols=2, file_name = None):
     """
     Plots 1D-Daten in Gruppen für CCFs.
 
@@ -93,7 +98,7 @@ def plot_ccfs_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabe
             configure_ccfs_axis(ax, row, col, ylabel, color, x_values_ccfs, y_values, None, line_name)
 
         finalize_figure(fig, axes, x_label=xlabel, title=title, group_index=group_index,
-                        save_only=save_only, output_dir=output_dir, compare_cont=compare_cont)
+                        save_only=save_only, output_dir=output_dir, compare_cont=compare_cont, file_name=file_name)
 
 
 def configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name):
