@@ -323,21 +323,23 @@ def print_table_for_multiple_reference(filename, reference_light_curve_lines_dic
 
 
 def format_label(name, as_latex=True):
+
+    original_name = name
     # Escape für LaTeX
     name = name.replace('_', r'\_') if as_latex else name.replace('_', ' ')
 
     # Continuum?
     if "Cont" in name:
-        is_not_calibrated = ("not\\_optical\\_calibrated" in name if as_latex else "not_optical_calibrated" in name)
+        is_not_calibrated = ("not\\_optical\\_calibrated" in name if as_latex else "not_optical_calibrated" in original_name)
         num_part = ''.join(filter(str.isdigit, name))
         label = f"Cont. {num_part}" if num_part else name
         if is_not_calibrated:
-            label += " (no optical calib.)"
+            label += " (not opt. calib.)"
         return label
 
     # Linie?
-    is_not_calibrated = ("not\\_optical\\_calibrated" in name if as_latex else "not_optical_calibrated" in name)
-    base_name = name.split(r"\_")[0] if as_latex else name.split("_")[0]
+    is_not_calibrated = ("not\\_optical\\_calibrated" in name if as_latex else "not_optical_calibrated" in original_name)
+    base_name = name.split(r"\_")[0] if as_latex else original_name.split("_")[0]
 
     replacements_latex = {
         "HAlpha": r"H$\alpha$",
@@ -372,6 +374,6 @@ def format_label(name, as_latex=True):
     formatted = replacements.get(base_name, base_name)
 
     if is_not_calibrated:
-        formatted += " (no optical calib.)"
+        formatted += " (not opt. calib.)"
 
     return formatted
