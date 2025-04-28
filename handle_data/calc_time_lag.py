@@ -260,28 +260,46 @@ def get_fluoreszenz_table():
 
     campaign = "NGC4593_Full_Line"
     reference_light_curve_lines_dict = {
-        "Cont1150": ["HBeta",
+        "Cont1150": ["HAlpha",
+                     "HBeta",
                      "LyAlpha",
                      "OI8446",
                      "HBeta_not_optical_calibrated",
                      "LyAlpha_not_optical_calibrated",
                      # "OI8446_not_optical_calibrated"
                      ],
-        "Cont1150_not_optical_calibrated": ["HBeta",
+        "Cont1150_not_optical_calibrated": ["HAlpha",
+                                            "HBeta",
                                             "LyAlpha",
                                             "OI8446",
                                             "HBeta_not_optical_calibrated",
                                             "LyAlpha_not_optical_calibrated",
                                             # "OI8446_not_optical_calibrated"
                                             ],
-        #"Cont1450": ["HBeta", "LyAlpha", "OI8446", "HBeta_not_optical_calibrated", "LyAlpha_not_optical_calibrated", "OI8446_not_optical_calibrated"],
-        #"Cont1450_not_optical_calibrated": ["HBeta", "LyAlpha", "OI8446", "HBeta_not_optical_calibrated", "LyAlpha_not_optical_calibrated", "OI8446_not_optical_calibrated"],
-        "LyAlpha": ["HBeta",
+        "Cont1460": ["HAlpha",
+                     "HBeta",
+                     "LyAlpha",
+                     "OI8446",
+                     #"HBeta_not_optical_calibrated",
+                     "LyAlpha_not_optical_calibrated",
+                     #"OI8446_not_optical_calibrated"
+                     ],
+        "Cont1460_not_optical_calibrated": ["HAlpha",
+                                            "HBeta",
+                                            "LyAlpha",
+                                            "OI8446",
+                                            #"HBeta_not_optical_calibrated",
+                                            "LyAlpha_not_optical_calibrated",
+                                            #"OI8446_not_optical_calibrated"
+                                            ],
+        "LyAlpha": ["HAlpha",
+                    "HBeta",
                     "OI8446",
                     "HBeta_not_optical_calibrated",
                     # "OI8446_not_optical_calibrated"
                     ],
-        "LyAlpha_not_optical_calibrated": ["HBeta",
+        "LyAlpha_not_optical_calibrated": ["HAlpha",
+                                           "HBeta",
                                            "OI8446",
                                            "HBeta_not_optical_calibrated",
                                            # "OI8446_not_optical_calibrated"
@@ -289,9 +307,12 @@ def get_fluoreszenz_table():
         "HBeta": ["OI8446",
                   #"OI8446_not_optical_calibrated"
                   ],
-        "HBeta_not_optical_calibrated": ["OI8446",
+        "HAlpha": ["OI8446",
+                   ]
+        #"HBeta_not_optical_calibrated": ["OI8446",
                                          #"OI8446_not_optical_calibrated"
-                                         ]}
+         #                                ]
+    }
 
     data_light_curve_lines_dict = {}
 
@@ -312,4 +333,4 @@ def get_fluoreszenz_table():
 #calc_centroid_malte_code("NGC4593_Full_Line", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'LyAlpha', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446'], include_mass=True)
 
 
-#get_fluoreszenz_table()
+get_fluoreszenz_table()
