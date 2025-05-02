@@ -156,8 +156,9 @@ def plot_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
     # todo: Lyman Alpha uncalibriert in import data hinzufügen
     one_dim_correlation_data = import_1d_correlation_data()
 
-    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data, cont_name=cont_name, output_dir=output_dir,
-                                        key_order=key_order)
+    for campaign, data_dict in one_dim_correlation_data.items():
+        plot_all_1d_ccfs_in_groups_for_cont(data_dict, campaign, cont_name=cont_name, output_dir=output_dir,
+                                            key_order=key_order)
 
 
 @task
@@ -176,8 +177,9 @@ def save_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
     # key_order = ["time shift (tau)", 'HeI5015', 'HeI5875', 'HeI4471', 'HeI7065', 'HeII4685','HAlpha', 'HBeta', 'HGamma', 'HDelta',  'OI8446']
     one_dim_correlation_data = import_1d_correlation_data()
 
-    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data, cont_name=cont_name, output_dir=output_dir,
-                                        key_order=key_order, save_only=True)
+    for campaign, data_dict in one_dim_correlation_data.items():
+        plot_all_1d_ccfs_in_groups_for_cont(data_dict, campaign, cont_name=cont_name, output_dir=output_dir,
+                                            key_order=key_order, save_only=True)
 
 
 @task
@@ -201,9 +203,10 @@ def save_1d_corr_in_groups_bowen_fluorescence_for_cont(output_dir=DEFAULT_OUTPUT
                  "HBeta": key_order_hbeta}
 
     one_dim_correlation_data = import_1d_correlation_data()
-    for reference_lightcurve, key_order in keyorders.items():
-        plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data, cont_name=reference_lightcurve, output_dir=output_dir,
-                                            key_order=key_order, save_only=True, file_name=f"{reference_lightcurve}_bowen_fluorescence_ccfs", only_key_order=True)
+    for campaign, data_dict in one_dim_correlation_data.items():
+        for reference_lightcurve, key_order in keyorders.items():
+            plot_all_1d_ccfs_in_groups_for_cont(data_dict, campaign, cont_name=reference_lightcurve, output_dir=output_dir,
+                                                key_order=key_order, save_only=True, file_name=f"{reference_lightcurve}_bowen_fluorescence_ccfs", only_key_order=True)
 
 @task
 def plot_avg_rms_spec(output_dir=DEFAULT_OUTPUT_DIR):
