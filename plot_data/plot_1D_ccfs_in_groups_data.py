@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.ticker import MultipleLocator, FuncFormatter, AutoMinorLocator
+from matplotlib.ticker import MultipleLocator, FuncFormatter
 
 from handle_data.handle_data_file import format_label
 from plot_data.general_plot import prepare_data, finalize_figure, format_yaxis
@@ -10,9 +10,6 @@ def plot_all_1d_ccfs_in_groups_for_cont(galaxie_campaigns_correlation_data_dict,
                                         save_only=False, file_name=None, only_key_order=False):
     xlabel = "Time Lag $\\tau$ [d]"
     ylabel = "Correlation Coefficient"
-
-    x_key = "time shift (tau)"
-    y_key = cont_name
 
     def sort_keys(key):
         for idx, prefix in enumerate(key_order):
@@ -36,12 +33,12 @@ def plot_all_1d_ccfs_in_groups_for_cont(galaxie_campaigns_correlation_data_dict,
             print(f"[Warning] Continuum name '{cont_name}' not found in campaign '{campaign}'. Skipping.")
             continue
 
-        plot_ccfs_in_groups(sorted_data_dict, x_key, y_key, cont_name, xlabel, ylabel,
+        plot_ccfs_in_groups(sorted_data_dict, cont_name, xlabel, ylabel,
                             title=f"CCFs between Emission Lines and {format_label(cont_name)} for {campaign.split('_')[0]}",
                             save_only=save_only, output_dir=save_folder, shared_y=True, file_name=file_name)
 
 
-def plot_ccfs_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
+def plot_ccfs_in_groups(data, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
                         title=None, save_only=False, output_dir=None, color_dict=None, rows=4, cols=2, file_name = None):
     """
     Plots 1D-Daten in Gruppen für CCFs.
