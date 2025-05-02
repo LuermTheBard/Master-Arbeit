@@ -8,6 +8,7 @@ from handle_data.handle_data_file import sort_1d_corr_data_for_lines, get_contin
     get_weighted_best_continua, prepare_cut_data
 from import_data.import_data import import_1d_correlation_data, import_1d_lightcurve_data, import_fits_data, \
     import_line_profile_data
+from plot_data.plot_1D_ccfs_and_reference_lightcurves import plot_1d_corr_and_lightcurves_in_groups
 from plot_data.plot_1D_ccfs_in_groups_data import plot_all_1d_ccfs_in_groups_for_cont
 from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua
 from plot_data.plot_1D_lightcurves_in_groups_data import plot_all_1d_lightcurves_in_groups
@@ -208,6 +209,34 @@ def save_1d_corr_in_groups_bowen_fluorescence_for_cont(output_dir=DEFAULT_OUTPUT
         for reference_lightcurve, key_order in keyorders.items():
             plot_all_1d_ccfs_in_groups_for_cont(data_dict, campaign, cont_name=reference_lightcurve, output_dir=output_dir,
                                                 key_order=key_order, save_only=True, file_name=f"{reference_lightcurve}_bowen_fluorescence_ccfs", only_key_order=True)
+
+
+@task
+def save_1d_corr_and_lightcurves_in_groups_bowen_fluorescence(output_dir=DEFAULT_OUTPUT_DIR):
+
+    ensure_output_dir(output_dir)
+
+    output_dir = output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    key_order_cont1150 = ["time shift (tau)", 'HAlpha', 'HBeta', "LyAlpha_not_optical_calibrated", 'OI8446']
+    key_order_cont1460 = ["time shift (tau)", 'HAlpha', 'HBeta', "LyAlpha_not_optical_calibrated", 'OI8446']
+    key_order_lyalpha = ["time shift (tau)", 'HAlpha', 'HBeta', 'OI8446']
+    key_order_halpha = ["time shift (tau)", 'OI8446']
+    key_order_hbeta= ["time shift (tau)", 'OI8446']
+
+    keyorders = {"Cont1150_not_optical_calibrated": key_order_cont1150,
+                 "Cont1460_not_optical_calibrated": key_order_cont1460,
+                 "LyAlpha_not_optical_calibrated": key_order_lyalpha,
+                 "HAlpha": key_order_halpha,
+                 "HBeta": key_order_hbeta}
+
+    one_dim_correlation_data = import_1d_correlation_data()
+    lightcurves_data = import_1d_lightcurve_data()
+    for campaign, data_dict in one_dim_correlation_data.items():
+        lightcurves_ccfs_dict = {"lightcurves": lightcurves_data[campaign], "ccfs": data_dict}
+        plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders,  file_name="ccfs_and_reference_lightcurves", only_key_order=True)
+
 
 @task
 def plot_avg_rms_spec(output_dir=DEFAULT_OUTPUT_DIR):
