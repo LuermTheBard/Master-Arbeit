@@ -1,5 +1,3 @@
-# todo: methode should give the data to an equivilant methode to plot_ccfs_in_groups, which uses prepare data
-# todo: write a fitting configure_..._axis methode
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
@@ -127,7 +125,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
                 line_data = np.array([])
                 color = "black"
 
-            configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, ylabel_line_lightcurves, ylabel_cont_lightcurves, color, x_values_ccfs, line_data, yerr, line_name)
+            configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name)
 
 
         finalize_figure(fig, axes, x_label=(xlabel_lightcurves, xlabel_ccfs), title=title, group_index=group_index,
@@ -161,95 +159,90 @@ def prepare_ccfs_references_data(data, rows, cols):
 
 
 
-def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, ylabel_line_lightcurves, ylabel_cont_lightcurves, color, x_values_ccfs, line_data, yerr, line_name_and_ref_name):
-
+def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr,
+                                      line_name_and_ref_name):
     line_name, reference_name = line_name_and_ref_name.split("_ref_")
 
-    if len(line_data) > 0:
-        if yerr is not None:
-            x_key = 'timestamps [MJD]'
-            y_key = 'fluxes [ergs/s/cm2/A]'
-            yerr_name = 'fluxerrs [ergs/s/cm2/A]'
+    if len(line_data) == 0:
+        return
 
-            # Normierung für das erste Set
-            y = line_data["lightcurves"][y_key]
-            yerr_vals = line_data["lightcurves"][yerr_name]
+    if yerr is not None:
+        x_key = 'timestamps [MJD]'
+        y_key = 'fluxes [ergs/s/cm2/A]'
+        yerr_key = 'fluxerrs [ergs/s/cm2/A]'
 
-            yerr_vals = calculate_standard_error_for_lightcurves(y, yerr_vals)
+        y_norm, yerr_norm = normalize_lightcurve(line_data["lightcurves"][y_key], line_data["lightcurves"][yerr_key])
+        y_ref_norm, yerr_ref_norm = normalize_lightcurve(line_data["lightcurves_ref"][y_key],
+                                                          line_data["lightcurves_ref"][yerr_key])
 
-            y_mean = y.mean()
-            y_std = y.std()
-            y_norm = (y - y_mean) / y_std
-            yerr_norm = yerr_vals / y_std
+        plot_normalized_lightcurve(ax, line_data["lightcurves"][x_key], y_norm, yerr_norm,
+                                   format_label(line_name, as_latex=False), color[0])
+        plot_normalized_lightcurve(ax, line_data["lightcurves_ref"][x_key], y_ref_norm, yerr_ref_norm,
+                                   format_label(reference_name, as_latex=False), color[1])
 
-            ax.errorbar(
-                line_data["lightcurves"][x_key],
-                y_norm,
-                yerr=yerr_norm,
-                fmt='.:', capsize=3, markersize=4, label=f'{format_label(line_name, as_latex=False)}', color=color[0]
-            )
+        configure_axes_for_lightcurves(ax, row, col)
+    else:
+        ax.plot(x_values_ccfs, line_data["ccfs"], label=format_label(line_name, as_latex=False), color=color)
+        configure_axes_for_ccfs(ax, row, col, ylabel_ccfs)
 
-            # Normierung für das Referenz-Set
-            y_ref = line_data["lightcurves_ref"][y_key]
-            yerr_ref_vals = line_data["lightcurves_ref"][yerr_name]
-
-            yerr_ref_vals = calculate_standard_error_for_lightcurves(y_ref, yerr_ref_vals)
+    ax.legend(fontsize=8, loc='upper right')
 
 
-            y_ref_mean = y_ref.mean()
-            y_ref_std = y_ref.std()
-            y_ref_norm = (y_ref - y_ref_mean) / y_ref_std
-            yerr_ref_norm = yerr_ref_vals / y_ref_std
 
-            ax.errorbar(
-                line_data["lightcurves_ref"][x_key],
-                y_ref_norm,
-                yerr=yerr_ref_norm,
-                fmt='.:', capsize=3, markersize=4, label=f'{format_label(reference_name, as_latex=False)}',
-                color=color[1]
-            )
-            if col == 0:
-                ax.set_ylabel("Normalized Lightcurves", fontsize=12)
-                ax.yaxis.set_label_coords(-0.15, 0.5)
+def normalize_lightcurve(y, yerr_vals):
+    yerr_vals = calculate_standard_error_for_lightcurves(y, yerr_vals)
+    y_mean = y.mean()
+    y_std = y.std()
+    y_norm = (y - y_mean) / y_std
+    yerr_norm = yerr_vals / y_std
+    return y_norm, yerr_norm
 
-            if row < 3:
-                ax.set_xticklabels([])
 
-            ax.xaxis.set_major_locator(MultipleLocator(5))
-            ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-            ax.set_ylim(-3, 3.5)
+def plot_normalized_lightcurve(ax, x, y_norm, yerr_norm, label, color):
+    ax.errorbar(x, y_norm, yerr=yerr_norm, fmt='.:', capsize=3, markersize=4, label=label, color=color)
 
-            if row == 0:
-                ax_top = ax.secondary_xaxis('top')
-                ax_top.xaxis.set_major_locator(MultipleLocator(5))
-                ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
-                ax_top.tick_params(axis='x', rotation=45, labelsize=10)
-        else:
-            ax.plot(
-                x_values_ccfs, line_data["ccfs"], label=f'{format_label(line_name, as_latex=False)}', color=color
-            )
-            ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
-            ax.set_xlim(-9.999, 14.999)
-            ax.set_ylim(-0.1, 1)
-            ax.yaxis.set_major_locator(MultipleLocator(0.2))
-            ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
-            if col == 0:
-                ax.set_ylabel("Lightcurves", fontsize=12)
-                ax.yaxis.set_label_coords(-0.15, 0.5)
-            else:
-                ax.yaxis.tick_right()
-                ax.set_ylabel(ylabel_ccfs, fontsize=12)
-                ax.yaxis.set_label_position("right")
-                ax_right = ax.secondary_yaxis('right')
-                ax_right.yaxis.set_major_locator(MultipleLocator(0.2))
-                ax_right.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
 
-            if row < 3:
-                ax.set_xticklabels([])
+def configure_axes_for_lightcurves(ax, row, col):
+    if col == 0:
+        ax.set_ylabel("Normalized Lightcurves", fontsize=12)
+        ax.yaxis.set_label_coords(-0.15, 0.5)
 
-            if row == 0:
-                ax_top = ax.secondary_xaxis('top')
-                ax_top.xaxis.set_major_locator(MultipleLocator(5))
-                ax_top.tick_params(axis='x')
+    if row < 3:
+        ax.set_xticklabels([])
 
-        ax.legend(fontsize=8, loc='upper right')
+    ax.xaxis.set_major_locator(MultipleLocator(5))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+    ax.set_ylim(-3, 3.5)
+
+    if row == 0:
+        ax_top = ax.secondary_xaxis('top')
+        ax_top.xaxis.set_major_locator(MultipleLocator(5))
+        ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
+        ax_top.tick_params(axis='x', rotation=45, labelsize=10)
+
+
+def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs):
+    ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
+    ax.set_xlim(-9.999, 14.999)
+    ax.set_ylim(-0.1, 1)
+    ax.yaxis.set_major_locator(MultipleLocator(0.2))
+    ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
+
+    if col == 0:
+        ax.set_ylabel("Lightcurves", fontsize=12)
+        ax.yaxis.set_label_coords(-0.15, 0.5)
+    else:
+        ax.yaxis.tick_right()
+        ax.set_ylabel(ylabel_ccfs, fontsize=12)
+        ax.yaxis.set_label_position("right")
+        ax_right = ax.secondary_yaxis('right')
+        ax_right.yaxis.set_major_locator(MultipleLocator(0.2))
+        ax_right.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
+
+    if row < 3:
+        ax.set_xticklabels([])
+
+    if row == 0:
+        ax_top = ax.secondary_xaxis('top')
+        ax_top.xaxis.set_major_locator(MultipleLocator(5))
+        ax_top.tick_params(axis='x')
