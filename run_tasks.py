@@ -219,23 +219,29 @@ def save_1d_corr_and_lightcurves_in_groups_bowen_fluorescence(output_dir=DEFAULT
     output_dir = output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    key_order_cont1150 = ["time shift (tau)", 'HAlpha', 'HBeta', "LyAlpha_not_optical_calibrated", 'OI8446']
-    key_order_cont1460 = ["time shift (tau)", 'HAlpha', 'HBeta', "LyAlpha_not_optical_calibrated", 'OI8446']
+    key_order_cont1150 = ["time shift (tau)",
+                          'HAlpha',
+                          'HBeta',
+                          # "LyAlpha_not_optical_calibrated",
+                          'OI8446']
+    # key_order_cont1460 = ["time shift (tau)", 'HAlpha', 'HBeta', "LyAlpha_not_optical_calibrated", 'OI8446']
     key_order_lyalpha = ["time shift (tau)", 'HAlpha', 'HBeta', 'OI8446']
     key_order_halpha = ["time shift (tau)", 'OI8446']
     key_order_hbeta= ["time shift (tau)", 'OI8446']
 
     keyorders = {"Cont1150_not_optical_calibrated": key_order_cont1150,
-                 "Cont1460_not_optical_calibrated": key_order_cont1460,
+                 # "Cont1460_not_optical_calibrated": key_order_cont1460,
                  "LyAlpha_not_optical_calibrated": key_order_lyalpha,
                  "HAlpha": key_order_halpha,
                  "HBeta": key_order_hbeta}
+
+    final_sorted_keys = ["time shift (tau)", "LyAlpha_not_optical_calibrated", 'OI8446','HBeta','HAlpha']
 
     one_dim_correlation_data = import_1d_correlation_data()
     lightcurves_data = import_1d_lightcurve_data()
     for campaign, data_dict in one_dim_correlation_data.items():
         lightcurves_ccfs_dict = {"lightcurves": lightcurves_data[campaign], "ccfs": data_dict}
-        plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders,  file_name="ccfs_and_reference_lightcurves", only_key_order=True)
+        plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders, file_name="ccfs_and_reference_lightcurves", final_key_order=final_sorted_keys)
 
 
 @task
