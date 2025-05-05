@@ -161,7 +161,12 @@ def prepare_ccfs_references_data(data, rows, cols):
 
 def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr,
                                       line_name_and_ref_name):
-    line_name, reference_name = line_name_and_ref_name.split("_ref_")
+    if "_ref_" in line_name_and_ref_name:
+
+        line_name, reference_name = line_name_and_ref_name.split("_ref_")
+    else:
+        line_name = None
+        reference_name = None
 
     if len(line_data) == 0:
         return
@@ -185,7 +190,7 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         ax.plot(x_values_ccfs, line_data["ccfs"], label=format_label(line_name, as_latex=False), color=color)
         configure_axes_for_ccfs(ax, row, col, ylabel_ccfs)
 
-    ax.legend(fontsize=8, loc='upper right')
+    ax.legend(fontsize=8)
 
 
 

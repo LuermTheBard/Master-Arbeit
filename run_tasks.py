@@ -222,7 +222,7 @@ def save_1d_corr_and_lightcurves_in_groups_bowen_fluorescence(output_dir=DEFAULT
     key_order_cont1150 = ["time shift (tau)",
                           'HAlpha',
                           'HBeta',
-                          # "LyAlpha_not_optical_calibrated",
+                          "LyAlpha_not_optical_calibrated",
                           'OI8446']
     # key_order_cont1460 = ["time shift (tau)", 'HAlpha', 'HBeta', "LyAlpha_not_optical_calibrated", 'OI8446']
     key_order_lyalpha = ["time shift (tau)", 'HAlpha', 'HBeta', 'OI8446']
@@ -235,7 +235,7 @@ def save_1d_corr_and_lightcurves_in_groups_bowen_fluorescence(output_dir=DEFAULT
                  "HAlpha": key_order_halpha,
                  "HBeta": key_order_hbeta}
 
-    final_sorted_keys = ["time shift (tau)", "LyAlpha_not_optical_calibrated", 'OI8446','HBeta','HAlpha']
+    final_sorted_keys = ["time shift (tau)", 'OI8446', "LyAlpha_not_optical_calibrated", 'HBeta', 'HAlpha']
 
     one_dim_correlation_data = import_1d_correlation_data()
     lightcurves_data = import_1d_lightcurve_data()
