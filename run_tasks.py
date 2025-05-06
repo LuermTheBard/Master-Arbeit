@@ -155,7 +155,6 @@ def plot_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
     ensure_output_dir(output_dir)
 
     key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875',  'HeII4685', 'OI8446']
-    # todo: Lyman Alpha uncalibriert in import data hinzufügen
     one_dim_correlation_data = import_1d_correlation_data()
 
     for campaign, data_dict in one_dim_correlation_data.items():
