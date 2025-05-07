@@ -105,15 +105,24 @@ def check_for_empty_rows(axes, fig, x_label, line_profile=False):
                 if axes[row, col].has_data():  # Stelle sicher, dass die Achse existiert und Daten hat
                     if line_profile:
                         pass
+                    elif len(x_label) ==2:
+                        pass
                     else:
                         axes[row, col].xaxis.set_major_locator(MultipleLocator(5))  # Ticks festlegen
+
 
                     axes[row, col].xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
 
                     # Beschriftungen nur in der untersten vorhandenen Reihe anzeigen
                     if row == lowest_row:
-                        axes[row, col].set_xlabel(x_label, fontsize=12)
-                        axes[row, col].tick_params(axis='x', which='both', direction='inout', labelbottom=True)
+                        if len(x_label) ==2:
+                            if col == 0:
+                                axes[row, col].set_xlabel(x_label[0], fontsize=12)
+                            else:
+                                axes[row, col].set_xlabel(x_label[1], fontsize=12)
+                        else:
+                            axes[row, col].set_xlabel(x_label, fontsize=12)
+                            axes[row, col].tick_params(axis='x', which='both', direction='inout', labelbottom=True)
 
 
 def prepare_data(data, rows, cols):

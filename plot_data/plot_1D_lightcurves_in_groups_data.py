@@ -7,7 +7,7 @@ from plot_data.general_plot import prepare_data, finalize_figure, format_relativ
 from settings import BASE_MJD, COLORCODE_CONTINUA_NORMALIZED
 
 
-def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, compare_cont, key_order_lines=None, key_order_conts=None, save_only=False):
+def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont, key_order_lines=None, key_order_conts=None, save_only=False):
     base_mjd = BASE_MJD
 
     xlabel = f"MJD - {base_mjd:.2f}"
@@ -22,36 +22,36 @@ def plot_all_1d_lightcurves_in_groups(galaxie_campaigns_dict, output_dir, compar
     y_key = 'fluxes [ergs/s/cm2/A]'
 
 
-    for campaign, data_dict in galaxie_campaigns_dict.items():
 
-        save_folder = output_dir / campaign / "plot_1d_lightcurves"
-        save_folder.mkdir(parents=True, exist_ok=True)
 
-        # Plot for lines
-        super_title = f"{campaign.split('_')[0]} Lines"
-        compare_cont_data = {compare_cont: data_dict["continua"][compare_cont]}
-        compare_cont_data.update(data_dict["lines"])
+    save_folder = output_dir / campaign / "plot_1d_lightcurves"
+    save_folder.mkdir(parents=True, exist_ok=True)
 
-        def sort_keys(key, key_order):
-            for idx, prefix in enumerate(key_order):
-                if key.startswith(prefix):
-                    return idx
-            return len(key_order)
+    # Plot for lines
+    super_title = f"{campaign.split('_')[0]} Lines"
+    compare_cont_data = {compare_cont: data_dict["continua"][compare_cont]}
+    compare_cont_data.update(data_dict["lines"])
 
-        sorted_line_data_dict = dict(sorted(compare_cont_data.items(), key=lambda item: sort_keys(item[0], key_order_lines)))
+    def sort_keys(key, key_order):
+        for idx, prefix in enumerate(key_order):
+            if key.startswith(prefix):
+                return idx
+        return len(key_order)
 
-        plot_lightcurves_in_groups(sorted_line_data_dict, x_key, y_key, compare_cont, xlabel, ylabel_line, yerr_name=yerr_name, title=super_title,
-                               save_only=save_only, output_dir=save_folder, line_light_curves=True)
+    sorted_line_data_dict = dict(sorted(compare_cont_data.items(), key=lambda item: sort_keys(item[0], key_order_lines)))
 
-        # Plot for continua (with custom color dictionary if needed)
-        super_title = f"{campaign.split('_')[0]} Continua"
+    plot_lightcurves_in_groups(sorted_line_data_dict, x_key, y_key, compare_cont, xlabel, ylabel_line, yerr_name=yerr_name, title=super_title,
+                           save_only=save_only, output_dir=save_folder, line_light_curves=True)
 
-        sorted_cont_data_dict = dict(
-            sorted(data_dict["continua"].items(), key=lambda item: sort_keys(item[0], key_order_conts)))
+    # Plot for continua (with custom color dictionary if needed)
+    super_title = f"{campaign.split('_')[0]} Continua"
 
-        plot_lightcurves_in_groups(sorted_cont_data_dict, x_key, y_key, compare_cont, xlabel, ylabel_cont, yerr_name=yerr_name,
-                               title=super_title, save_only=save_only, output_dir=save_folder,
-                               color_dict=COLORCODE_CONTINUA_NORMALIZED)
+    sorted_cont_data_dict = dict(
+        sorted(data_dict["continua"].items(), key=lambda item: sort_keys(item[0], key_order_conts)))
+
+    plot_lightcurves_in_groups(sorted_cont_data_dict, x_key, y_key, compare_cont, xlabel, ylabel_cont, yerr_name=yerr_name,
+                           title=super_title, save_only=save_only, output_dir=save_folder,
+                           color_dict=COLORCODE_CONTINUA_NORMALIZED)
 
 
 def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,

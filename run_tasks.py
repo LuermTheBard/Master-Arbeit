@@ -8,6 +8,7 @@ from handle_data.handle_data_file import sort_1d_corr_data_for_lines, get_contin
     get_weighted_best_continua, prepare_cut_data
 from import_data.import_data import import_1d_correlation_data, import_1d_lightcurve_data, import_fits_data, \
     import_line_profile_data
+from plot_data.plot_1D_ccfs_and_reference_lightcurves import plot_1d_corr_and_lightcurves_in_groups
 from plot_data.plot_1D_ccfs_in_groups_data import plot_all_1d_ccfs_in_groups_for_cont
 from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua
 from plot_data.plot_1D_lightcurves_in_groups_data import plot_all_1d_lightcurves_in_groups
@@ -90,7 +91,8 @@ def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     for cont in ["Cont1150_not_optical_calibrated", "Cont5100"]:
         key_order_lines = [cont, 'HAlpha', 'HBeta', 'HGamma', 'LyAlpha_not_optical_calibrated', 'HeI5875', 'HeII4685', 'OI8446']
         key_order_conts = ["Cont1150_not_optical_calibrated", "Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015", "Cont8900"]
-        plot_all_1d_lightcurves_in_groups(data, output_dir, compare_cont=cont, key_order_lines=key_order_lines, key_order_conts=key_order_conts, save_only=save_only)
+        for campaign, data_dict in data.items():
+            plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont=cont, key_order_lines=key_order_lines, key_order_conts=key_order_conts, save_only=save_only)
 
 
 
@@ -153,11 +155,11 @@ def plot_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
     ensure_output_dir(output_dir)
 
     key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875',  'HeII4685', 'OI8446']
-    # todo: Lyman Alpha uncalibriert in import data hinzufügen
     one_dim_correlation_data = import_1d_correlation_data()
 
-    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data, cont_name=cont_name, output_dir=output_dir,
-                                        key_order=key_order)
+    for campaign, data_dict in one_dim_correlation_data.items():
+        plot_all_1d_ccfs_in_groups_for_cont(data_dict, campaign, cont_name=cont_name, output_dir=output_dir,
+                                            key_order=key_order)
 
 
 @task
@@ -176,8 +178,9 @@ def save_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
     # key_order = ["time shift (tau)", 'HeI5015', 'HeI5875', 'HeI4471', 'HeI7065', 'HeII4685','HAlpha', 'HBeta', 'HGamma', 'HDelta',  'OI8446']
     one_dim_correlation_data = import_1d_correlation_data()
 
-    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data, cont_name=cont_name, output_dir=output_dir,
-                                        key_order=key_order, save_only=True)
+    for campaign, data_dict in one_dim_correlation_data.items():
+        plot_all_1d_ccfs_in_groups_for_cont(data_dict, campaign, cont_name=cont_name, output_dir=output_dir,
+                                            key_order=key_order, save_only=True)
 
 
 @task
@@ -201,9 +204,44 @@ def save_1d_corr_in_groups_bowen_fluorescence_for_cont(output_dir=DEFAULT_OUTPUT
                  "HBeta": key_order_hbeta}
 
     one_dim_correlation_data = import_1d_correlation_data()
-    for reference_lightcurve, key_order in keyorders.items():
-        plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data, cont_name=reference_lightcurve, output_dir=output_dir,
-                                            key_order=key_order, save_only=True, file_name=f"{reference_lightcurve}_bowen_fluorescence_ccfs", only_key_order=True)
+    for campaign, data_dict in one_dim_correlation_data.items():
+        for reference_lightcurve, key_order in keyorders.items():
+            plot_all_1d_ccfs_in_groups_for_cont(data_dict, campaign, cont_name=reference_lightcurve, output_dir=output_dir,
+                                                key_order=key_order, save_only=True, file_name=f"{reference_lightcurve}_bowen_fluorescence_ccfs", only_key_order=True)
+
+
+@task
+def save_1d_corr_and_lightcurves_in_groups_bowen_fluorescence(output_dir=DEFAULT_OUTPUT_DIR):
+
+    ensure_output_dir(output_dir)
+
+    output_dir = output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    key_order_cont1150 = ["time shift (tau)",
+                          'HAlpha',
+                          'HBeta',
+                          "LyAlpha_not_optical_calibrated",
+                          'OI8446']
+    # key_order_cont1460 = ["time shift (tau)", 'HAlpha', 'HBeta', "LyAlpha_not_optical_calibrated", 'OI8446']
+    key_order_lyalpha = ["time shift (tau)", 'HAlpha', 'HBeta', 'OI8446']
+    key_order_halpha = ["time shift (tau)", 'OI8446']
+    key_order_hbeta= ["time shift (tau)", 'OI8446']
+
+    keyorders = {"Cont1150_not_optical_calibrated": key_order_cont1150,
+                 # "Cont1460_not_optical_calibrated": key_order_cont1460,
+                 "LyAlpha_not_optical_calibrated": key_order_lyalpha,
+                 "HAlpha": key_order_halpha,
+                 "HBeta": key_order_hbeta}
+
+    final_sorted_keys = ["time shift (tau)", 'OI8446', "LyAlpha_not_optical_calibrated", 'HBeta', 'HAlpha']
+
+    one_dim_correlation_data = import_1d_correlation_data()
+    lightcurves_data = import_1d_lightcurve_data()
+    for campaign, data_dict in one_dim_correlation_data.items():
+        lightcurves_ccfs_dict = {"lightcurves": lightcurves_data[campaign], "ccfs": data_dict}
+        plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders, file_name="ccfs_and_reference_lightcurves", final_key_order=final_sorted_keys)
+
 
 @task
 def plot_avg_rms_spec(output_dir=DEFAULT_OUTPUT_DIR):
