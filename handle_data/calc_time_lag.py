@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 from Malte_get_BH_mass import Line
 from handle_data.handle_data_file import print_table_for_one_reference, print_table_for_multiple_reference
 from import_data.import_data import find_prime_data_folder
+from settings import FWHM_RMS, FWHM_ERR
 
 
 def plot_ccf_with_centroid(x_values, y_values, x_selected, y_selected, centroid, baseline, threshold, line_name, cont_name):
@@ -162,19 +163,6 @@ def get_centroid_of_peak(x_values, y_values, baseline=None, threshold=0.8):
     return centroid, x_selected, y_selected, baseline, y_threshold
 
 
-# Definiere die Default-Listen für FWHM (rms) und sigma (rms)
-default_fwhm_rms = {
-    'HAlpha': 3054.0, 'HBeta': 3160.0, 'HGamma': 3130.0, 'HDelta': 4940.0,
-    'HeI5875': 3588, 'HeI7065': 2542, 'HeI4471': 999, 'HeI5015': np.nan,
-    'HeII4685': 5711, 'OI8446': 2608, 'LyAlpha': 3384
-}
-
-default_sigma_rms = {
-    'HAlpha': 1175.0, 'HBeta': 1190.0, 'HGamma': 1240.0, 'HDelta': 1560.0,
-    'HeI5875': 1218, 'HeI7065': np.nan, 'HeI4471': 155, 'HeI5015': np.nan,
-    'HeII4685': 1998, 'OI8446': 846, 'LyAlpha': 1752
-}
-
 def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True, create_tex_file=True):
 
     data_folder = find_prime_data_folder()
@@ -238,12 +226,12 @@ def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True,
     for line in lines:
         if line in index_map and data[line]["centroids"] is not None and data[line]["peaks"] is not None:
             line_obj = Line(
-                line,  # Name der Linie
-                default_fwhm_rms.get(line, 0.0),  # FWHM (rms)
-                default_sigma_rms.get(line, 0.0),  # Sigma (rms)
-                np.vstack((combined[:, 0], combined[:, index_map[line]])).T,
-                data[line]["centroids"],
-                data[line]["peaks"]
+                name=line,  # Name der Linie
+                FWHM_rms=FWHM_RMS.get(line, 0.0),  # FWHM (rms)
+                FWHM_rms_errs=FWHM_ERR.get(line, 0.0),  # Sigma (rms)
+                correlation=np.vstack((combined[:, 0], combined[:, index_map[line]])).T,
+                tau_cents=data[line]["centroids"],
+                tau_peaks=data[line]["peaks"]
             )
             line_objects.append(line_obj)
 
@@ -330,7 +318,7 @@ def get_fluoreszenz_table():
 #calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150_not_optical_calibrated", lines=['HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685'], include_mass=True)
 #calc_centroid_malte_code("NGC4593_Full_Line", "HBeta", lines=["OI8446", "OI8446_not_optical_calibrated"], include_mass=True)
 #calc_centroid_malte_code("NGC4593_Full_Line", "HBeta_not_optical_calibrated", lines=["OI8446", "OI8446_not_optical_calibrated"], include_mass=True)
-#calc_centroid_malte_code("NGC4593_Full_Line", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'LyAlpha', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446'], include_mass=True)
+calc_centroid_malte_code("NGC4593_Full_Line", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'OI8446'], include_mass=True)
 
 
 get_fluoreszenz_table()
