@@ -27,6 +27,7 @@ class TaskRunnerApp:
         self.selected_task = tk.StringVar()
         self.arg_entries = []
         self.task_queue = []
+        self.recent_tasks = []
 
         title_label = ttk.Label(root, text="Task-Auswahl", font=("Helvetica", 16, "bold"))
         title_label.pack(pady=(10, 5))
@@ -72,13 +73,24 @@ class TaskRunnerApp:
         sys.stderr = StdoutRedirector(self.log_text)
 
     def on_task_selected(self, event=None):
+        task_name = self.selected_task.get()
+        if not task_name:
+            return
+
+        # Als zuletzt verwendet markieren
+        if task_name in self.recent_tasks:
+            self.recent_tasks.remove(task_name)
+        self.recent_tasks.insert(0, task_name)
+        self.recent_tasks = self.recent_tasks[:3]  # Max. 3 merken
+
+        self.update_dropdown_items()
+
+        # Eingabefelder aktualisieren wie gehabt
         for widget in self.arg_frame.winfo_children():
             widget.destroy()
         self.arg_entries.clear()
 
-        task_name = self.selected_task.get()
         func = registered_tasks[task_name]
-
         doc = func.__doc__.strip() if func.__doc__ else "Keine Beschreibung vorhanden."
         self.desc_label.config(text=doc)
 
@@ -94,6 +106,13 @@ class TaskRunnerApp:
         if "plot" in args:
             self._add_arg_field("plot (True/False)")
 
+    def update_dropdown_items(self):
+        # Erst die letzten, dann den Rest
+        all_tasks = list(registered_tasks.keys())
+        remaining = [t for t in all_tasks if t not in self.recent_tasks]
+        combined = [f"🔁 {t}" for t in self.recent_tasks] + remaining
+        self.task_dropdown['values'] = combined
+
     def _add_arg_field(self, label_text):
         frame = ttk.Frame(self.arg_frame)
         frame.pack(fill="x", pady=4)
@@ -104,7 +123,7 @@ class TaskRunnerApp:
         self.arg_entries.append((label_text.split()[0], entry))
 
     def add_to_queue(self):
-        task_name = self.selected_task.get()
+        task_name = self.selected_task.get().replace("🔁 ", "")
         if not task_name:
             messagebox.showwarning("Hinweis", "Bitte zuerst einen Task auswählen.")
             return
