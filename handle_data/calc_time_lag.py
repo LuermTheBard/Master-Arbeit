@@ -166,13 +166,13 @@ def get_centroid_of_peak(x_values, y_values, baseline=None, threshold=0.8):
 default_fwhm_rms = {
     'HAlpha': 3054.0, 'HBeta': 3160.0, 'HGamma': 3130.0, 'HDelta': 4940.0,
     'HeI5875': 3588, 'HeI7065': 2542, 'HeI4471': 999, 'HeI5015': np.nan,
-    'HeII4685': 5711, 'OI8446': 2608, 'LyAlpha': 3384, 'LyAlpha_not_optical_calibrated': 4227
+    'HeII4685': 5711, 'OI8446': 2608, 'LyAlpha': 3384
 }
 
 default_sigma_rms = {
     'HAlpha': 1175.0, 'HBeta': 1190.0, 'HGamma': 1240.0, 'HDelta': 1560.0,
     'HeI5875': 1218, 'HeI7065': np.nan, 'HeI4471': 155, 'HeI5015': np.nan,
-    'HeII4685': 1998, 'OI8446': 846, 'LyAlpha': 1752, 'LyAlpha_not_optical_calibrated': 1688
+    'HeII4685': 1998, 'OI8446': 846, 'LyAlpha': 1752
 }
 
 def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True, create_tex_file=True):
@@ -330,7 +330,7 @@ def get_fluoreszenz_table():
 #calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150_not_optical_calibrated", lines=['HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685'], include_mass=True)
 #calc_centroid_malte_code("NGC4593_Full_Line", "HBeta", lines=["OI8446", "OI8446_not_optical_calibrated"], include_mass=True)
 #calc_centroid_malte_code("NGC4593_Full_Line", "HBeta_not_optical_calibrated", lines=["OI8446", "OI8446_not_optical_calibrated"], include_mass=True)
-calc_centroid_malte_code("NGC4593_Full_Line", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'LyAlpha_not_optical_calibrated', 'HeI5875', 'HeII4685', 'OI8446', "Cont1150_not_optical_calibrated"], include_mass=True)
+#calc_centroid_malte_code("NGC4593_Full_Line", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'LyAlpha', 'HeI5875', 'HeI7065', 'HeII4685', 'OI8446'], include_mass=True)
 
 
 get_fluoreszenz_table()
