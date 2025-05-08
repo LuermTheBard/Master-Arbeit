@@ -31,7 +31,7 @@ pseudo_conts_for_line_avg = {
     'HeI5015': {'blue': (4976, 4981), 'red': (5085, 5112)},
     'HeII4685': {'blue': (4198, 4225), 'red': (4762, 4774)},
     'OI8446': {'blue': (7999, 8025), 'red': (8775, 8798)},
-    'OIII5007': {'blue': (4762, 4774), 'red': (5085, 5112)},
+    'OIII5007': {'blue': (4976, 4987), 'red': (5085, 5112)},
 }
 
 pseudo_conts_for_line_rms = {
@@ -46,7 +46,7 @@ pseudo_conts_for_line_rms = {
     'HeI5015': {'blue': (4976, 4981), 'red': (5119, 5133)},
     'HeII4685': {'blue': (4198, 4225), 'red': (4770, 4787)},
     'OI8446': {'blue': (8222, 8238), 'red': (8748, 8767)},
-    'OIII5007': {'blue': (4762, 4774), 'red': (5085, 5112)},
+    'OIII5007': {'blue': (4976, 4987), 'red': (5085, 5112)},
 }
 
 
@@ -410,8 +410,8 @@ def cut_normalized_line_out(intensity, velocity, velocity_range):
     # Falls ein Bereich gegeben ist, schneide die Daten zurecht
     if velocity_range is not None:
         min_v, max_v = velocity_range
-        min_v = min(min_v, -abs(max_v))  # Sicherstellen, dass min negativ ist
-        max_v = max(max_v, abs(min_v))  # Sicherstellen, dass max positiv ist
+        min_v = min(min_v, -abs(min_v))  # Sicherstellen, dass min negativ ist
+        max_v = max(max_v, abs(max_v))  # Sicherstellen, dass max positiv ist
         mask = (velocity >= min_v) & (velocity <= max_v)
         velocity = velocity[mask]
         intensity = intensity[mask]

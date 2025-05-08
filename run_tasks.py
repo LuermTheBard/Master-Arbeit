@@ -329,7 +329,7 @@ def plot_and_save_normalized_line_profiles_types_together(output_dir=DEFAULT_OUT
 
 # todo: cut out line profiles for uncalibrated LyAlpha
 @task
-def substract_pseudo_continua_from_spectra(plot=True, output_dir=DEFAULT_OUTPUT_DIR):
+def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT_DIR):
     ensure_output_dir(output_dir)
 
     fits_data = import_fits_data()
@@ -339,7 +339,7 @@ def substract_pseudo_continua_from_spectra(plot=True, output_dir=DEFAULT_OUTPUT_
     rms_data = np.array(fits_data['NGC4593_rms.fits']['data'][0])
 
     key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685',
-                 'OI8446']
+                 'OI8446', "OIII5007"]
 
     for line in key_order:
         process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot)
@@ -379,6 +379,16 @@ def cut_line_profile(
     plot=False,
     output_dir=DEFAULT_OUTPUT_DIR,
 ):
+    def str_to_bool(val):
+        if isinstance(val, bool):
+            return val
+        if isinstance(val, str):
+            return val.strip().lower() in ("true", "1", "yes")
+        return False  # fallback
+
+    normalized = str_to_bool(normalized)
+    plot = str_to_bool(plot)
+
     if isinstance(cut_out_range, str):
         cut_out_range = tuple(map(int, cut_out_range.strip("() ").split(',')))
 

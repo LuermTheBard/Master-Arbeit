@@ -130,31 +130,33 @@ All_LINE_GROUPS = {
               "show_in_rms": True},
 
 }
-def calculate_velocity_errors(lines_wavelengths, fwhm_rms):
+def calculate_velocity_errors(lines_wavelengths):
     """
     Gibt ein Dictionary mit Liniennamen und geschätztem Fehler im Velocity Space (km/s) zurück.
     """
     c = 299792.458  # Lichtgeschwindigkeit in km/s
     velocity_errors = {}
 
-    for line, wavelength in lines_wavelengths.items():
+    for line, central_wavelength in lines_wavelengths.items():
         # Grating auswählen
-        if 1119 <= wavelength <= 1715:
+        if 1119 <= central_wavelength <= 1715:
             R = 1000  # G140L   #https://hst-docs.stsci.edu/stisihb/chapter-13-spectroscopic-reference-material/13-3-gratings/first-order-grating-g140l
-        elif 2888 <= wavelength <= 5697:
+        elif 2888 <= central_wavelength <= 5697:
             R = 750   # G430L   #https://hst-docs.stsci.edu/stisihb/chapter-13-spectroscopic-reference-material/13-3-gratings/first-order-grating-g430l
-        elif 5245 <= wavelength <= 10233:
+        elif 5245 <= central_wavelength <= 10233:
             R = 500   # G750L   #https://hst-docs.stsci.edu/stisihb/chapter-13-spectroscopic-reference-material/13-3-gratings/first-order-grating-g750l
         else:
             R = None
 
         if R:
-            delta_lambda = wavelength / R
-            delta_v = c * (delta_lambda / wavelength)
+            delta_lambda = central_wavelength / R
+            delta_v = c * (delta_lambda / central_wavelength)
+
+
             velocity_errors[line] = round(delta_v, 0)
         else:
             velocity_errors[line] = None
-            print(f"Warnung: Keine passende Grating-Auflösung für {line} (λ = {wavelength} Å) gefunden.")
+            print(f"Warnung: Keine passende Grating-Auflösung für {line} (λ = {central_wavelength} Å) gefunden.")
 
     return velocity_errors
 
@@ -182,7 +184,7 @@ FWHM_RMS = {
     'HeII4685': 5711, 'OI8446': 3000, 'LyAlpha': 3384
 }
 
-FWHM_ERR = calculate_velocity_errors(CENTRAL_WAVELENGTH, FWHM_RMS)
+FWHM_ERR = calculate_velocity_errors(CENTRAL_WAVELENGTH)
 """
 FWHM_ERR = {
     'HAlpha': 600.0,
