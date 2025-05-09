@@ -241,15 +241,15 @@ def print_table_for_one_reference(filename, linelist, continuum, include_mass=Tr
 
         # Tabelleninhalt mit Fehlerdarstellung
         for line in linelist:
-            tau_cent_str = f"{line.tau_cent:.1f} \\ensuremath{{_{{{line.tau_cent_err[0] - line.tau_cent:.1f}}}^{{+{line.tau_cent_err[1] - line.tau_cent:.1f}}}}}"
+            tau_cent_str = f"{line.tau_cent:.1f} \\ensuremath{{_{{{line.tau_cent_err[0] - line.tau_cent:.2f}}}^{{+{line.tau_cent_err[1] - line.tau_cent:.2f}}}}}"
             tau_peak_str = f"{line.tau_peak:.1f} \\ensuremath{{_{{{line.tau_peak_err[0] - line.tau_peak:.1f}}}^{{+{line.tau_peak_err[1] - line.tau_peak:.1f}}}}}"
             name = line.name.replace('_', r'\_')
 
             if include_mass:
                 mass_str = f"{line.M_Mo:.1f} \\ensuremath{{_{{{line.M_Mo_err[0] - line.M_Mo:.1f}}}^{{+{line.M_Mo_err[1] - line.M_Mo:.1f}}}}}"
-                outfile.write(f"{name} & ${tau_cent_str}$ & ${tau_peak_str}$ & ${mass_str}$ \\\\" + '\n')
+                outfile.write(f"{format_label(name, as_latex=True)} & ${tau_cent_str}$ & ${tau_peak_str}$ & ${mass_str}$ \\\\" + '\n')
             else:
-                outfile.write(f"{name} & ${tau_cent_str}$ & ${tau_peak_str}$ \\\\" + '\n')
+                outfile.write(f"{format_label(name, as_latex=True)} & ${tau_cent_str}$ & ${tau_peak_str}$ \\\\" + '\n')
 
         # Tabellenabschluss
         outfile.write(r'\bottomrule' + '\n')

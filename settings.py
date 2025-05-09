@@ -140,11 +140,11 @@ def calculate_velocity_errors(lines_wavelengths):
     for line, central_wavelength in lines_wavelengths.items():
         # Grating auswählen
         if 1119 <= central_wavelength <= 1715:
-            R = 1000  # G140L   #https://hst-docs.stsci.edu/stisihb/chapter-13-spectroscopic-reference-material/13-3-gratings/first-order-grating-g140l
+            R = 1000  # G140L   # https://hst-docs.stsci.edu/stisihb/chapter-13-spectroscopic-reference-material/13-3-gratings/first-order-grating-g140l
         elif 2888 <= central_wavelength <= 5697:
-            R = 750   # G430L   #https://hst-docs.stsci.edu/stisihb/chapter-13-spectroscopic-reference-material/13-3-gratings/first-order-grating-g430l
+            R = 750   # G430L   # https://hst-docs.stsci.edu/stisihb/chapter-13-spectroscopic-reference-material/13-3-gratings/first-order-grating-g430l
         elif 5245 <= central_wavelength <= 10233:
-            R = 500   # G750L   #https://hst-docs.stsci.edu/stisihb/chapter-13-spectroscopic-reference-material/13-3-gratings/first-order-grating-g750l
+            R = 500   # G750L   # https://hst-docs.stsci.edu/stisihb/chapter-13-spectroscopic-reference-material/13-3-gratings/first-order-grating-g750l
         else:
             R = None
 
@@ -159,6 +159,35 @@ def calculate_velocity_errors(lines_wavelengths):
             print(f"Warnung: Keine passende Grating-Auflösung für {line} (λ = {central_wavelength} Å) gefunden.")
 
     return velocity_errors
+
+
+def calculate_dispersion_velocity(lines_wavelengths):
+    """
+    Gibt ein Dictionary mit Liniennamen und der Geschwindigkeitsauflösung (km/s) pro Pixel zurück,
+    basierend auf der Dispersion des jeweils passenden STIS-Gitters.
+    """
+    c = 299792.458  # Lichtgeschwindigkeit in km/s
+    dispersion_velocity = {}
+
+    for line, central_wavelength in lines_wavelengths.items():
+        # Gitterwahl & zugehörige Dispersion
+        if 1119 <= central_wavelength <= 1715:
+            dispersion = 0.584   # Å/pixel für G140L
+        elif 2888 <= central_wavelength <= 5697:
+            dispersion = 2.746   # Å/pixel für G430L
+        elif 5245 <= central_wavelength <= 10233:
+            dispersion = 4.882   # Å/pixel für G750L
+        else:
+            dispersion = None
+
+        if dispersion:
+            delta_v = c * (dispersion / central_wavelength)
+            dispersion_velocity[line] = round(delta_v, 1)
+        else:
+            dispersion_velocity[line] = None
+            print(f"Warnung: Keine passende Gitter-Dispersion für {line} (λ = {central_wavelength} Å) gefunden.")
+
+    return dispersion_velocity
 
 
 # Ursprüngliche Wellenlängen
@@ -181,26 +210,44 @@ CENTRAL_WAVELENGTH = {
 FWHM_RMS = {
     'HAlpha': 3054.0, 'HBeta': 3160.0, 'HGamma': 3130.0, 'HDelta': 4940.0,
     'HeI5875': 3588, 'HeI7065': 2542, 'HeI4471': 999, 'HeI5015': np.nan,
-    'HeII4685': 5711, 'OI8446': 3000, 'LyAlpha': 3384
+    'HeII4685': 5711, 'OI8446': 3800, 'LyAlpha': 3384
 }
 
-FWHM_ERR = calculate_velocity_errors(CENTRAL_WAVELENGTH)
-"""
-FWHM_ERR = {
-    'HAlpha': 600.0,
-    'HBeta': 400.0,
-    'HGamma': 400.0,
-    'HDelta': 400.0,
-    'HeI5875': 600.0,
-    'HeI7065': 600.0,
-    'HeI4471': 400.0,
-    'HeI5015': 400.0,
-    'HeII4685': 400.0,
-    'OI8446': 600.0,
-    'OIII5007': 400.0,
-    'LyAlpha': 300.0,
+DELTA_V = calculate_velocity_errors(CENTRAL_WAVELENGTH)
+
+KM_PER_S_PER_PIXEL = calculate_dispersion_velocity(CENTRAL_WAVELENGTH)
+
+
+KM_PER_S_PER_PIXEL = {
+    'HAlpha': 222.9,     # (Grating: G750L, Dispersion: 4.882 Å/pixel)
+    'HBeta': 169.2,      # (Grating: G430L, Dispersion: 2.746 Å/pixel)
+    'HGamma': 189.4,     # (Grating: G430L, Dispersion: 2.746 Å/pixel)
+    'HDelta': 200.7,     # (Grating: G430L, Dispersion: 2.746 Å/pixel)
+    'HeI5875': 249.1,    # (Grating: G750L, Dispersion: 4.882 Å/pixel)
+    #'HeI7065': 207.1,    # (Grating: G750L, Dispersion: 4.882 Å/pixel)
+    #'HeI4471': 184.1,    # (Grating: G430L, Dispersion: 2.746 Å/pixel)
+    #'HeI5015': 164.1,    # (Grating: G430L, Dispersion: 2.746 Å/pixel)
+    'HeII4685': 175.7,   # (Grating: G430L, Dispersion: 2.746 Å/pixel)
+    'OI8446': 173.3,     # (Grating: G750L, Dispersion: 4.882 Å/pixel)
+    #'OIII5007': 164.1,   # (Grating: G430L, Dispersion: 2.746 Å/pixel)
+    'LyAlpha': 143.9     # (Grating: G140L, Dispersion: 0.584 Å/pixel)
 }
-"""
+
+FWHM_ERR = {
+    'HAlpha': 250,
+    'HBeta': 200,
+    'HGamma': 300,
+    'HDelta': 300,
+    'HeI5875': 300,
+    #'HeI7065': 600.0,
+    #'HeI4471': 400.0,
+    #'HeI5015': 400.0,
+    'HeII4685': 200.0,
+    'OI8446': 400.0,
+    #'OIII5007': np.nan,
+    'LyAlpha': 200.0,
+}
+
 
 # Ausgabe
 print("FWHM_ERR = {")
