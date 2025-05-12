@@ -241,7 +241,7 @@ def print_table_for_one_reference(filename, linelist, continuum, include_mass=Tr
 
         # Tabelleninhalt mit Fehlerdarstellung
         for line in linelist:
-            tau_cent_str = f"{line.tau_cent:.1f} \\ensuremath{{_{{{line.tau_cent_err[0] - line.tau_cent:.2f}}}^{{+{line.tau_cent_err[1] - line.tau_cent:.2f}}}}}"
+            tau_cent_str = f"{line.tau_cent:.1f} \\ensuremath{{_{{{round(line.tau_cent_err[0] - line.tau_cent,1)}}}^{{+{round(line.tau_cent_err[1] - line.tau_cent, 1)}}}}}"
             tau_peak_str = f"{line.tau_peak:.1f} \\ensuremath{{_{{{line.tau_peak_err[0] - line.tau_peak:.1f}}}^{{+{line.tau_peak_err[1] - line.tau_peak:.1f}}}}}"
             name = line.name.replace('_', r'\_')
 
