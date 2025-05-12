@@ -244,6 +244,29 @@ def save_1d_corr_and_lightcurves_in_groups_bowen_fluorescence(output_dir=DEFAULT
 
 
 @task
+def save_1d_corr_and_lightcurves_in_groups_UVW2(output_dir=DEFAULT_OUTPUT_DIR):
+
+    ensure_output_dir(output_dir)
+
+    output_dir = output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    key_order_UVW2 = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
+
+
+    keyorders = {"UVW2": key_order_UVW2,}
+
+    final_sorted_keys = key_order_UVW2
+
+    one_dim_correlation_data = import_1d_correlation_data()
+    lightcurves_data = import_1d_lightcurve_data()
+    for campaign, data_dict in one_dim_correlation_data.items():
+        lightcurves_ccfs_dict = {"lightcurves": lightcurves_data[campaign], "ccfs": data_dict}
+        plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders, file_name="ccfs_and_reference_lightcurves", final_key_order=final_sorted_keys)
+
+
+
+@task
 def plot_avg_rms_spec(output_dir=DEFAULT_OUTPUT_DIR):
     avg_rms_spec_dir = output_dir / "avg_rms_spec"
 
