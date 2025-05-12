@@ -83,10 +83,11 @@ def plot_avg_rms(fits_data, save_path=None, log_scale=False):
         rms_title,
         galaxy_name,
         lines=All_LINES,
+        groups=All_LINE_GROUPS,
         save_path=save_path / f"avg_rms_spec.pdf" if save_path else None,
         log_scale=log_scale,
-        xlim=(3800, 8900),
-        ylim=(0, 14)
+        xlim=(3800, 8900), #xlim=(3800, 10100),
+        ylim=(0, 14), #ylim=(0, 100)
     )
 
     if save_path:
@@ -101,7 +102,7 @@ def plot_avg_rms(fits_data, save_path=None, log_scale=False):
                    delimiter=" ", header=header_line, comments='')
 
 def plot_avg_rms_spectra(
-        x, y1, y2, xlabel, ylabel, title1, title2, super_title, lines, save_path=None, log_scale=False,
+        x, y1, y2, xlabel, ylabel, title1, title2, super_title, lines, groups, save_path=None, log_scale=False,
         xlim=None,
         ylim=None):
     """
@@ -139,8 +140,8 @@ def plot_avg_rms_spectra(
     y1_filtered = y1_filtered / exponent
     y2_filtered = y2_filtered / exponent
 
-    shift_factor_1 = 2
-    shift_factor_2 = -0.8
+    shift_factor_1 = 2  # 50
+    shift_factor_2 = -0.8 # 0
 
     # Scale y1 to overlay it above y2
     scale_factor = 8
@@ -199,7 +200,7 @@ def plot_avg_rms_spectra(
                 ha="left" if slanted else "center",
                 va="bottom")
 
-    for group, data in All_LINE_GROUPS.items():
+    for group, data in groups.items():
         plot_line_group(ax, data["position"], x_filtered, y1_filtered, y2_scaled, group, line_length=line_length,
                         tick_vertical_shift_avg=data.get("tick_vertical_shift_avg",0.2), tick_vertical_shift_rms=data.get("tick_vertical_shift_rms", 0.2), show_in_rms=data.get("show_in_rms", False), all_lines=data.get("all_lines", False))
 
