@@ -243,7 +243,7 @@ def print_table_for_one_reference(filename, linelist, continuum, include_mass=Tr
         for line in linelist:
             tau_cent_str = f"{line.tau_cent:.1f} \\ensuremath{{_{{{round(line.tau_cent_err[0] - line.tau_cent,1)}}}^{{+{round(line.tau_cent_err[1] - line.tau_cent, 1)}}}}}"
             tau_peak_str = f"{line.tau_peak:.1f} \\ensuremath{{_{{{line.tau_peak_err[0] - line.tau_peak:.1f}}}^{{+{line.tau_peak_err[1] - line.tau_peak:.1f}}}}}"
-            name = line.name.replace('_', r'\_')
+            name = format_label(line.name)
 
             if include_mass:
                 mass_str = f"{line.M_Mo:.1f} \\ensuremath{{_{{{line.M_Mo_err[0] - line.M_Mo:.1f}}}^{{+{line.M_Mo_err[1] - line.M_Mo:.1f}}}}}"
@@ -353,6 +353,10 @@ def format_label(name, as_latex=True):
         "HeII4685": r"He\,\textsc{ii}\,4685",
         "OI8446": r"O\,\textsc{i}\,8446",
         "LyAlpha": r"Lyman $\alpha$",
+        "SiIV1393": r"Si\,\textsc{iv}\,1393",
+        "NV1238": r"N\,\textsc{v}\,1238",
+        "CIV1548": r"C\,\textsc{iv}\,1548",
+        "HeII1640": r"He\,\textsc{ii}\,1640",
     }
 
     replacements_plot = {
@@ -367,6 +371,10 @@ def format_label(name, as_latex=True):
         "HeII4685": "He II 4685",
         "OI8446": "O I 8446",
         "LyAlpha": "Lyman α",
+        "SiIV1393": "Si IV 1393",
+        "NV1238": "N V 1238",
+        "CIV1548": "C IV 1548",
+        "HeII1640": "He II 1640",
     }
 
     replacements = replacements_latex if as_latex else replacements_plot

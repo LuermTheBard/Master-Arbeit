@@ -251,18 +251,27 @@ def save_1d_corr_and_lightcurves_in_groups_UVW2(output_dir=DEFAULT_OUTPUT_DIR):
     output_dir = output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    key_order_UVW2 = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
+    key_order_UVW2_optical  = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
+
+    key_order_UVW2_UV = ["time shift (tau)", "SiIV1393_not_optical_calibrated", "NV1238_not_optical_calibrated", "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated", "OIII]1660_not_optical_calibrated"]
 
 
-    keyorders = {"UVW2": key_order_UVW2,}
 
-    final_sorted_keys = key_order_UVW2
+    keyorders_optical = {"UVW2": key_order_UVW2_optical,}
+
+
+    keyorders_UV = {"UVW2": key_order_UVW2_UV, }
+
+    keyorders_dict = {"NGC4593_Full_Line": keyorders_optical, "NGC4593_UV_Lines": keyorders_UV}
+
+
+
 
     one_dim_correlation_data = import_1d_correlation_data()
     lightcurves_data = import_1d_lightcurve_data()
     for campaign, data_dict in one_dim_correlation_data.items():
         lightcurves_ccfs_dict = {"lightcurves": lightcurves_data[campaign], "ccfs": data_dict}
-        plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders, file_name="ccfs_and_reference_lightcurves", final_key_order=final_sorted_keys)
+        plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders_dict[campaign], file_name="ccfs_and_reference_lightcurves", final_key_order=keyorders_dict[campaign])
 
 
 

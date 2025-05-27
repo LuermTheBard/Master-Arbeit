@@ -163,7 +163,7 @@ def get_centroid_of_peak(x_values, y_values, baseline=None, threshold=0.8):
     return centroid, x_selected, y_selected, baseline, y_threshold
 
 
-def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True, create_tex_file=True):
+def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True, create_tex_file=True, index_map='optical'):
 
     data_folder = find_prime_data_folder()
     base_path = Path(
@@ -180,7 +180,7 @@ def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True,
         lineCorrelations = np.loadtxt(line_correlations_path)
     except Exception as e:
         print(f"❌ Fehler beim Laden der Datei {line_correlations_path}: {e}")
-        return
+        return None
 
     if lightcurve_correlations_path.exists():
         try:
@@ -211,15 +211,30 @@ def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True,
             continue  # Statt `return`, damit andere Linien geladen werden
 
     # Index-Mapping für die Spalten von combined
-    index_map = {
-        'HDelta': 1, 'HGamma': 2, 'HeII4685': 3, 'HBeta': 4,
-        'HeI5875': 5, 'HAlpha': 6, 'HeI5015': 7, 'OI8446': 8,
-        'HeI4471': 9, 'HeI7065': 10, 'OIII5007': 11, "LyAlpha": 12,
-        "UVW2": 13, "Cont1150_not_optical_calibrated": 14,
-        "LyAlpha_not_optical_calibrated": 15,
-        "HBeta_not_optical_calibrated": 16,
-        "OI8446_not_optical_calibrated": 17
-    }
+    if index_map == 'optical':
+        index_map = {
+            'HDelta': 1, 'HGamma': 2, 'HeII4685': 3, 'HBeta': 4,
+            'HeI5875': 5, 'HAlpha': 6, 'HeI5015': 7, 'OI8446': 8,
+            'HeI4471': 9, 'HeI7065': 10, 'OIII5007': 11, "LyAlpha": 12,
+            "UVW2": 13, "Cont1150_not_optical_calibrated": 14,
+            "LyAlpha_not_optical_calibrated": 15,
+            "HBeta_not_optical_calibrated": 16,
+            "OI8446_not_optical_calibrated": 17
+        }
+    elif index_map == 'UV':
+        index_map = {
+            "HBeta_not_optical_calibrated": 1,
+            "LyAlpha_not_optical_calibrated":2,
+            "OI8446_not_optical_calibrated":3,
+            "SiIV1393_not_optical_calibrated":4,
+            "NV1238_not_optical_calibrated":5,
+            "CIV1548_not_optical_calibrated": 6,
+            "HeII1640_not_optical_calibrated": 7,
+            "OIII]1660_not_optical_calibrated":8
+        }
+    else:
+        print(f"⚠️ Warnung: please define index_map. Options:'optical' or 'UV'.")
+        return None
 
     # Erstelle die Line-Objekte
     line_objects = []
@@ -318,7 +333,10 @@ def get_fluoreszenz_table():
 #calc_centroid_malte_code("NGC4593_Full_Line", "Cont1150_not_optical_calibrated", lines=['HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685'], include_mass=True)
 #calc_centroid_malte_code("NGC4593_Full_Line", "HBeta", lines=["OI8446", "OI8446_not_optical_calibrated"], include_mass=True)
 #calc_centroid_malte_code("NGC4593_Full_Line", "HBeta_not_optical_calibrated", lines=["OI8446", "OI8446_not_optical_calibrated"], include_mass=True)
-calc_centroid_malte_code("NGC4593_Full_Line", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'LyAlpha', 'HeI5875', 'HeII4685', 'OI8446'], include_mass=True)
+#calc_centroid_malte_code("NGC4593_Full_Line", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'LyAlpha', 'HeI5875', 'HeII4685', 'OI8446'], include_mass=True)
+calc_centroid_malte_code("NGC4593_UV_Lines", "UVW2",
+                         lines=["LyAlpha_not_optical_calibrated", "SiIV1393_not_optical_calibrated", "NV1238_not_optical_calibrated",
+                                "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated"], index_map="UV", include_mass=False)
 
 
-get_fluoreszenz_table()
+#get_fluoreszenz_table()
