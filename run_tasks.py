@@ -274,6 +274,61 @@ def save_1d_corr_and_lightcurves_in_groups_UVW2(output_dir=DEFAULT_OUTPUT_DIR):
         plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders_dict[campaign], file_name="ccfs_and_reference_lightcurves", final_key_order=keyorders_dict[campaign])
 
 
+@task
+def save_1d_corr_and_lightcurves_in_groups_UVW2_Cackett(output_dir=DEFAULT_OUTPUT_DIR):
+
+    ensure_output_dir(output_dir)
+
+    output_dir = output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+
+    key_order_UVW2 = ["time shift (tau)",
+                      "LyAlpha_not_optical_calibrated",
+                      "NV1238_not_optical_calibrated",
+                      "SiIV1393_not_optical_calibrated",
+                      "CIV1548_not_optical_calibrated",
+                      "HeII1640_not_optical_calibrated",
+                      "HDelta",
+                      "HGamma",
+                      'HeII4685',
+                      "HBeta",
+                      'HeI5875',
+                      "HAlpha"
+                      ]
+
+    keyorders= {"UVW2": key_order_UVW2, }
+
+
+    one_dim_correlation_data = import_1d_correlation_data()
+    lightcurves_data = import_1d_lightcurve_data()
+
+    lightcurves_ccfs_dict_optical = {"lightcurves": lightcurves_data["NGC4593_Full_Line"],
+                                     "ccfs": one_dim_correlation_data["NGC4593_Full_Line"]}
+    lightcurves_ccfs_dict_UV = {"lightcurves": lightcurves_data["NGC4593_UV_Lines"],
+                                     "ccfs": one_dim_correlation_data["NGC4593_UV_Lines"]}
+
+    lightcurves_ccfs_dict_combined = {
+        "lightcurves": {
+            "lines": {
+                **lightcurves_data["NGC4593_Full_Line"]["lines"],
+                **lightcurves_data["NGC4593_UV_Lines"]["lines"]
+            },
+            "continua": {
+                **lightcurves_data["NGC4593_Full_Line"]["continua"],
+                **lightcurves_data["NGC4593_UV_Lines"]["continua"]
+            }
+        },
+        "ccfs": {"UVW2":{**one_dim_correlation_data["NGC4593_Full_Line"]["UVW2"],
+                 **one_dim_correlation_data["NGC4593_UV_Lines"]["UVW2"]}}
+    }
+
+
+
+    plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders_dict[campaign], file_name="ccfs_and_reference_lightcurves", final_key_order=keyorders_dict[campaign])
+
+
+
 
 @task
 def plot_avg_rms_spec(output_dir=DEFAULT_OUTPUT_DIR):
