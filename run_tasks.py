@@ -303,11 +303,6 @@ def save_1d_corr_and_lightcurves_in_groups_UVW2_Cackett(output_dir=DEFAULT_OUTPU
     one_dim_correlation_data = import_1d_correlation_data()
     lightcurves_data = import_1d_lightcurve_data()
 
-    lightcurves_ccfs_dict_optical = {"lightcurves": lightcurves_data["NGC4593_Full_Line"],
-                                     "ccfs": one_dim_correlation_data["NGC4593_Full_Line"]}
-    lightcurves_ccfs_dict_UV = {"lightcurves": lightcurves_data["NGC4593_UV_Lines"],
-                                     "ccfs": one_dim_correlation_data["NGC4593_UV_Lines"]}
-
     lightcurves_ccfs_dict_combined = {
         "lightcurves": {
             "lines": {
@@ -325,7 +320,9 @@ def save_1d_corr_and_lightcurves_in_groups_UVW2_Cackett(output_dir=DEFAULT_OUTPU
 
 
 
-    plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders_dict[campaign], file_name="ccfs_and_reference_lightcurves", final_key_order=keyorders_dict[campaign])
+    plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict_combined, "Combined", output_dir, keyorders,
+                                           file_name="ccfs_and_reference_lightcurves", final_key_order=keyorders,
+                                           rows=11, cols=2,)
 
 
 

@@ -7,7 +7,7 @@ from plot_data.general_plot import finalize_figure, format_yaxis, format_month_d
 from settings import BASE_MJD
 
 
-def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None):
+def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2):
     base_mjd = BASE_MJD
     xlabel_ccfs = "Time Lag $\\tau$ [d]"
     ylabel_ccfs = "Correlation Coefficient"
@@ -91,7 +91,9 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
                key=lambda item: final_sort_keys(item[0])))
 
 
-    plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs, xlabel_lightcurves, ylabel_line_lightcurves, ylabel_cont_lightcurves, yerr_name_lightcurves, title=f"CCFs and reference lightcurves",save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name)
+    plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs, xlabel_lightcurves, ylabel_line_lightcurves,
+                                                  ylabel_cont_lightcurves, yerr_name_lightcurves, title=f"CCFs and reference lightcurves",
+                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name, rows=rows, cols=cols,)
 
 
 def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs,
