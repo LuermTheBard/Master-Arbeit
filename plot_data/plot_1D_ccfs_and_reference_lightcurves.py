@@ -105,7 +105,8 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
 
 
     for current_data, group_index in prepare_ccfs_references_data(final_sorted_data_dict, rows, cols):
-        fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=False, sharey=shared_y)
+        fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=False, sharey=shared_y,
+                                 gridspec_kw={'width_ratios': [2, 1]})  # 2/3 : 1/3 Verhältnis
         fig.subplots_adjust(hspace=0, wspace=0)
 
         if only_one_label is True:
@@ -226,7 +227,7 @@ def configure_axes_for_lightcurves(ax, row, col, only_one_label=False):
 
     ax.xaxis.set_major_locator(MultipleLocator(5))
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-    ax.set_ylim(-3, 4.5)
+    ax.set_ylim(-2.99, 4.499)
 
     if row == 0:
         ax_top = ax.secondary_xaxis('top')
@@ -238,7 +239,7 @@ def configure_axes_for_lightcurves(ax, row, col, only_one_label=False):
 def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label=False):
     ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
     ax.set_xlim(-9.999, 14.999)
-    ax.set_ylim(-0.1, 1.2)
+    ax.set_ylim(-0.1, 1.1999)
     ax.yaxis.set_major_locator(MultipleLocator(0.2))
     ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
 
