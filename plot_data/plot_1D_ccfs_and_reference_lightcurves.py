@@ -7,7 +7,7 @@ from plot_data.general_plot import finalize_figure, format_yaxis, format_month_d
 from settings import BASE_MJD
 
 
-def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2):
+def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, only_one_label = False):
     base_mjd = BASE_MJD
     xlabel_ccfs = "Time Lag $\\tau$ [d]"
     ylabel_ccfs = "Correlation Coefficient"
@@ -93,13 +93,13 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
 
     plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs, xlabel_lightcurves, ylabel_line_lightcurves,
                                                   ylabel_cont_lightcurves, yerr_name_lightcurves, title=f"CCFs and reference lightcurves",
-                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name, rows=rows, cols=cols,)
+                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name, rows=rows, cols=cols, only_one_label = only_one_label)
 
 
 def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs,
                                                   xlabel_lightcurves, ylabel_line_lightcurves, ylabel_cont_lightcurves,
                                                   yerr_name_lightcurves, title, save_only, output_dir, shared_y,
-                                                  file_name, color_dict=None, rows=4, cols=2,):
+                                                  file_name, color_dict=None, rows=4, cols=2, only_one_label = False):
     x_values_ccfs = final_sorted_data_dict['time shift (tau)']
     final_sorted_data_dict.pop('time shift (tau)')
 
@@ -108,6 +108,12 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
         fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=False, sharey=shared_y)
         fig.subplots_adjust(hspace=0, wspace=0)
 
+        if only_one_label is True:
+            # Linke Seite oben (y-Achse): "Normalized Lightcurves"
+            fig.text(0.02, 0.5, "Normalized Lightcurves", va='center', ha='left', rotation='vertical', fontsize=12)
+
+            # Rechte Seite unten (y-Achse): ylabel_ccfs
+            fig.text(0.98, 0.5, ylabel_ccfs, va='center', ha='right', rotation='vertical', fontsize=12)
 
         for i, (line_name, line_data) in enumerate(current_data):
 
@@ -127,7 +133,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
                 line_data = np.array([])
                 color = "black"
 
-            configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name)
+            configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name, only_one_label = only_one_label)
 
 
         finalize_figure(fig, axes, x_label=(xlabel_lightcurves, xlabel_ccfs), title=title, group_index=group_index,
@@ -162,7 +168,7 @@ def prepare_ccfs_references_data(data, rows, cols):
 
 
 def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr,
-                                      line_name_and_ref_name):
+                                      line_name_and_ref_name, only_one_label = False):
     if "_ref_" in line_name_and_ref_name:
 
         line_name, reference_name = line_name_and_ref_name.split("_ref_")
@@ -187,10 +193,10 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         plot_normalized_lightcurve(ax, line_data["lightcurves_ref"][x_key], y_ref_norm, yerr_ref_norm,
                                    format_label(reference_name, as_latex=False), color[1])
 
-        configure_axes_for_lightcurves(ax, row, col)
+        configure_axes_for_lightcurves(ax, row, col, only_one_label)
     else:
         ax.plot(x_values_ccfs, line_data["ccfs"], label=format_label(line_name, as_latex=False), color=color)
-        configure_axes_for_ccfs(ax, row, col, ylabel_ccfs)
+        configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label)
 
     ax.legend(fontsize=8)
 
@@ -209,9 +215,10 @@ def plot_normalized_lightcurve(ax, x, y_norm, yerr_norm, label, color):
     ax.errorbar(x, y_norm, yerr=yerr_norm, fmt='.:', capsize=3, markersize=4, label=label, color=color)
 
 
-def configure_axes_for_lightcurves(ax, row, col):
+def configure_axes_for_lightcurves(ax, row, col, only_one_label=False):
     if col == 0:
-        ax.set_ylabel("Normalized Lightcurves", fontsize=12)
+        if only_one_label is False:
+            ax.set_ylabel("Normalized Lightcurves", fontsize=12)
         ax.yaxis.set_label_coords(-0.15, 0.5)
 
     if row < 3:
@@ -219,7 +226,7 @@ def configure_axes_for_lightcurves(ax, row, col):
 
     ax.xaxis.set_major_locator(MultipleLocator(5))
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-    ax.set_ylim(-3, 3.5)
+    ax.set_ylim(-3, 4.5)
 
     if row == 0:
         ax_top = ax.secondary_xaxis('top')
@@ -228,20 +235,22 @@ def configure_axes_for_lightcurves(ax, row, col):
         ax_top.tick_params(axis='x', rotation=45, labelsize=10)
 
 
-def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs):
+def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label=False):
     ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
     ax.set_xlim(-9.999, 14.999)
-    ax.set_ylim(-0.1, 1)
+    ax.set_ylim(-0.1, 1.2)
     ax.yaxis.set_major_locator(MultipleLocator(0.2))
     ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
 
     if col == 0:
-        ax.set_ylabel("Lightcurves", fontsize=12)
+        if only_one_label is False:
+            ax.set_ylabel("Lightcurves", fontsize=12)
         ax.yaxis.set_label_coords(-0.15, 0.5)
     else:
         ax.yaxis.tick_right()
-        ax.set_ylabel(ylabel_ccfs, fontsize=12)
-        ax.yaxis.set_label_position("right")
+        if only_one_label is False:
+            ax.set_ylabel(ylabel_ccfs, fontsize=12)
+            ax.yaxis.set_label_position("right")
         ax_right = ax.secondary_yaxis('right')
         ax_right.yaxis.set_major_locator(MultipleLocator(0.2))
         ax_right.yaxis.set_major_formatter(FuncFormatter(format_yaxis))

@@ -322,7 +322,7 @@ def save_1d_corr_and_lightcurves_in_groups_UVW2_Cackett(output_dir=DEFAULT_OUTPU
 
     plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict_combined, "Combined", output_dir, keyorders,
                                            file_name="ccfs_and_reference_lightcurves", final_key_order=keyorders,
-                                           rows=11, cols=2,)
+                                           rows=11, cols=2, only_one_label = True)
 
 
 
