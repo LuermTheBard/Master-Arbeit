@@ -10,7 +10,8 @@ from plot_data.plot_1D_ccfs_in_groups_data import plot_all_1d_ccfs_in_groups_for
 from plot_data.plot_1D_lightcurves_in_groups_data import plot_all_1d_lightcurves_in_groups
 from plot_data.plot_fits_data import plot_avg_rms
 from plot_data.plot_line_profiles_in_groups import plot_normalized_line_profiles_in_groups, process_spectrum, \
-    plot_cut_out_line_profile, cut_normalized_line_out, cut_line_out
+    plot_cut_out_line_profile
+from plot_utils import cut_normalized_line_out, cut_line_out
 from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
 
 # Dictionary to store registered tasks
