@@ -115,11 +115,14 @@ def check_for_empty_rows(axes, fig, x_label, line_profile=False):
 
                     # Beschriftungen nur in der untersten vorhandenen Reihe anzeigen
                     if row == lowest_row:
-                        if len(x_label) ==2:
+                        if type(x_label) == tuple:
                             if col == 0:
-                                axes[row, col].set_xlabel(x_label[0], fontsize=12)
+                                label=x_label[0]
+                                axes[row, col].set_xlabel(label, fontsize=12)
                             else:
-                                axes[row, col].set_xlabel(x_label[1], fontsize=12)
+                                label = x_label[1]
+                                axes[row, col].set_xlabel(label, fontsize=12)
+                            axes[row, col].xaxis.set_major_locator(MultipleLocator(2))
                         else:
                             axes[row, col].set_xlabel(x_label, fontsize=12)
                             axes[row, col].tick_params(axis='x', which='both', direction='inout', labelbottom=True)

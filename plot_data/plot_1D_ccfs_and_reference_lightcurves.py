@@ -1,3 +1,4 @@
+import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
@@ -5,6 +6,8 @@ from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 from plot_utils import format_label, calculate_standard_error_for_lightcurves
 from plot_data.general_plot import finalize_figure, format_yaxis, format_month_day
 from settings import BASE_MJD
+
+matplotlib.use('Qt5Agg')
 
 
 def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, only_one_label = False):
@@ -106,7 +109,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
 
     for current_data, group_index in prepare_ccfs_references_data(final_sorted_data_dict, rows, cols):
         fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=False, sharey=shared_y,
-                                 gridspec_kw={'width_ratios': [2, 1]})  # 2/3 : 1/3 Verhältnis
+                                 gridspec_kw={'width_ratios': [4, 1]})  # 2/3 : 1/3 Verhältnis
         fig.subplots_adjust(hspace=0, wspace=0)
 
         if only_one_label is True:
@@ -195,11 +198,13 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
                                    format_label(reference_name, as_latex=False), color[1])
 
         configure_axes_for_lightcurves(ax, row, col, only_one_label)
+        ax.legend(fontsize=8)
     else:
-        ax.plot(x_values_ccfs, line_data["ccfs"], label=format_label(line_name, as_latex=False), color=color)
+        ax.plot(x_values_ccfs, line_data["ccfs"], color=color)
+        ax.text(9.5,0.95, format_label(line_name, as_latex=False),  ha='right', va='top', fontsize=8)
         configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label)
 
-    ax.legend(fontsize=8)
+
 
 
 
@@ -238,8 +243,8 @@ def configure_axes_for_lightcurves(ax, row, col, only_one_label=False):
 
 def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label=False):
     ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
-    ax.set_xlim(-9.999, 14.999)
-    ax.set_ylim(-0.1, 1.1999)
+    ax.set_xlim(-4.999, 9.999)
+    ax.set_ylim(0, 0.999)
     ax.yaxis.set_major_locator(MultipleLocator(0.2))
     ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
 
@@ -261,5 +266,5 @@ def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label=False):
 
     if row == 0:
         ax_top = ax.secondary_xaxis('top')
-        ax_top.xaxis.set_major_locator(MultipleLocator(5))
+        ax_top.xaxis.set_major_locator(MultipleLocator(2))
         ax_top.tick_params(axis='x')
