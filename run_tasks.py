@@ -65,7 +65,7 @@ def save_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     run_1d_lightcurves_groups(output_dir, save_only=True)
 
 
-"""
+
 @task
 def plot_1d_corr_in_groups_for_cont_optical_calibrated(cont_name=None, output_dir=DEFAULT_OUTPUT_DIR):
     
@@ -126,7 +126,8 @@ def save_1d_corr_in_groups_bowen_fluorescence_for_cont(output_dir=DEFAULT_OUTPUT
         for reference_lightcurve, key_order in keyorders.items():
             plot_all_1d_ccfs_in_groups_for_cont(data_dict, campaign, cont_name=reference_lightcurve, output_dir=output_dir,
                                                 key_order=key_order, save_only=True, file_name=f"{reference_lightcurve}_bowen_fluorescence_ccfs", only_key_order=True)
-"""
+
+
 
 # methodes to plot lightcurves and ccfs together
 @task

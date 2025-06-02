@@ -8,19 +8,6 @@ from plot_utils import format_label
 from plot_data.general_plot import finalize_figure, prepare_data
 from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
 
-line_mapping = {
-    'HAlpha': 'Hα',
-    'HBeta': 'Hβ',
-    'HGamma': 'Hγ',
-    'HDelta': 'Hδ',
-    'HeI5875': 'He I 5875',
-    'HeI7065': 'He I 7065',
-    'HeI4471': 'He I 4471',
-    'HeI5015': 'He I 5015',
-    'HeII4685': 'He II 4685',
-    'OI8446': 'O I 8446'
-}
-
 
 def plot_normalized_line_profiles_in_groups(data, save_only=False, output_dir=None,
                                             rows=4, cols=2, key_order=None, title="Normalized Line Profiles", shared_y=False):
@@ -298,6 +285,8 @@ def plot_cut_out_line_profile(cut_out_range, intensity_avg, intensity_rms, line_
         plt.suptitle(f"Line Profile: {line_name}")
         plt.show()
 
+
+# handle date for line profiles
 
 def subtract_continuum(wavelength, intensity, line_wavelength, left_range, right_range):
     """
