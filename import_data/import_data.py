@@ -4,7 +4,6 @@ import numpy as np
 
 from astropy.io import fits
 
-from plot_data.plot_line_profiles import line_mapping
 
 try:
     import tomllib
@@ -68,6 +67,7 @@ def import_1d_correlation_data():
                         header_lightcurve = file.readline().strip().split(" ")
                         lightcurve_correlation_data = np.loadtxt(lightcurve_correlation_file_path).T
                 else:
+                    header_lightcurve = list()
                     print(f"SKIPPED: lightcurveCorrelations file not found: {str(lightcurve_correlation_file_path)}")
 
                 continua_lines = ["time shift (tau)"] + header_line[5:]

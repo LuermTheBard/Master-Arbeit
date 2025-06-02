@@ -217,6 +217,7 @@ def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_labe
             plt.savefig(save_path, bbox_inches='tight')
             save_path = output_dir / f"{title.replace(' ', '_')}_compare_cont_{compare_cont}_group_{group_index + 1}.png"
             plt.savefig(save_path, bbox_inches='tight')
+        print(f"Figure saved to {save_path}")
 
     if not save_only:
         plt.show()

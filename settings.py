@@ -213,9 +213,9 @@ FWHM_RMS = {
     'HeII4685': 5711, 'OI8446': 3800, 'LyAlpha': 3384
 }
 
-DELTA_V = calculate_velocity_errors(CENTRAL_WAVELENGTH)
+#DELTA_V = calculate_velocity_errors(CENTRAL_WAVELENGTH)
 
-KM_PER_S_PER_PIXEL = calculate_dispersion_velocity(CENTRAL_WAVELENGTH)
+#KM_PER_S_PER_PIXEL = calculate_dispersion_velocity(CENTRAL_WAVELENGTH)
 
 
 KM_PER_S_PER_PIXEL = {
@@ -248,12 +248,6 @@ FWHM_ERR = {
     'LyAlpha': 200.0,
 }
 
-
-# Ausgabe
-print("FWHM_ERR = {")
-for line, error in FWHM_ERR.items():
-    print(f"    '{line}': {error},")
-print("}")
 
 
 DISPERSION_SIGMA_RMS = {

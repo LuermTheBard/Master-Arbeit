@@ -29,8 +29,13 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
 
     # Plot for lines
     super_title = f"{campaign.split('_')[0]} Lines"
-    compare_cont_data = {compare_cont: data_dict["continua"][compare_cont]}
-    compare_cont_data.update(data_dict["lines"])
+
+    try:
+        compare_cont_data = {compare_cont: data_dict["continua"][compare_cont]}
+        compare_cont_data.update(data_dict["lines"])
+    except KeyError:
+        print(f"Continuum '{compare_cont}' not found in campaign '{campaign}'. Skipping plot for lines.")
+        return
 
     def sort_keys(key, key_order):
         for idx, prefix in enumerate(key_order):

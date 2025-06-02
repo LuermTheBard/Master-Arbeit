@@ -1,18 +1,14 @@
-import subprocess
 import sys
 from pathlib import Path
 
 import numpy as np
 
-from handle_data.handle_data_file import sort_1d_corr_data_for_lines, get_continua_with_highest_corr_coef, \
-    get_weighted_best_continua, prepare_cut_data
+from handle_data.handle_data_file import prepare_cut_data
 from import_data.import_data import import_1d_correlation_data, import_1d_lightcurve_data, import_fits_data, \
     import_line_profile_data
 from plot_data.plot_1D_ccfs_and_reference_lightcurves import plot_1d_corr_and_lightcurves_in_groups
 from plot_data.plot_1D_ccfs_in_groups_data import plot_all_1d_ccfs_in_groups_for_cont
-from plot_data.plot_1D_correlation_data import process_1d_correlations, compare_plots_across_continua
 from plot_data.plot_1D_lightcurves_in_groups_data import plot_all_1d_lightcurves_in_groups
-from plot_data.plot_1d_lightcurves_data import plot_1d_lightcurves, plot_1d_lightcurves_with_offset
 from plot_data.plot_fits_data import plot_avg_rms
 from plot_data.plot_line_profiles import plot_normalized_line_profiles_in_pairs, \
     plot_normalized_line_profiles_together, process_spectrum, plot_normalized_line_profiles_type_together, \
@@ -40,49 +36,15 @@ def ensure_output_dir(output_dir):
 
 
 @task
-def dummy_task():
-    subprocess.run(["python", "-m", "scrap.scripts.dummy_script", "calc_2_plus_2"], check=True)
+def plot_avg_rms_spec(output_dir=DEFAULT_OUTPUT_DIR):
+    avg_rms_spec_dir = output_dir / "avg_rms_spec"
 
+    avg_rms_spec_dir.mkdir(parents=True, exist_ok=True)
 
-@task
-def plot_all_1d_corr():
-    """
-    Plots all 1D correlations.
-    """
-    one_dim_correlation_data = import_1d_correlation_data()
-    one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
-    process_1d_correlations(one_dim_correlation_plot_data)
+    avg_rms_spec_file = avg_rms_spec_dir
 
-
-@task
-def save_all_1d_corr(output_dir=DEFAULT_OUTPUT_DIR):
-    """
-    save all 1D correlations.
-    """
-    ensure_output_dir(output_dir)
-    one_dim_correlation_data = import_1d_correlation_data()
-    one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
-    process_1d_correlations(one_dim_correlation_plot_data, output_dir=output_dir, save_only=True)
-
-
-@task
-def compare_and_save_all_1d_corr(output_dir=DEFAULT_OUTPUT_DIR):
-    """
-    save all 1D correlations.
-    """
-    ensure_output_dir(output_dir)
-    one_dim_correlation_data = import_1d_correlation_data()
-    one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
-    compare_plots_across_continua(one_dim_correlation_plot_data, output_dir=output_dir, save_only=True)
-
-
-def run_1d_lightcurves_task(output_dir=DEFAULT_OUTPUT_DIR, save_only=False, with_offset=False):
-    ensure_output_dir(output_dir)
-    data = import_1d_lightcurve_data()
-    if with_offset:
-        plot_1d_lightcurves_with_offset(data, output_dir, save_only=save_only, y_offset=0.15)
-    else:
-        plot_1d_lightcurves(data, output_dir, save_only=save_only)
+    fits_data = import_fits_data()
+    plot_avg_rms(fits_data, save_path=avg_rms_spec_file)
 
 
 def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
@@ -97,80 +59,39 @@ def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
 
 
 @task
-def plot_and_save_1d_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
-    run_1d_lightcurves_task(output_dir=output_dir)
-
-@task
-def save_1d_lightcurves(output_dir=DEFAULT_OUTPUT_DIR):
-    run_1d_lightcurves_task(output_dir=output_dir, save_only=True)
-
-@task
-def plot_and_save_1d_lightcurves_with_offset(output_dir=DEFAULT_OUTPUT_DIR):
-    run_1d_lightcurves_task(output_dir=output_dir, with_offset=True)
-
-@task
-def save_1d_lightcurves_with_offset(output_dir=DEFAULT_OUTPUT_DIR):
-    run_1d_lightcurves_task(output_dir=output_dir, with_offset=True, save_only=True)
-
-
-@task
 def plot_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     run_1d_lightcurves_groups(output_dir)
+
 
 @task
 def save_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     run_1d_lightcurves_groups(output_dir, save_only=True)
 
 
+"""
 @task
-def plot_line_1d_corr(line_name=None):
-    """
-    Plots 1D correlations for a specific line.
-
-    Args:
-        line_name (str): The name of the line to plot.
-
-    Raises:
-        ValueError: If line_name is not provided.
-    """
-    # Prüfen, ob line_name definiert ist
-    if not line_name:
-        raise ValueError("Please specify a line name in the following form: plot_line_1d_corr::line_name")
-
-    one_dim_correlation_data = import_1d_correlation_data()
-    one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
-    process_1d_correlations(one_dim_correlation_plot_data, line_name=line_name)
-
-
-@task
-def plot_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DIR):
-    """
-    save all 1D correlations.
-    """
-
-    # Prüfen, ob line_name definiert ist
+def plot_1d_corr_in_groups_for_cont_optical_calibrated(cont_name=None, output_dir=DEFAULT_OUTPUT_DIR):
+    
+    # Prüfen, ob cont_name definiert ist
     if not cont_name:
-        raise ValueError("Please specify a line name in the following form: plot_line_1d_corr::line_name")
+        raise ValueError("Please specify a cont_name in the following form: plot_line_1d_corr::cont_name")
 
     ensure_output_dir(output_dir)
 
     key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875',  'HeII4685', 'OI8446']
     one_dim_correlation_data = import_1d_correlation_data()
 
-    for campaign, data_dict in one_dim_correlation_data.items():
-        plot_all_1d_ccfs_in_groups_for_cont(data_dict, campaign, cont_name=cont_name, output_dir=output_dir,
+    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data["NGC4593_optical_calibrated"], "NGC4593_optical_calibrated", cont_name=cont_name, output_dir=output_dir,
                                             key_order=key_order)
 
 
 @task
-def save_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DIR):
-    """
-    save all 1D correlations.
-    """
+def save_1d_corr_in_groups_for_cont_optical_calibrated(cont_name=None, output_dir=DEFAULT_OUTPUT_DIR):
+    
 
-    # Prüfen, ob line_name definiert ist
+    # Prüfen, ob cont_name definiert ist
     if not cont_name:
-        raise ValueError("Please specify a line name in the following form: plot_line_1d_corr::line_name")
+        raise ValueError("Please specify a cont_name in the following form: plot_line_1d_corr::cont_name")
 
     ensure_output_dir(output_dir)
 
@@ -178,10 +99,10 @@ def save_1d_corr_in_groups_for_cont(cont_name=None, output_dir=DEFAULT_OUTPUT_DI
     # key_order = ["time shift (tau)", 'HeI5015', 'HeI5875', 'HeI4471', 'HeI7065', 'HeII4685','HAlpha', 'HBeta', 'HGamma', 'HDelta',  'OI8446']
     one_dim_correlation_data = import_1d_correlation_data()
 
-    for campaign, data_dict in one_dim_correlation_data.items():
-        plot_all_1d_ccfs_in_groups_for_cont(data_dict, campaign, cont_name=cont_name, output_dir=output_dir,
-                                            key_order=key_order, save_only=True)
-
+    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data["NGC4593_optical_calibrated"],
+                                        "NGC4593_optical_calibrated", cont_name=cont_name, output_dir=output_dir,
+                                        key_order=key_order, save_only=True)
+"""
 
 @task
 def save_1d_corr_in_groups_bowen_fluorescence_for_cont(output_dir=DEFAULT_OUTPUT_DIR):
@@ -210,6 +131,7 @@ def save_1d_corr_in_groups_bowen_fluorescence_for_cont(output_dir=DEFAULT_OUTPUT
                                                 key_order=key_order, save_only=True, file_name=f"{reference_lightcurve}_bowen_fluorescence_ccfs", only_key_order=True)
 
 
+# methodes to plot lightcurves and ccfs together
 @task
 def save_1d_corr_and_lightcurves_in_groups_bowen_fluorescence(output_dir=DEFAULT_OUTPUT_DIR):
 
@@ -262,9 +184,7 @@ def save_1d_corr_and_lightcurves_in_groups_UVW2(output_dir=DEFAULT_OUTPUT_DIR):
 
     keyorders_UV = {"UVW2": key_order_UVW2_UV, }
 
-    keyorders_dict = {"NGC4593_Full_Line": keyorders_optical, "NGC4593_UV_Lines": keyorders_UV}
-
-
+    keyorders_dict = {"NGC4593_optical_calibrated": keyorders_optical, "NGC4593_not_optical_calibrated": keyorders_UV}
 
 
     one_dim_correlation_data = import_1d_correlation_data()
@@ -306,16 +226,16 @@ def save_1d_corr_and_lightcurves_in_groups_UVW2_Cackett(output_dir=DEFAULT_OUTPU
     lightcurves_ccfs_dict_combined = {
         "lightcurves": {
             "lines": {
-                **lightcurves_data["NGC4593_Full_Line"]["lines"],
-                **lightcurves_data["NGC4593_UV_Lines"]["lines"]
+                **lightcurves_data["NGC4593_optical_calibrated"]["lines"],
+                **lightcurves_data["NGC4593_not_optical_calibrated"]["lines"]
             },
             "continua": {
-                **lightcurves_data["NGC4593_Full_Line"]["continua"],
-                **lightcurves_data["NGC4593_UV_Lines"]["continua"]
+                **lightcurves_data["NGC4593_optical_calibrated"]["continua"],
+                **lightcurves_data["NGC4593_not_optical_calibrated"]["continua"]
             }
         },
-        "ccfs": {"UVW2":{**one_dim_correlation_data["NGC4593_Full_Line"]["UVW2"],
-                 **one_dim_correlation_data["NGC4593_UV_Lines"]["UVW2"]}}
+        "ccfs": {"UVW2":{**one_dim_correlation_data["NGC4593_optical_calibrated"]["UVW2"],
+                 **one_dim_correlation_data["NGC4593_not_optical_calibrated"]["UVW2"]}}
     }
 
 
@@ -324,21 +244,7 @@ def save_1d_corr_and_lightcurves_in_groups_UVW2_Cackett(output_dir=DEFAULT_OUTPU
                                            file_name="ccfs_and_reference_lightcurves", final_key_order=keyorders,
                                            rows=11, cols=2, only_one_label = True)
 
-
-
-
-@task
-def plot_avg_rms_spec(output_dir=DEFAULT_OUTPUT_DIR):
-    avg_rms_spec_dir = output_dir / "avg_rms_spec"
-
-    avg_rms_spec_dir.mkdir(parents=True, exist_ok=True)
-
-    avg_rms_spec_file = avg_rms_spec_dir
-
-    fits_data = import_fits_data()
-    plot_avg_rms(fits_data, save_path=avg_rms_spec_file)
-
-
+"""
 def run_normalized_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     ensure_output_dir(output_dir)
     data = import_line_profile_data(normalized=True)
@@ -381,19 +287,8 @@ def run_normalized_profiles_together(
         plot_normalized_line_profiles_type_together(profile_data, key_order)
     else:
         plot_normalized_line_profiles_together(profile_data, key_order, save_only=save_only)
-
-@task
-def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
-    ensure_output_dir(output_dir)
-
-    profile_data = import_line_profile_data(normalized=True)
-
-    # key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeII4685',
-                 'OI8446']
-
-    plot_normalized_line_profiles_in_groups(profile_data, key_order=key_order)
-
+        
+    
 
 @task
 def plot_and_save_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DIR):
@@ -411,7 +306,21 @@ def plot_and_save_normalized_line_profiles_types_together(output_dir=DEFAULT_OUT
         plot_type="type"
     )
 
-# todo: cut out line profiles for uncalibrated LyAlpha
+"""
+
+@task
+def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
+    ensure_output_dir(output_dir)
+
+    profile_data = import_line_profile_data(normalized=True)
+
+    # key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeII4685',
+                 'OI8446']
+
+    plot_normalized_line_profiles_in_groups(profile_data, key_order=key_order)
+
+
 @task
 def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT_DIR):
     ensure_output_dir(output_dir)
@@ -512,33 +421,17 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-
-@task
-def highest_corr_coef():
-    one_dim_correlation_data = import_1d_correlation_data()
-    sorted_one_dim_correlation_plot_data = sort_1d_corr_data_for_lines(one_dim_correlation_data)
-
-    campaign_result_dict = dict()
-    for campaign, lines_data in sorted_one_dim_correlation_plot_data.items():
-        campaign_result_dict[campaign] = get_weighted_best_continua(get_continua_with_highest_corr_coef(lines_data))
-
-    print()
-
-
 def run_task(commands):
     for command in commands:
-        #try:
-            parts = command.split("::")
-            name_of_task = parts[0]
-            task_args = parts[1:] if len(parts) > 1 else []
 
-            print(f"Running {name_of_task} with arguments {task_args}...")
+        parts = command.split("::")
+        name_of_task = parts[0]
+        task_args = parts[1:] if len(parts) > 1 else []
 
-            registered_tasks[name_of_task](*task_args)
-        #except KeyError:
-        #    print(f"Task '{command}' is not available.")
-        #except Exception as e:
-        #    print(f"An error occurred while running '{command}': {e}")
+        print(f"Running {name_of_task} with arguments {task_args}...")
+
+        registered_tasks[name_of_task](*task_args)
+
 
 
 if __name__ == "__main__":
