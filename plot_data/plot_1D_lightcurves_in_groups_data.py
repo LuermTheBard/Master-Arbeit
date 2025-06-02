@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, MaxNLocator, FuncFormatter
 
-from handle_data.handle_data_file import calculate_standard_error_for_lightcurves, format_label
+from plot_utils import calculate_standard_error_for_lightcurves, format_label
 from plot_data.general_plot import prepare_data, finalize_figure, format_relative_days, format_yaxis, format_month_day
 from settings import BASE_MJD, COLORCODE_CONTINUA_NORMALIZED
 

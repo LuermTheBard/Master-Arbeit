@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 
-from handle_data.handle_data_file import format_label
+from plot_utils import format_label
 from plot_data.general_plot import prepare_data, finalize_figure, format_yaxis
 
 

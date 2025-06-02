@@ -259,7 +259,7 @@ def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True,
 
 
 def get_fluoreszenz_table():
-    output_filename = f'CCF_lags_fluoreszenz.tex'
+    output_filename = f'handle_data/CCF_lags_fluoreszenz.tex'
 
     campaign = "NGC4593_optical_calibrated"
     reference_light_curve_lines_dict = {

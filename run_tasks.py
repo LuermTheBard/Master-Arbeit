@@ -3,17 +3,15 @@ from pathlib import Path
 
 import numpy as np
 
-from handle_data.handle_data_file import prepare_cut_data
 from import_data.import_data import import_1d_correlation_data, import_1d_lightcurve_data, import_fits_data, \
     import_line_profile_data
 from plot_data.plot_1D_ccfs_and_reference_lightcurves import plot_1d_corr_and_lightcurves_in_groups
 from plot_data.plot_1D_ccfs_in_groups_data import plot_all_1d_ccfs_in_groups_for_cont
 from plot_data.plot_1D_lightcurves_in_groups_data import plot_all_1d_lightcurves_in_groups
 from plot_data.plot_fits_data import plot_avg_rms
-from plot_data.plot_line_profiles import plot_normalized_line_profiles_in_pairs, \
-    plot_normalized_line_profiles_together, process_spectrum, plot_normalized_line_profiles_type_together, \
-    cut_normalized_line_out, cut_line_out, plot_cut_out_line_profile
-from plot_data.plot_line_profiles_in_groups import plot_normalized_line_profiles_in_groups
+from plot_data.plot_line_profiles import cut_normalized_line_out, cut_line_out
+from plot_data.plot_line_profiles_in_groups import plot_normalized_line_profiles_in_groups, process_spectrum, \
+    plot_cut_out_line_profile
 from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
 
 # Dictionary to store registered tasks
@@ -240,73 +238,9 @@ def save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha(output_d
 
 
 
-    plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict_combined, "Combined", output_dir, keyorders,
+    plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict_combined, "NGC4593_Combined", output_dir, keyorders,
                                            file_name="ccfs_and_reference_lightcurves", final_key_order=keyorders,
                                            rows=11, cols=2, only_one_label = True)
-
-"""
-def run_normalized_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
-    ensure_output_dir(output_dir)
-    data = import_line_profile_data(normalized=True)
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685', 'OI8446']
-
-    if "avg" in data and "rms" in data:
-        # global dictionary
-        plot_normalized_line_profiles_in_pairs(data, key_order, save_only=save_only)
-    else:
-        for campaign, d in data.items():
-            plot_normalized_line_profiles_in_pairs(d, campaign, key_order, save_only=save_only)
-
-
-@task
-def plot_and_save_normalized_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
-    run_normalized_profiles_in_pairs(output_dir)
-
-
-@task
-def save_normalized_line_profiles_in_pairs(output_dir=DEFAULT_OUTPUT_DIR):
-    run_normalized_profiles_in_pairs(output_dir, save_only=True)
-
-
-def run_normalized_profiles_together(
-    output_dir=DEFAULT_OUTPUT_DIR,
-    key_order=None,
-    save_only=False,
-    plot_type="together",  # oder: "type"
-    profile_data=None,
-):
-    ensure_output_dir(output_dir)
-
-    if profile_data is None:
-        profile_data = import_line_profile_data(normalized=True)
-
-    if key_order is None:
-        key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685', 'OI8446']
-
-    if plot_type == "type":
-        plot_normalized_line_profiles_type_together(profile_data, key_order)
-    else:
-        plot_normalized_line_profiles_together(profile_data, key_order, save_only=save_only)
-        
-    
-
-@task
-def plot_and_save_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DIR):
-    run_normalized_profiles_together(output_dir=output_dir)
-
-@task
-def save_line_normalized_line_profiles_together(output_dir=DEFAULT_OUTPUT_DIR):
-    run_normalized_profiles_together(output_dir=output_dir, save_only=True)
-
-@task
-def plot_and_save_normalized_line_profiles_types_together(output_dir=DEFAULT_OUTPUT_DIR):
-    run_normalized_profiles_together(
-        output_dir=output_dir,
-        key_order=['HeI5875', 'HeI7065', 'HeII4685'],
-        plot_type="type"
-    )
-
-"""
 
 @task
 def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
@@ -337,31 +271,6 @@ def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT
     for line in key_order:
         process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot)
         process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=plot)
-
-
-@task
-def cut_out_line_profiles_from_fits(output_dir=DEFAULT_OUTPUT_DIR):
-    output_dir_path = ensure_output_dir(output_dir)
-
-    output_path = output_dir_path / "Line_Profiles_intercaly_pseudo_substracted"
-    output_path.mkdir(parents=True, exist_ok=True)
-
-    fits_data_H_Alpha = import_fits_data("Halpha_pseudo_cont_substracted")
-    fits_data_H_Beta = import_fits_data("Hbeta_pseudo_cont_substracted")
-
-    merged_dict = prepare_cut_data(fits_data_H_Alpha, fits_data_H_Beta, output_path)
-
-    key_order = ['HAlpha', 'HAlpha_substracted_first']
-
-    plot_normalized_line_profiles_type_together(merged_dict, key_order)
-
-    key_order = ['HBeta', 'HBeta_substracted_first']
-
-    plot_normalized_line_profiles_type_together(merged_dict, key_order)
-
-    key_order = ['HAlpha_substracted_first', 'HBeta_substracted_first']
-
-    plot_normalized_line_profiles_type_together(merged_dict, key_order)
 
 
 @task
