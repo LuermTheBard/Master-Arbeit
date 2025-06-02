@@ -1,7 +1,7 @@
 import numpy as np
 
 from import_data.import_data import import_line_profile_data
-from plot_data.plot_line_profiles import transform_wavelength_to_velocity_and_cut
+from plot_data.plot_line_profiles_in_groups import transform_wavelength_to_velocity_and_cut
 from settings import F_MEAN, F_SIGMA
 
 
