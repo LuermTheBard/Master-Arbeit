@@ -102,7 +102,7 @@ def save_1d_corr_in_groups_for_cont_optical_calibrated(cont_name=None, output_di
     plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data["NGC4593_optical_calibrated"],
                                         "NGC4593_optical_calibrated", cont_name=cont_name, output_dir=output_dir,
                                         key_order=key_order, save_only=True)
-"""
+
 
 @task
 def save_1d_corr_in_groups_bowen_fluorescence_for_cont(output_dir=DEFAULT_OUTPUT_DIR):
@@ -129,11 +129,11 @@ def save_1d_corr_in_groups_bowen_fluorescence_for_cont(output_dir=DEFAULT_OUTPUT
         for reference_lightcurve, key_order in keyorders.items():
             plot_all_1d_ccfs_in_groups_for_cont(data_dict, campaign, cont_name=reference_lightcurve, output_dir=output_dir,
                                                 key_order=key_order, save_only=True, file_name=f"{reference_lightcurve}_bowen_fluorescence_ccfs", only_key_order=True)
-
+"""
 
 # methodes to plot lightcurves and ccfs together
 @task
-def save_1d_corr_and_lightcurves_in_groups_bowen_fluorescence(output_dir=DEFAULT_OUTPUT_DIR):
+def save_1d_corr_and_lightcurves_in_groups_for_bowen_fluorescence_lines(output_dir=DEFAULT_OUTPUT_DIR):
 
     ensure_output_dir(output_dir)
 
@@ -166,7 +166,7 @@ def save_1d_corr_and_lightcurves_in_groups_bowen_fluorescence(output_dir=DEFAULT
 
 
 @task
-def save_1d_corr_and_lightcurves_in_groups_UVW2(output_dir=DEFAULT_OUTPUT_DIR):
+def save_1d_corr_and_lightcurves_in_groups_for_UVW2(output_dir=DEFAULT_OUTPUT_DIR):
 
     ensure_output_dir(output_dir)
 
@@ -195,7 +195,7 @@ def save_1d_corr_and_lightcurves_in_groups_UVW2(output_dir=DEFAULT_OUTPUT_DIR):
 
 
 @task
-def save_1d_corr_and_lightcurves_in_groups_UVW2_Cackett(output_dir=DEFAULT_OUTPUT_DIR):
+def save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha(output_dir=DEFAULT_OUTPUT_DIR):
 
     ensure_output_dir(output_dir)
 
