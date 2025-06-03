@@ -14,6 +14,17 @@ DATA_PATH = Path.cwd().parent / "data"
 
 
 def find_prime_data_folder():
+    """
+    Locates the main 'data' directory within the current working directory or its ancestors.
+
+    This function searches for a directory named 'data' in the current working directory
+    and up to two parent directories. If not found, it performs a recursive search starting
+    from the current working directory.
+
+    Returns:
+        Path or None: A Path object pointing to the found 'data' directory, or None if
+        no such directory could be located.
+    """
     current_working_directory = Path.cwd()
 
     # Suche in den aktuellen und zwei übergeordneten Verzeichnissen
@@ -35,6 +46,32 @@ def find_prime_data_folder():
 
 
 def import_1d_correlation_data():
+    """
+    Imports 1D correlation data (ICCF results) from all galaxy campaigns.
+
+    The function searches for the 'data/campaigns' directory structure, iterates through
+    available campaigns, and loads correlation data for each continuum, including both
+    line-to-continuum and lightcurve-to-continuum ICCF results.
+
+    The expected structure inside each campaign directory is:
+        campaigns/<campaign_name>/1DCorrelations/<continuum_name>/lineCorrelations_ICCF.txt
+        campaigns/<campaign_name>/1DCorrelations/<continuum_name>/lightcurveCorrelations_ICCF.txt
+
+    Returns:
+        dict: A nested dictionary structured as:
+              {
+                  <campaign_name>: {
+                      <continuum_name>: {
+                          "time shift (tau)": [...],
+                          <line_or_lightcurve_name>: [...],
+                          ...
+                      },
+                      ...
+                  },
+                  ...
+              }
+    """
+
     data_path = find_prime_data_folder()
 
     campains_path = data_path / "campaigns"
@@ -93,31 +130,23 @@ def import_1d_correlation_data():
     return galaxie_campaigns_dict
 
 
-def load_dopplershift_data_from_toml(toml_name, toml_path=None):
-    if toml_path is None:
-        data_path = find_prime_data_folder()
-
-        toml_path = data_path / "dopplershift_calc_data" / toml_name
-    else:
-        toml_path = toml_path / toml_name
-
-    with open(str(toml_path), "rb") as file:
-        dopplershift_data = tomllib.load(file)
-
-    return dopplershift_data
-
-
 def process_light_curves(light_curves, one_dim_lightcurves_path):
     """
-    Verarbeitet Light-Curve-Dateien und erstellt ein Dictionary mit den Daten.
+    Processes light curve text files and returns a dictionary of their contents.
+
+    Each file is assumed to have a header and three columns:
+    timestamps, fluxes, and flux errors.
 
     Args:
-        light_curves (list): Liste der Dateinamen der Light-Curves.
-        one_dim_lightcurves_path (Path): Pfad zum Verzeichnis der Light-Curve-Dateien.
+        light_curves (list): List of filenames of the light curve text files.
+        one_dim_lightcurves_path (Path): Path to the directory containing the light curve files.
 
     Returns:
-        dict: Ein Dictionary mit den verarbeiteten Light-Curve-Daten.
+        dict: A dictionary where each key is the curve name and the value is another
+              dictionary with keys: 'timestamps [MJD]', 'fluxes [ergs/s/cm2/A]', and
+              'fluxerrs [ergs/s/cm2/A]'.
     """
+
     result_dict = {}
 
     for curve in light_curves:
@@ -138,11 +167,16 @@ def process_light_curves(light_curves, one_dim_lightcurves_path):
 
 def import_1d_lightcurve_data():
     """
-    Importiert 1D-Light-Curve-Daten aus den Kampagnenverzeichnissen und erstellt ein verschachteltes Dictionary.
+    Imports 1D light curve data from all campaign directories and organizes them into a nested dictionary.
+
+    For each campaign, separates and loads continuum and emission line light curves
+    from the '1DLightCurves' subdirectory.
 
     Returns:
-        dict: Ein Dictionary mit den Daten aller Kampagnen, geordnet nach Lines und Continua.
+        dict: A dictionary where each key is a campaign name and the value is a dictionary
+              with keys 'lines' and 'continua', each containing their respective light curve data.
     """
+
     data_path = find_prime_data_folder()
     campaigns_path = data_path / "campaigns"
 
@@ -173,12 +207,21 @@ def import_1d_lightcurve_data():
 
 def import_fits_data(fits_folder=None):
     """
-    Importiert FITS-Daten aus einem Verzeichnis und erstellt ein verschachteltes Dictionary.
-    Gibt Warnungen aus, falls Daten oder notwendige Header-Parameter fehlen.
+    Imports FITS files from a specified directory and organizes them into a nested dictionary.
+    Calculates the x-axis values from WCS header keywords if available.
+    Issues warnings if data or required header parameters are missing.
+
+    Args:
+        fits_folder (str or Path, optional): Relative or absolute path to the directory containing FITS files.
+                                             If not provided, defaults to the 'fits' subdirectory under the main data folder.
 
     Returns:
-        dict: Ein Dictionary mit den Daten, Headern und x-Achsen-Werten aller FITS-Dateien im Verzeichnis.
+        dict: A dictionary where each key is a FITS filename and the value is a dictionary containing:
+              - "data": List of data arrays (one per HDU)
+              - "headers": List of header dictionaries (one per HDU)
+              - "x_axis": List of x-axis arrays computed from WCS keywords if present
     """
+
 
     data_path = find_prime_data_folder()
 
@@ -248,6 +291,20 @@ def import_fits_data(fits_folder=None):
 
 
 def import_line_profile_data(normalized=None):
+    """
+    Imports AVG and RMS line profile data from the 'LineProfiles' directory.
+
+    If the `normalized` flag is set, only normalized profiles will be imported;
+    otherwise, unnormalized profiles are imported.
+
+    Args:
+        normalized (bool or None): Whether to import normalized profiles (True),
+                                   unnormalized profiles (False), or all (None).
+
+    Returns:
+        dict: A dictionary with keys "avg" and "rms", each mapping to a dictionary
+              of line names and their corresponding profile data.
+    """
 
     data_path = find_prime_data_folder()
 
@@ -276,6 +333,22 @@ def import_line_profile_data(normalized=None):
 
 
 def process_line_profile_data(line_profiles_list, line_profile_path):
+    """
+    Processes a list of line profile files and returns a structured dictionary.
+
+    Each file is expected to have a header with axis labels and two data columns.
+    Optionally extracts pseudo-continuum ranges from the filename.
+
+    Args:
+        line_profiles_list (list): List of line profile filenames to process.
+        line_profile_path (Path): Path to the directory containing the profile files.
+
+    Returns:
+        dict: A dictionary mapping line names to:
+              - 'pseudo_conts': a tuple of (blue, red) pseudo-continuum bounds or None
+              - 'data_dict': a dictionary with axis labels and corresponding data arrays
+    """
+
     result_dict = dict()
 
     for item in line_profiles_list:
