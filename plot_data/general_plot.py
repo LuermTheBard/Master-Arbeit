@@ -73,59 +73,47 @@ def format_yaxis(value, _):
 # -----------------------------------------------------------------------------
 
 
+def is_valid_axis(ax, fig):
+    return ax in fig.axes and (len(ax.lines) > 0 or len(ax.containers) > 0 or len(ax.images) > 0)
+
+
 def check_for_empty_rows(axes, fig, x_label, line_profile=False):
     """
     Prüft, ob in der Figure leere Subplot-Zeilen existieren, und entfernt diese gegebenenfalls.
     Außerdem wird die X-Achsenbeschriftung und -Formatierung für die verbleibenden Reihen gesetzt.
-
-    Parameter:
-    -----------
-    axes : numpy.ndarray
-        Array von Matplotlib-Achsenobjekten, typischerweise erzeugt durch plt.subplots().
-    fig : matplotlib.figure.Figure
-        Matplotlib-Figure, die die Subplots enthält.
-    x_label : str
-        Beschriftung für die X-Achse.
     """
 
-    # Löschen leerer Reihen
-    for row in range(4):
-        if all(not axes[row, col].has_data() for col in range(2)):
+    n_rows = axes.shape[0]  # robust ermitteln
+    for row in range(n_rows):
+        if all(not is_valid_axis(axes[row, col], fig) for col in range(2)):
             for col in range(2):
                 fig.delaxes(axes[row, col])
 
     # Ermittlung der untersten verbleibenden Reihe
-    remaining_rows = [row for row in range(4) if any(axes[row, col].has_data() for col in range(2))]
-    if remaining_rows:  # Überprüfen, ob noch Reihen existieren
+    remaining_rows = [row for row in range(n_rows) if any(is_valid_axis(axes[row, col], fig) for col in range(2))]
+    if remaining_rows:
         lowest_row = max(remaining_rows)
 
-        # X-Achsenbeschriftungen und Ticks setzen
         for row in remaining_rows:
             for col in range(2):
-                if axes[row, col].has_data():  # Stelle sicher, dass die Achse existiert und Daten hat
-                    if line_profile:
-                        pass
-                    elif len(x_label) ==2:
-                        pass
-                    else:
-                        axes[row, col].xaxis.set_major_locator(MultipleLocator(5))  # Ticks festlegen
-
+                if is_valid_axis(axes[row, col], fig):
+                    if not line_profile and not isinstance(x_label, tuple):
+                        axes[row, col].xaxis.set_major_locator(MultipleLocator(5))
 
                     axes[row, col].xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
 
-                    # Beschriftungen nur in der untersten vorhandenen Reihe anzeigen
                     if row == lowest_row:
-                        if type(x_label) == tuple:
+                        if isinstance(x_label, tuple):
+                            label = x_label[col]
+                            axes[row, col].set_xlabel(label, fontsize=12)
                             if col == 0:
-                                label=x_label[0]
-                                axes[row, col].set_xlabel(label, fontsize=12)
-                            else:
-                                label = x_label[1]
-                                axes[row, col].set_xlabel(label, fontsize=12)
-                            axes[row, col].xaxis.set_major_locator(MultipleLocator(2))
+                                axes[row, col].xaxis.set_major_locator(MultipleLocator(5))
+                            elif col == 1:
+                                axes[row, col].xaxis.set_major_locator(MultipleLocator(2))
                         else:
                             axes[row, col].set_xlabel(x_label, fontsize=12)
-                            axes[row, col].tick_params(axis='x', which='both', direction='inout', labelbottom=True)
+
+                        axes[row, col].tick_params(axis='x', which='both', direction='out', labelbottom=True)
 
 
 def prepare_data(data, rows, cols):

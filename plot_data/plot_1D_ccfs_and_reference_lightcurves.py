@@ -111,7 +111,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
         fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=False, sharey=shared_y,
                                  gridspec_kw={'width_ratios': [4, 1]})  # 2/3 : 1/3 Verhältnis
         fig.subplots_adjust(hspace=0, wspace=0)
-
+        #fig.tight_layout()
         if only_one_label is True:
             # Linke Seite oben (y-Achse): "Normalized Lightcurves"
             fig.text(0.02, 0.5, "Normalized Lightcurves", va='center', ha='left', rotation='vertical', fontsize=12)
