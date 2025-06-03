@@ -8,58 +8,59 @@ from settings import BASE_MJD
 
 def mjd_to_date(mjd):
     """
-    Konvertiere MJD (Modified Julian Date) in ein Kalenderdatum.
+    Converts a Modified Julian Date (MJD) to a Gregorian calendar date.
 
-    Parameter:
+    Parameters:
     -----------
     mjd : float
-        Wert des Modified Julian Date.
+        The Modified Julian Date value.
 
     Returns:
     -----------
     datetime.datetime
-        Entsprechendes Kalenderdatum basierend auf dem MJD-Startdatum 1858-11-17.
+        The corresponding calendar date based on the MJD epoch (1858-11-17).
     """
+
     mjd_start_date = datetime.datetime(1858, 11, 17)  # MJD Startdatum
     return mjd_start_date + datetime.timedelta(days=mjd)
 
 
 def format_month_day(mjd, pos):
     """
-    Formatter für die obere Achse, der MJD in Monats- und Tagesformat (z.B. 'Aug 01') umwandelt.
+    Formatter function for Matplotlib that converts MJD to 'Month Day' format (e.g., 'Aug 01').
 
-    Parameter:
+    Parameters:
     -----------
     mjd : float
         Modified Julian Date.
     pos : int
-        Position (für Matplotlib-Formatter, hier nicht weiter verwendet).
+        Axis position (passed by Matplotlib, not used here).
 
     Returns:
     -----------
     str
-        Datums-String im Format 'Monat Tag' (z.B. 'Aug 01').
+        Date string in the format '%b %d', e.g., 'Aug 01'.
     """
+
     date = mjd_to_date(mjd)
     return date.strftime('%b %d')
 
 
 def format_relative_days(mjd):
     """
-    Formatter für die X-Achse, der die relativen Tage (gegenüber einem Basismjd) anzeigt.
+    Computes the number of days relative to a global BASE_MJD value.
 
-    Parameter:
+    Parameters:
     -----------
     mjd : float
         Modified Julian Date.
-    pos : int
-        Position (für Matplotlib-Formatter, hier nicht weiter verwendet).
 
     Returns:
     -----------
-    str
-        String der Form '0', '1', '2', ... basierend auf dem Abstand zum base_mjd.
+    float
+        Number of days relative to BASE_MJD.
     """
+
     base_mjd = BASE_MJD # Startwert (erster MJD)
     relative_day = mjd - base_mjd
     return relative_day
@@ -74,16 +75,42 @@ def format_yaxis(value, _):
 
 
 def is_valid_axis(ax, fig):
+    """
+    Checks whether a given axis is part of the figure and contains visible content.
+
+    Parameters:
+    -----------
+    ax : matplotlib.axes.Axes
+        The axis to check.
+    fig : matplotlib.figure.Figure
+        The Matplotlib figure containing the axis.
+
+    Returns:
+    -----------
+    bool
+        True if the axis is in the figure and contains lines, containers, or images.
+    """
     return ax in fig.axes and (len(ax.lines) > 0 or len(ax.containers) > 0 or len(ax.images) > 0)
 
 
 def check_for_empty_rows(axes, fig, x_label, line_profile=False):
     """
-    Prüft, ob in der Figure leere Subplot-Zeilen existieren, und entfernt diese gegebenenfalls.
-    Außerdem wird die X-Achsenbeschriftung und -Formatierung für die verbleibenden Reihen gesetzt.
+    Removes completely empty subplot rows from a figure and sets x-axis labels
+    and tick formatting for the lowest visible row.
+
+    Parameters:
+    -----------
+    axes : numpy.ndarray
+        2D array of Matplotlib Axes objects.
+    fig : matplotlib.figure.Figure
+        The figure containing the subplots.
+    x_label : str or tuple of str
+        X-axis label(s). If a tuple is provided, each column gets a different label.
+    line_profile : bool, optional
+        Whether the plots are line profiles. Affects tick formatting. Default is False.
     """
 
-    n_rows = axes.shape[0]  # robust ermitteln
+    n_rows = axes.shape[0]
     for row in range(n_rows):
         if all(not is_valid_axis(axes[row, col], fig) for col in range(2)):
             for col in range(2):
@@ -118,32 +145,26 @@ def check_for_empty_rows(axes, fig, x_label, line_profile=False):
 
 def prepare_data(data, rows, cols):
     """
-    Bereitet die Daten vor, indem sie gruppenweise anhand der verfügbaren Subplot-Größe (rows x cols) aufgeteilt werden.
-    Eventuell unvollständige Gruppen werden mit leeren Platzhaltern aufgefüllt.
+    Splits input data into groups that fit within a subplot grid of size (rows x cols).
+    Incomplete groups are filled with empty placeholders.
 
-    Parameter:
+    Parameters:
     -----------
     data : dict
-        Dictionary mit den zu plottenden Daten. Keys sind beispielsweise Kurvennamen,
-        Werte sind selbst wiederum Dictionaries mit x- und y-Daten.
-    xlabel : str
-        Key im Dictionary, unter dem sich die x-Daten befinden.
-    ylabel : str
-        Key im Dictionary, unter dem sich die y-Daten befinden.
-    yerr_name : str or None
-        Key für die Fehlerbalken (optional). Wenn None, werden keine Fehlerbalken gezeichnet.
+        Dictionary of items to plot. Keys are labels, values are data objects.
     rows : int
-        Anzahl der Subplot-Zeilen.
+        Number of subplot rows per group.
     cols : int
-        Anzahl der Subplot-Spalten.
+        Number of subplot columns per group.
 
     Yields:
     -----------
     current_data : list of tuples
-        Teilmenge der Daten, die in einem Subplot-Grid (rows x cols) dargestellt werden sollen.
+        List of (key, value) pairs for the current group.
     group_index : int
-        Index der aktuellen Gruppe (0-basiert).
+        Index of the current group (0-based).
     """
+
     total_plots = len(data)
     num_groups = (total_plots + (rows * cols) - 1) // (rows * cols)  # Anzahl der benötigten Gruppen
     data_items = list(data.items())
@@ -164,31 +185,37 @@ def prepare_data(data, rows, cols):
 
 def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_label, compare_cont=None, line_profile=False, file_name=None):
     """
-    Finalisiert das Layout der Figure und speichert bzw. zeigt sie an.
+    Finalizes the layout of a Matplotlib figure: removes empty subplot rows, sets title,
+    saves the figure as PDF and PNG, and optionally displays it.
 
-    Parameter:
+    Parameters:
     -----------
     fig : matplotlib.figure.Figure
-        Die Figure, die finalisiert werden soll.
+        The figure to finalize.
     axes : numpy.ndarray
-        Array von Matplotlib-Achsenobjekten.
+        2D array of Matplotlib Axes objects.
     title : str
-        Titel der Abbildung.
+        Title of the figure.
     group_index : int
-        Index der aktuellen Gruppe (0-basiert).
+        Index of the current group (used in filenames).
     save_only : bool
-        Ob die Abbildung nur gespeichert werden soll (ohne plt.show()).
-    output_dir : str or Path
-        Pfad zum Speicherort.
-    x_label : str
-        Beschriftung für die X-Achse.
-    formating : bool, optional
-        Ob spezielles Formatieren aktiviert werden soll (Standard: True).
+        If True, the figure will only be saved (not shown).
+    output_dir : str or pathlib.Path
+        Directory where the figure will be saved.
+    x_label : str or tuple of str
+        Label(s) for the x-axis. Tuple assigns different labels per column.
+    compare_cont : str, optional
+        Optional identifier for use in filenames (e.g., when comparing continua).
+    line_profile : bool, optional
+        Whether the plots represent line profiles (affects formatting).
+    file_name : str, optional
+        Custom filename prefix. If None, the title is used instead.
 
     Returns:
     -----------
     None
     """
+
     check_for_empty_rows(axes, fig, x_label=x_label, line_profile=line_profile)
 
     if title:
