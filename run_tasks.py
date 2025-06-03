@@ -1,19 +1,19 @@
 import sys
+from inspect import signature
 
-from plot_data.plot_fits_data import plot_avg_rms_spec
-from plot_data.plot_1D_lightcurves_in_groups_data import (
+from plot_data.plot_avg_rms import plot_avg_rms_spec
+from plot_data.plot_1D_lightcurves_in_groups import (
     plot_1d_lightcurves_in_groups,
     save_1d_lightcurves_in_groups
 )
-from plot_data.plot_1D_ccfs_in_groups_data import (
-    plot_1d_corr_in_groups_for_cont_optical_calibrated,
-    save_1d_corr_in_groups_for_cont_optical_calibrated,
+from plot_data.plot_1D_ccfs_in_groups import (
+    plot_1d_corr_in_groups, save_1d_corr_in_groups,
     save_1d_corr_in_groups_bowen_fluorescence_for_cont
 )
 from plot_data.plot_1D_ccfs_and_reference_lightcurves import (
     save_1d_corr_and_lightcurves_in_groups_for_bowen_fluorescence_lines,
     save_1d_corr_and_lightcurves_in_groups_for_UVW2,
-    save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha
+    save_1d_corr_and_lightcurves_in_groups_UVW2_from_UV_Lines_to_HAlpha
 )
 from plot_data.plot_line_profiles_in_groups import (
     run_normalized_profiles_together_in_groups,
@@ -48,32 +48,53 @@ task_lookup = {
     'plot_avg_rms_spec': plot_avg_rms_spec,
     'plot_1d_lightcurves_in_groups': plot_1d_lightcurves_in_groups,
     'save_1d_lightcurves_in_groups': save_1d_lightcurves_in_groups,
-    'plot_1d_corr_in_groups_for_cont_optical_calibrated': plot_1d_corr_in_groups_for_cont_optical_calibrated,
-    'save_1d_corr_in_groups_for_cont_optical_calibrated': save_1d_corr_in_groups_for_cont_optical_calibrated,
+    'plot_1d_corr_in_groups': plot_1d_corr_in_groups,
+    'save_1d_corr_in_groups': save_1d_corr_in_groups,
     'save_1d_corr_in_groups_bowen_fluorescence_for_cont': save_1d_corr_in_groups_bowen_fluorescence_for_cont,
     'save_1d_corr_and_lightcurves_in_groups_for_bowen_fluorescence_lines': save_1d_corr_and_lightcurves_in_groups_for_bowen_fluorescence_lines,
     'save_1d_corr_and_lightcurves_in_groups_for_UVW2': save_1d_corr_and_lightcurves_in_groups_for_UVW2,
-    'save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha': save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha,
+    'save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha': save_1d_corr_and_lightcurves_in_groups_UVW2_from_UV_Lines_to_HAlpha,
     'run_normalized_profiles_together_in_groups': run_normalized_profiles_together_in_groups,
     'substract_pseudo_continua_from_spectra': substract_pseudo_continua_from_spectra,
     'cut_line_profile': cut_line_profile
 }
 
 
-def run_task(commands):
-    for command in commands:
-        parts = command.split("::")
-        name_of_task = parts[0]
-        task_args = parts[1:] if len(parts) > 1 else []
+def run_task(argv):
+    task_name = argv[0]
+    args = argv[1:]
 
-        print(f"Running '{name_of_task}' with arguments {task_args}...")
+    if task_name not in task_lookup:
+        print(f"Task '{task_name}' not found.")
+        return
 
-        if name_of_task not in task_lookup:
-            print(f"[ERROR] Task '{name_of_task}' is not defined.")
-            continue
+    task_func = task_lookup[task_name]
+    sig = signature(task_func)
 
-        func = task_lookup[name_of_task]
-        func(*task_args)
+    required_params = [
+        p for p in sig.parameters.values()
+        if p.default == p.empty and p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
+    ]
+
+    if len(args) < len(required_params):
+        print(f"Task '{task_name}' requires at least {len(required_params)} argument(s), but {len(args)} were given.")
+
+        # Format usage string with required and optional parameters
+        usage_parts = []
+        for p in sig.parameters.values():
+            if p.default == p.empty:
+                usage_parts.append(f"<{p.name}>")
+            else:
+                usage_parts.append(f"[{p.name}]")
+
+        usage_string = f"Usage: python script.py {task_name} {' '.join(usage_parts)}"
+        print(usage_string)
+        return
+
+    try:
+        task_func(*args)
+    except Exception as e:
+        print(f"Error running task '{task_name}': {e}")
 
 
 if __name__ == "__main__":
@@ -85,4 +106,3 @@ if __name__ == "__main__":
             print(f"- {task_name}")
     else:
         run_task(sys.argv[1:])
-

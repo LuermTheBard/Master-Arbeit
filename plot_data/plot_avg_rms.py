@@ -350,4 +350,4 @@ def plot_avg_rms_spec(output_dir=DEFAULT_OUTPUT_DIR):
     plot_avg_rms(fits_data, save_path=avg_rms_spec_file)
 
 
-plot_avg_rms_spec()
+# plot_avg_rms_spec()

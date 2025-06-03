@@ -274,6 +274,6 @@ def save_1d_corr_in_groups_bowen_fluorescence_for_cont(output_dir=DEFAULT_OUTPUT
 
 
 
-save_1d_corr_in_groups("UVW2", "NGC4593_optical_calibrated")
-save_1d_corr_in_groups("UVW2", "NGC4593_not_optical_calibrated")
+# save_1d_corr_in_groups("UVW2", "NGC4593_optical_calibrated")
+# save_1d_corr_in_groups("UVW2", "NGC4593_not_optical_calibrated")
 # save_1d_corr_in_groups_bowen_fluorescence_for_cont()

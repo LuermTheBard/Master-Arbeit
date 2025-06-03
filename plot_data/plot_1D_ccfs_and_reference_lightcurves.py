@@ -501,7 +501,7 @@ def save_1d_corr_and_lightcurves_in_groups_for_UVW2(output_dir=DEFAULT_OUTPUT_DI
         plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders_dict[campaign], file_name="UVW2_ccfs_and_reference_lightcurves", final_key_order=keyorders_dict[campaign], rows=rows, centroid_data=centroid_data, only_one_label = True)
 
 
-def save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha(output_dir=DEFAULT_OUTPUT_DIR):
+def save_1d_corr_and_lightcurves_in_groups_UVW2_from_UV_Lines_to_HAlpha(output_dir=DEFAULT_OUTPUT_DIR):
 
     ensure_output_dir(output_dir)
 
@@ -554,7 +554,7 @@ def save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha(output_d
 
 
 
-save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha()
+# save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha()
 
 # save_1d_corr_and_lightcurves_in_groups_for_UVW2()
 # save_1d_corr_and_lightcurves_in_groups_for_bowen_fluorescence_lines()

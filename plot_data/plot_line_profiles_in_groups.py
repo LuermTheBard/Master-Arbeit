@@ -422,4 +422,4 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-run_normalized_profiles_together_in_groups()
+# run_normalized_profiles_together_in_groups()
