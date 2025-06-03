@@ -13,15 +13,7 @@ from plot_data.plot_line_profiles_in_groups import plot_normalized_line_profiles
     plot_cut_out_line_profile
 from plot_utils import cut_normalized_line_out, cut_line_out
 from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
-
-# Dictionary to store registered tasks
-registered_tasks = {}
-
-
-# Decorator to register functions as tasks
-def task(func):
-    registered_tasks[func.__name__] = func
-    return func
+from task_registry import task, registered_tasks
 
 
 # Reusable helper to ensure directory exists
