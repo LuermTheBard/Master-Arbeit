@@ -10,7 +10,40 @@ from settings import BASE_MJD
 matplotlib.use('Qt5Agg')
 
 
-def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, only_one_label = False):
+def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, only_one_label=False):
+    """
+    Organizes and plots CFFs and their corresponding lightcurves
+    in subplot groups, based on specified key orders.
+
+    Parameters:
+    -----------
+    lightcurves_ccf_data_dict : dict
+        Dictionary containing CCF and lightcurve data structured as:
+        {"ccfs": ..., "lightcurves": {"continua": ..., "lines": ...}}.
+    campaign : str
+        Campaign identifier used for folder structure.
+    output_dir : str or pathlib.Path
+        Base directory for saving plots.
+    key_orders : dict
+        Dictionary mapping each reference lightcurve to a list specifying the order of keys to plot.
+    save_only : bool, optional
+        If True, the plots are saved to disk without displaying them. Default is False.
+    file_name : str, optional
+        Optional base name for output files. If None, a default name is generated from the title.
+    final_key_order : list of str, optional
+        Final desired order of plotted keys (e.g., lines), used for sorting.
+    rows : int, optional
+        Number of subplot rows per figure. Default is 4.
+    cols : int, optional
+        Number of subplot columns per figure. Default is 2.
+    only_one_label : bool, optional
+        If True, only one y-axis label per figure is shown. Default is False.
+
+    Returns:
+    -----------
+    None
+    """
+
     base_mjd = BASE_MJD
     xlabel_ccfs = "Time Lag $\\tau$ [d]"
     ylabel_ccfs = "Correlation Coefficient"
@@ -94,15 +127,50 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
                key=lambda item: final_sort_keys(item[0])))
 
 
-    plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs, xlabel_lightcurves, ylabel_line_lightcurves,
-                                                  ylabel_cont_lightcurves, yerr_name_lightcurves, title=f"CCFs and reference lightcurves",
+    plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs, xlabel_lightcurves,
+                                                  title=f"CCFs and reference lightcurves",
                                                   save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name, rows=rows, cols=cols, only_one_label = only_one_label)
 
 
 def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs,
-                                                  xlabel_lightcurves, ylabel_line_lightcurves, ylabel_cont_lightcurves,
-                                                  yerr_name_lightcurves, title, save_only, output_dir, shared_y,
-                                                  file_name, color_dict=None, rows=4, cols=2, only_one_label = False):
+                                                  xlabel_lightcurves, title, save_only, output_dir, shared_y,
+                                                  file_name, rows=4, cols=2, only_one_label=False):
+    """
+    Plots CCFs and their associated normalized lightcurves
+    in a side-by-side subplot layout.
+
+    Parameters:
+    -----------
+    final_sorted_data_dict : dict
+        Dictionary containing the CCFs and lightcurve pairs. Must include a key
+        'time shift (tau)' for the CCF x-axis.
+    xlabel_ccfs : str
+        X-axis label for CCF subplots (right column).
+    ylabel_ccfs : str
+        Y-axis label for CCF subplots.
+    xlabel_lightcurves : str
+        X-axis label for lightcurve subplots (left column).
+    title : str
+        Title for the entire figure or plot group.
+    save_only : bool
+        If True, plots are saved to disk only; if False, they are also displayed.
+    output_dir : str or pathlib.Path
+        Directory to save the output files.
+    shared_y : bool
+        Whether subplots should share the same y-axis limits.
+    file_name : str
+        Optional base name for the saved files (PDF and PNG).
+    rows : int, optional
+        Number of subplot rows per figure. Default is 4.
+    cols : int, optional
+        Number of subplot columns per figure. Default is 2.
+    only_one_label : bool, optional
+        If True, only one label per y-axis (left/right) is shown to avoid clutter.
+
+    Returns:
+    -----------
+    None
+    """
     x_values_ccfs = final_sorted_data_dict['time shift (tau)']
     final_sorted_data_dict.pop('time shift (tau)')
 
@@ -145,6 +213,28 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
 
 
 def prepare_ccfs_references_data(data, rows, cols):
+    """
+    Prepares and groups the input data into (rows x cols) chunks for subplot grids.
+    Each item is duplicated so that both a lightcurve and a CCF version can be plotted.
+    Incomplete groups are padded with placeholder entries.
+
+    Parameters:
+    -----------
+    data : dict
+        Dictionary containing CCF/lightcurve data. Keys are line-reference combinations.
+    rows : int
+        Number of rows in each subplot group.
+    cols : int
+        Number of columns in each subplot group.
+
+    Yields:
+    -----------
+    current_data : list of tuples
+        Subset of (key, value) pairs for one subplot group.
+    group_index : int
+        Index of the current group (starting from 0).
+    """
+
     # Jedes Item zweimal hintereinander einfügen
     data_items = []
     for key, value in data.items():
@@ -172,7 +262,39 @@ def prepare_ccfs_references_data(data, rows, cols):
 
 
 def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr,
-                                      line_name_and_ref_name, only_one_label = False):
+                                      line_name_and_ref_name, only_one_label=False):
+    """
+    Configures a single subplot axis to display either a normalized lightcurve pair
+    or a CCF, depending on the data provided.
+
+    Parameters:
+    -----------
+    ax : matplotlib.axes.Axes
+        The subplot axis to configure.
+    row : int
+        Row index within the subplot grid.
+    col : int
+        Column index within the subplot grid.
+    ylabel_ccfs : str
+        Y-axis label for the CCFs (used for the right column).
+    color : tuple or str
+        Tuple of two colors (for lightcurve plots) or single color (for CCFs).
+    x_values_ccfs : array-like
+        X-axis values for the CCF plot.
+    line_data : dict or np.ndarray
+        Dictionary with lightcurve and CCF data or an empty array for placeholders.
+    yerr : bool or None
+        Whether to include error bars (used for lightcurve plots).
+    line_name_and_ref_name : str
+        Name of the line and its reference, formatted as "<line>_ref_<reference>".
+    only_one_label : bool, optional
+        If True, y-axis labels are minimized to reduce clutter.
+
+    Returns:
+    -----------
+    None
+    """
+
     if "_ref_" in line_name_and_ref_name:
 
         line_name, reference_name = line_name_and_ref_name.split("_ref_")
@@ -222,6 +344,25 @@ def plot_normalized_lightcurve(ax, x, y_norm, yerr_norm, label, color):
 
 
 def configure_axes_for_lightcurves(ax, row, col, only_one_label=False):
+    """
+    Configures axis formatting and ticks for a normalized lightcurve subplot.
+
+    Parameters:
+    -----------
+    ax : matplotlib.axes.Axes
+        The axis to configure.
+    row : int
+        Row index in the subplot grid.
+    col : int
+        Column index in the subplot grid.
+    only_one_label : bool, optional
+        If True, hides redundant y-axis labels for cleaner layout.
+
+    Returns:
+    -----------
+    None
+    """
+
     if col == 0:
         if only_one_label is False:
             ax.set_ylabel("Normalized Lightcurves", fontsize=12)
@@ -242,6 +383,27 @@ def configure_axes_for_lightcurves(ax, row, col, only_one_label=False):
 
 
 def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label=False):
+    """
+    Configures axis formatting and ticks for a cross-correlation function (CCF) subplot.
+
+    Parameters:
+    -----------
+    ax : matplotlib.axes.Axes
+        The axis to configure.
+    row : int
+        Row index in the subplot grid.
+    col : int
+        Column index in the subplot grid.
+    ylabel_ccfs : str
+        Y-axis label for the CCFs (applied to right column).
+    only_one_label : bool, optional
+        If True, limits y-axis labeling to reduce clutter.
+
+    Returns:
+    -----------
+    None
+    """
+
     ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
     ax.set_xlim(-4.999, 9.999)
     ax.set_ylim(0, 0.999)
