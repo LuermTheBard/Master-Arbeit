@@ -2,26 +2,30 @@ import numpy as np
 from astropy.constants.codata2018 import c
 from scipy.interpolate import interp1d
 
-from import_data.import_data import import_line_profile_data
 from settings import F_MEAN, F_SIGMA, CENTRAL_WAVELENGTH
 
 
 def calculate_standard_error_for_lightcurves(flux, flux_noise_err):
     """
-    Berechnet den Gesamtfehler einer Lichtkurve basierend auf:
+    Calculates the total uncertainty of a lightcurve data point based on:
 
-    1. Der relativen Standardabweichung des Flusses (F_SIGMA / F_MEAN).
-    2. Dem individuellen Rauschfehler (flux_noise_err).
+    1. The relative scatter of the lightcurve (F_SIGMA / F_MEAN),
+    2. The individual measurement noise (flux_noise_err).
 
-    Formel:
-    Gesamtfehler = sqrt((F_SIGMA / F_MEAN * FLUX)² + flux_noise_err²)
+    Formula:
+    total_error = sqrt((F_SIGMA / F_MEAN * flux)^2 + flux_noise_err^2)
 
-    Parameter:
-    - flux (float oder np.array): Der beobachtete Flusswert oder ein Array von Flüssen.
-    - flux_noise_err (float): Zusätzlicher Fehler durch Rauschen.
+    Parameters:
+    -----------
+    flux : float or np.ndarray
+        Observed flux value(s) of the lightcurve.
+    flux_noise_err : float or np.ndarray
+        Measurement noise or instrumental uncertainty.
 
-    Rückgabewert:
-    - Gesamtfehler als float oder np.array (je nach Eingabetyp von `flux`).
+    Returns:
+    -----------
+    float or np.ndarray
+        The total error associated with the input flux value(s).
     """
 
     if F_MEAN == 0:
@@ -33,181 +37,31 @@ def calculate_standard_error_for_lightcurves(flux, flux_noise_err):
 
 # -------------------------------------------------------------------------------------------------------------------
 
-
-def get_continua_with_highest_corr_coef(line_sorted_data):
-    line_best_continua_dict = dict()
-
-    # Schritt 1: Berechnung der maximalen, zweitgrößten und drittgrößten Werte für jede Linie
-    for line, cont_data_tuple_list in line_sorted_data.items():
-        cont_max_dict = dict()
-
-        for cont_tuple in cont_data_tuple_list:
-            # cont_tuple: (continua_name, x_values, y_values)
-            cont_max_dict[cont_tuple[0]] = sum(cont_tuple[2])
-
-        # Schritt 2: Sortiere cont_max_dict nach Werten absteigend
-        sorted_continua = sorted(cont_max_dict.items(), key=lambda item: item[1], reverse=True)
-
-        # Schritt 3: Extrahiere die drei höchsten Werte (falls vorhanden)
-        top_three_continua = {
-            "best": sorted_continua[0][0] if len(sorted_continua) > 0 else None,
-            "second_best": sorted_continua[1][0] if len(sorted_continua) > 1 else None,
-            "third_best": sorted_continua[2][0] if len(sorted_continua) > 2 else None
-        }
-
-        # Speichere die Ergebnisse in line_best_continua_dict
-        line_best_continua_dict[line] = top_three_continua
-
-    return line_best_continua_dict
-
-
-def get_weighted_best_continua(line_best_continua_dict, weights=None):
-    # Initialisiere ein Wörterbuch zur Gewichtung der continua
-    if weights is None:
-        weights = {"best": 3, "second_best": 2, "third_best": 1}
-    continua_scores = {}
-
-    # Schritt 1: Berechne die gewichteten Punkte
-    for line, ranks in line_best_continua_dict.items():
-        for rank, continua_name in ranks.items():
-            if continua_name is not None:
-                # Addiere die gewichteten Punkte für jedes continua
-                continua_scores[continua_name] = continua_scores.get(continua_name, 0) + weights[rank]
-
-    # Schritt 2: Sortiere die continua_scores nach den Gesamtpunkten
-    sorted_scores = sorted(continua_scores.items(), key=lambda item: item[1], reverse=True)
-
-    # Schritt 3: Extrahiere die besten drei continua
-    top_three_overall = {
-        "best": sorted_scores[0][0] if len(sorted_scores) > 0 else None,
-        "second_best": sorted_scores[1][0] if len(sorted_scores) > 1 else None,
-        "third_best": sorted_scores[2][0] if len(sorted_scores) > 2 else None
-    }
-
-    return top_three_overall
-
-
-def sort_1d_corr_data_for_lines(galaxy_campaigns_dict):
-    line_sorted_data = dict()
-
-    for campaign, continua_dict in galaxy_campaigns_dict.items():
-        line_data_dict = dict()
-        for continua, data_dict in continua_dict.items():
-            x_values = data_dict["time shift (tau)"]
-            for line, data_points in data_dict.items():
-                if line != "time shift (tau)":
-                    if line in line_data_dict.keys():
-                        line_data_dict[line].append((continua, x_values, data_points))
-                    else:
-                        line_data_dict[line] = [(continua, x_values, data_points)]
-
-        line_sorted_data[campaign] = line_data_dict
-
-    return line_sorted_data
-
-
-def calc_error_of_function(func, params, errors):
+def print_table_for_one_reference(filename, linelist, continuum, include_mass=True):
     """
-    Calculates the propagated error for a given function and its input parameters.
+    Generates a LaTeX document containing a formatted table with time lag measurements
+    (centroid and peak) for a given reference lightcurve and its associated emission lines.
 
-    Args:
-        func (callable): The function to evaluate. It should take parameters as input.
-        params (list or np.array): List or array of input parameter values.
-        errors (list or np.array): List or array of errors associated with the input parameters.
+    Parameters:
+    -----------
+    filename : str or Path
+        Output file path where the LaTeX document will be saved.
+    linelist : list
+        List of objects representing emission lines. Each object must have the attributes:
+        - name
+        - tau_cent, tau_cent_err (tuple)
+        - tau_peak, tau_peak_err (tuple)
+        - M_Mo, M_Mo_err (tuple), if include_mass is True
+    continuum : str
+        Name of the reference continuum lightcurve. Used for labeling.
+    include_mass : bool, optional
+        Whether to include black hole mass estimates (with errors) in the table. Default is True.
 
     Returns:
-        float: Propagated error in the result.
+    -----------
+    None
     """
-    # Convert params and errors to numpy arrays for easy manipulation
-    params = np.array(params)
-    errors = np.array(errors)
 
-    # Numerical partial derivatives with respect to each parameter
-    partial_derivatives = np.zeros_like(params, dtype=float)
-    delta = 1e-8  # Small increment for numerical differentiation
-
-    for i in range(len(params)):
-        params_step = params.copy()
-        params_step[i] += delta
-        partial_derivatives[i] = (func(*params_step) - func(*params)) / delta
-
-    # Propagated error calculation
-    propagated_error = np.sqrt(np.sum((partial_derivatives * errors) ** 2))
-    return propagated_error
-
-
-def prepare_cut_data(fits_data_H_Alpha, fits_data_H_Beta, output_path):
-    H_Alpha_wavelenghts = np.array(fits_data_H_Alpha['avg_HAlpha_Line_Profile.fits']['x_axis'][0])
-    H_Alpha_avg_data = np.array(fits_data_H_Alpha['avg_HAlpha_Line_Profile.fits']['data'][0])
-    H_Alpha_rms_data = np.array(fits_data_H_Alpha['rms_HAlpha_Line_Profile.fits']['data'][0])
-    H_Beta_wavelenghts = np.array(fits_data_H_Beta['avg_HBeta_Line_Profile.fits']['x_axis'][0])
-    H_Beta_avg_data = np.array(fits_data_H_Beta['avg_HBeta_Line_Profile.fits']['data'][0])
-    H_Beta_rms_data = np.array(fits_data_H_Beta['rms_HBeta_Line_Profile.fits']['data'][0])
-    H_Alpha_avg_velocity, H_Alpha_avg_intensity = transform_wavelength_to_velocity_and_cut(H_Alpha_wavelenghts,
-                                                                                           H_Alpha_avg_data,
-                                                                                           "HAlpha",
-                                                                                           (-20000, 20000),
-                                                                                           output_path / "H_Alpha_AVG_Line_Profile.txt")
-    H_Alpha_rms_velocity, H_Alpha_rms_intensity = transform_wavelength_to_velocity_and_cut(H_Alpha_wavelenghts,
-                                                                                           H_Alpha_rms_data, "HAlpha",
-                                                                                           (-20000, 20000),
-                                                                                           output_path / "H_Alpha_RMS_Line_Profile.txt")
-    H_Beta_avg_velocity, H_Beta_avg_intensity = transform_wavelength_to_velocity_and_cut(H_Beta_wavelenghts,
-                                                                                         H_Beta_avg_data, "HBeta",
-                                                                                         (-20000, 20000),
-                                                                                         output_path / "H_Beta_AVG_Line_Profile.txt")
-    H_Beta_rms_velocity, H_Beta_rms_intensity = transform_wavelength_to_velocity_and_cut(H_Beta_wavelenghts,
-                                                                                         H_Beta_rms_data, "HBeta",
-                                                                                         (-20000, 20000),
-                                                                                         output_path / "H_Beta_RMS_Line_Profile.txt")
-    line_profile_dict = import_line_profile_data(normalized=True)
-    line_profile_dict_add = {"avg":
-                                 {"HAlpha_substracted_first":
-                                      {"data_dict":
-                                           {'velocity space (km/s)':
-                                                H_Alpha_avg_velocity,
-                                            'normalized flux': H_Alpha_avg_intensity}
-                                       },
-                                  "HBeta_substracted_first":
-                                      {"data_dict":
-                                           {'velocity space (km/s)':
-                                                H_Beta_avg_velocity,
-                                            'normalized flux':
-                                                H_Beta_avg_intensity}}},
-                             "rms":
-                                 {"HAlpha_substracted_first":
-                                      {"data_dict":
-                                           {'velocity space (km/s)':
-                                                H_Alpha_rms_velocity,
-                                            'normalized flux': H_Alpha_rms_intensity}},
-                                  "HBeta_substracted_first":
-                                      {"data_dict":
-                                           {'velocity space (km/s)':
-                                                H_Beta_rms_velocity,
-                                            'normalized flux':
-                                                H_Beta_rms_intensity}}},
-                             }
-    merged_dict = merge_dicts(line_profile_dict, line_profile_dict_add)
-    return merged_dict
-
-
-def merge_dicts(d1, d2):
-    """
-    Rekursive Funktion zum Zusammenführen zweier geschachtelter Dictionaries.
-    Falls Werte existieren, werden sie beibehalten oder überschrieben, falls notwendig.
-    """
-    for key, value in d2.items():
-        if key in d1:
-            if isinstance(d1[key], dict) and isinstance(value, dict):
-                merge_dicts(d1[key], value)  # Rekursiver Aufruf für geschachtelte Dicts
-            else:
-                d1[key] = value  # Überschreiben, falls kein Dict
-        else:
-            d1[key] = value  # Falls Key nicht existiert, direkt übernehmen
-    return d1
-
-
-def print_table_for_one_reference(filename, linelist, continuum, include_mass=True):
     with open(filename, 'w') as outfile:
         # LaTeX Dokument-Kopf
         outfile.write(r'\documentclass{article}' + '\n')
@@ -262,6 +116,29 @@ def print_table_for_one_reference(filename, linelist, continuum, include_mass=Tr
 
 
 def print_table_for_multiple_reference(filename, reference_light_curve_lines_dict, include_mass=True):
+    """
+    Generates a LaTeX document containing a formatted table with time lag measurements
+    for multiple reference lightcurves, each with its associated emission lines.
+
+    Parameters:
+    -----------
+    filename : str or Path
+        Output file path where the LaTeX document will be saved.
+    reference_light_curve_lines_dict : dict
+        Dictionary mapping each reference lightcurve name to a list of emission line objects.
+        Each object must have the attributes:
+        - name
+        - tau_cent, tau_cent_err (tuple)
+        - tau_peak, tau_peak_err (tuple)
+        - M_Mo, M_Mo_err (tuple), if include_mass is True
+    include_mass : bool, optional
+        Whether to include black hole mass estimates (with errors) in the table. Default is True.
+
+    Returns:
+    -----------
+    None
+    """
+
     with open(filename, 'w') as outfile:
         # LaTeX Dokument-Kopf
         outfile.write(r'\documentclass{article}' + '\n')
@@ -324,6 +201,26 @@ def print_table_for_multiple_reference(filename, reference_light_curve_lines_dic
 
 
 def format_label(name, as_latex=True):
+    """
+    Formats a spectral line or continuum identifier for use in plots or LaTeX documents.
+
+    - Converts internal identifiers (e.g., "HAlpha", "HeII4685", "Cont1") into human-readable labels.
+    - Optionally applies LaTeX-specific formatting and escapes underscores.
+    - Handles both emission lines and continua.
+
+    Parameters:
+    -----------
+    name : str
+        The original name or identifier of the line or continuum (e.g., "HAlpha", "Cont1").
+    as_latex : bool, optional
+        If True (default), returns a LaTeX-compatible label (e.g., for tables).
+        If False, returns a plain-text version (e.g., for matplotlib plots).
+
+    Returns:
+    -----------
+    str
+        A formatted and optionally LaTeX-escaped label for display.
+    """
 
     original_name = name
     # Escape für LaTeX
@@ -331,7 +228,7 @@ def format_label(name, as_latex=True):
 
     # Continuum?
     if "Cont" in name:
-        is_not_calibrated = ("not\\_optical\\_calibrated" in name if as_latex else "not_optical_calibrated" in original_name)
+        # is_not_calibrated = ("not\\_optical\\_calibrated" in name if as_latex else "not_optical_calibrated" in original_name)
         num_part = ''.join(filter(str.isdigit, name))
         label = f"Cont. {num_part}" if num_part else name
         # Not needed anymore:
@@ -388,18 +285,39 @@ def format_label(name, as_latex=True):
 
     return formatted
 
+#------------------------------------------------------------------------------------------------------------------------------------
+
 
 def subtract_continuum(wavelength, intensity, line_wavelength, left_range, right_range):
     """
-    Subtrahiert das Pseudokontinuum von einer Emissionslinie in einem Spektrum und normalisiert auf das Maximum in einer gegebenen Umgebung.
+    Estimates and subtracts the pseudo-continuum around an emission line in a spectrum,
+    and normalizes the result to the local maximum near the line.
 
-    :param wavelength: Array der Wellenlängen
-    :param intensity: Array der Intensitätswerte
-    :param line_wavelength: Zentrale Wellenlänge der Linie
-    :param left_range: Tupel (min, max) des linken Bereichs für die Kontinuumsschätzung
-    :param right_range: Tupel (min, max) des rechten Bereichs für die Kontinuumsschätzung
-    :return: (korrigierte Intensität, Pseudokontinuum)
+    A linear continuum is estimated using the mean intensity in two sidebands
+    (left and right of the line), and then subtracted from the original spectrum.
+    The result is normalized to the peak value within ±50 units of the line center.
+
+    Parameters:
+    -----------
+    wavelength : array-like
+        Array of wavelength values.
+    intensity : array-like
+        Array of flux or intensity values corresponding to the wavelengths.
+    line_wavelength : float
+        Central wavelength of the emission line of interest.
+    left_range : tuple (float, float)
+        Wavelength range used to estimate the left-side continuum (e.g., (start, end)).
+    right_range : tuple (float, float)
+        Wavelength range used to estimate the right-side continuum.
+
+    Returns:
+    -----------
+    corrected_intensity : np.ndarray
+        Intensity with the pseudo-continuum subtracted and normalized to its local maximum.
+    continuum : np.ndarray
+        The estimated linear continuum over the full wavelength range.
     """
+
     left_mask = (wavelength > left_range[0]) & (wavelength < left_range[1])
     right_mask = (wavelength > right_range[0]) & (wavelength < right_range[1])
 
@@ -427,24 +345,54 @@ def subtract_continuum(wavelength, intensity, line_wavelength, left_range, right
 
 def convert_to_velocity(wavelength, line_wavelength):
     """
-    Wandelt Wellenlängenwerte in Geschwindigkeitswerte um.
+    Converts wavelength values to velocity space (in km/s), relative to a given line center.
+
+    The velocity is calculated using the non-relativistic Doppler formula:
+        v = (λ - λ₀) / λ₀ * c
+
+    Parameters:
+    -----------
+    wavelength : array-like
+        Observed wavelength(s).
+    line_wavelength : float
+        Central rest-frame wavelength of the emission line.
+
+    Returns:
+    -----------
+    np.ndarray
+        Velocity values in km/s corresponding to the input wavelengths.
     """
+
     c_km_s = c.to('km/s').value  # Lichtgeschwindigkeit in km/s
     return (wavelength - line_wavelength) / line_wavelength * c_km_s
 
 
 def transform_wavelength_to_velocity_and_cut(wavelength, intensity, line_name, velocity_range=None, filename=None):
     """
-    Transformiert die Wellenlängenachse in den Geschwindigkeitsraum, normalisiert die Intensität
-    auf das Maximum und schneidet optional die Daten auf einen Bereich um 0.
+    Converts a spectrum from wavelength to velocity space centered on a given emission line,
+    normalizes the flux to its local maximum, and optionally crops the result to a velocity range.
 
-    :param wavelength: Array der Wellenlängen
-    :param intensity: Array der Intensitätswerte
-    :param line_name: Zentrale Wellenlänge der Linie
-    :param velocity_range: Tupel (min, max) zur Begrenzung des Geschwindigkeitsbereichs; min muss negativ, max positiv sein
-    :param filename: Falls definiert, wird das Ergebnis in eine Datei gespeichert
-    :return: (Geschwindigkeiten, normalisierte Intensität)
+    Parameters:
+    -----------
+    wavelength : array-like
+        Array of observed wavelengths.
+    intensity : array-like
+        Array of intensity or flux values.
+    line_name : str
+        Name of the emission line, used to look up its central wavelength.
+    velocity_range : tuple (float, float), optional
+        Velocity range in km/s to keep around zero. If provided, must be (min < 0, max > 0).
+    filename : str or Path, optional
+        If provided, the resulting velocity–flux data will be written to this file as text.
+
+    Returns:
+    -----------
+    velocity : np.ndarray
+        Velocity values (in km/s), possibly cropped to the specified range.
+    intensity : np.ndarray
+        Corresponding normalized intensity values.
     """
+
 
     line_wavelength = CENTRAL_WAVELENGTH[line_name]
 
@@ -466,6 +414,27 @@ def transform_wavelength_to_velocity_and_cut(wavelength, intensity, line_name, v
 
 
 def normalize_to_maximum(intensity, line_wavelength, wavelength):
+    """
+    Normalizes the intensity values to the local maximum around the given line center.
+
+    If a peak is found within ±10 units of `line_wavelength`, the intensities are scaled by that value.
+    Otherwise, the global maximum is used as a fallback.
+
+    Parameters:
+    -----------
+    intensity : array-like
+        Array of intensity or flux values to be normalized.
+    line_wavelength : float
+        Central wavelength of the emission line.
+    wavelength : array-like
+        Corresponding wavelength values.
+
+    Returns:
+    -----------
+    np.ndarray
+        Normalized intensity array.
+    """
+
     # Normalisierung der Intensität auf das Maximum
     if np.max(intensity) != 0:
         # Bestimme das Maximum innerhalb des Bereichs ±10 um line_wavelength
@@ -481,6 +450,28 @@ def normalize_to_maximum(intensity, line_wavelength, wavelength):
 
 
 def cut_normalized_line_out(intensity, velocity, velocity_range):
+    """
+    Crops the intensity and velocity arrays to the specified velocity range.
+
+    Ensures that the range is symmetric around 0 by forcing `min_v` to be ≤ 0 and `max_v` ≥ 0.
+
+    Parameters:
+    -----------
+    intensity : array-like
+        Normalized intensity values.
+    velocity : array-like
+        Velocity values in km/s.
+    velocity_range : tuple (float, float)
+        Desired velocity window (min, max). Should ideally be symmetric around zero.
+
+    Returns:
+    -----------
+    intensity : np.ndarray
+        Cropped intensity array.
+    velocity : np.ndarray
+        Cropped velocity array.
+    """
+
     # Falls ein Bereich gegeben ist, schneide die Daten zurecht
     if velocity_range is not None:
         min_v, max_v = velocity_range
@@ -493,6 +484,26 @@ def cut_normalized_line_out(intensity, velocity, velocity_range):
 
 
 def cut_line_out(intensity, wavelength, wavelength_range):
+    """
+    Crops the intensity and wavelength arrays to a specified wavelength range.
+
+    Parameters:
+    -----------
+    intensity : array-like
+        Intensity values of the spectrum.
+    wavelength : array-like
+        Wavelength values of the spectrum.
+    wavelength_range : tuple (float, float)
+        Range of wavelengths to keep (min, max).
+
+    Returns:
+    -----------
+    intensity : np.ndarray
+        Cropped intensity array.
+    wavelength : np.ndarray
+        Cropped wavelength array.
+    """
+
     # Falls ein Bereich gegeben ist, schneide die Daten zurecht
     if wavelength_range is not None:
         min_v, max_v = wavelength_range
@@ -504,11 +515,22 @@ def cut_line_out(intensity, wavelength, wavelength_range):
 
 def save_velocity_data_to_txt(filename, velocity, intensity):
     """
-    Speichert die Geschwindigkeits- und Intensitätswerte in eine TXT-Datei im gewünschten Format.
+    Saves velocity and normalized intensity values to a plain text file in tab-separated format.
 
-    :param filename: Name der Datei, in die gespeichert werden soll
-    :param velocity: Array der Geschwindigkeitswerte
-    :param intensity: Array der Intensitätswerte
+    The file includes a header and one data row per velocity–intensity pair.
+
+    Parameters:
+    -----------
+    filename : str or Path
+        Name or path of the file to save to.
+    velocity : array-like
+        Velocity values in km/s.
+    intensity : array-like
+        Corresponding normalized intensity (flux) values.
+
+    Returns:
+    -----------
+    None
     """
     with open(filename, 'w') as file:
         file.write("# velocity space (km/s) \t normalized flux\n")
