@@ -376,3 +376,34 @@ def process_line_profile_data(line_profiles_list, line_profile_path):
 
     return result_dict
 
+
+def load_centroid_data_as_dict():
+    """
+    Lädt alle .txt-Dateien mit Zeitverzögerungs- und Massenwerten aus einem Ordner
+    in ein gemeinsames Dictionary mit den Liniennamen als Keys. Doppelte Namen werden ignoriert.
+
+    Returns:
+    --------
+    dict
+        Dictionary mit dem Namen der Emissionslinie als Key.
+        Jeder Value ist ein Dictionary mit den zugehörigen Werten.
+    """
+
+    data_path = Path(find_prime_data_folder()) / "centroids"
+    data_dict = {}
+
+    for file in data_path.glob("*.txt"):
+        with open(file, "r") as f:
+            header = f.readline().strip().split()
+            data = np.loadtxt(file, skiprows=1, dtype=str)
+
+        for row in data:
+            name = row[0]
+            if name in data_dict:
+                continue  # bereits vorhanden, überspringen
+
+            values = row[1:].astype(float)
+            entry = dict(zip(header[1:], values))
+            data_dict[str(name)] = entry
+
+    return data_dict

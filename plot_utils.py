@@ -4,6 +4,7 @@ import numpy as np
 from astropy.constants.codata2018 import c
 from scipy.interpolate import interp1d
 
+from import_data.import_data import find_prime_data_folder
 from settings import F_MEAN, F_SIGMA, CENTRAL_WAVELENGTH
 
 
@@ -38,6 +39,52 @@ def calculate_standard_error_for_lightcurves(flux, flux_noise_err):
 
 
 # -------------------------------------------------------------------------------------------------------------------
+
+def save_centroid_as_txt(line_objects, output_file="centroids.txt", include_mass=True):
+    """
+    Saves centroid lags and optionally black hole masses in a machine-readable .txt file.
+
+    Parameters:
+    -----------
+    line_objects : list
+        List of emission line objects with:
+        - name
+        - tau_cent, tau_cent_err (tuple)
+        - M_Mo, M_Mo_err (tuple), if include_mass is True
+    output_path : str
+        Path to output text file.
+    include_mass : bool
+        Include black hole mass estimates if True.
+
+    Returns:
+    --------
+    None
+    """
+    output_folder = find_prime_data_folder() / "centroids"
+    ensure_output_dir(output_folder)
+
+
+    with open(str(output_folder / output_file), "w") as f:
+        if include_mass:
+            f.write("name tau_cent tau_cent_err_low tau_cent_err_high M_Mo M_Mo_err_low M_Mo_err_high\n")
+        else:
+            f.write("name tau_cent tau_cent_err_low tau_cent_err_high\n")
+
+        for line in line_objects:
+            tau = line.tau_cent
+            err_low = tau - line.tau_cent_err[0]
+            err_high = line.tau_cent_err[1] - tau
+
+            if include_mass:
+                M = line.M_Mo
+                M_err_low = M - line.M_Mo_err[0]
+                M_err_high = line.M_Mo_err[1] - M
+                f.write(f"{line.name} {tau:.4f} {err_low:.4f} {err_high:.4f} {M:.4f} {M_err_low:.4f} {M_err_high:.4f}\n")
+            else:
+                f.write(f"{line.name} {tau:.4f} {err_low:.4f} {err_high:.4f}\n")
+
+
+
 
 def print_table_for_one_reference(filename, linelist, continuum, include_mass=True):
     """

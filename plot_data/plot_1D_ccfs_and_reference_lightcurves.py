@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
-from import_data.import_data import import_1d_correlation_data, import_1d_lightcurve_data
+from import_data.import_data import import_1d_correlation_data, import_1d_lightcurve_data, load_centroid_data_as_dict
 from plot_utils import format_label, calculate_standard_error_for_lightcurves, ensure_output_dir
 from plot_data.general_plot import finalize_figure, format_yaxis, format_month_day
 from settings import BASE_MJD, DEFAULT_OUTPUT_DIR
@@ -11,7 +11,7 @@ from settings import BASE_MJD, DEFAULT_OUTPUT_DIR
 matplotlib.use('Qt5Agg')
 
 
-def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, only_one_label=False):
+def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, only_one_label=False, centroid_data=None):
     """
     Organizes and plots CFFs and their corresponding lightcurves
     in subplot groups, based on specified key orders.
@@ -128,14 +128,14 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
                key=lambda item: final_sort_keys(item[0])))
 
 
-    plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs, xlabel_lightcurves,
+    plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs, xlabel_lightcurves, centroid_data=centroid_data,
                                                   title=f"CCFs and reference lightcurves",
-                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name, rows=rows, cols=cols, only_one_label = only_one_label)
+                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name, rows=rows, cols=cols, only_one_label=only_one_label)
 
 
 def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs,
                                                   xlabel_lightcurves, title, save_only, output_dir, shared_y,
-                                                  file_name, rows=4, cols=2, only_one_label=False):
+                                                  file_name, centroid_data=None, rows=4, cols=2, only_one_label=False):
     """
     Plots CCFs and their associated normalized lightcurves
     in a side-by-side subplot layout.
@@ -206,7 +206,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
                 line_data = np.array([])
                 color = "black"
 
-            configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name, only_one_label = only_one_label)
+            configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name_and_ref_name=line_name, centroid_data=centroid_data, only_one_label=only_one_label)
 
 
         finalize_figure(fig, axes, x_label=(xlabel_lightcurves, xlabel_ccfs), title=title, group_index=group_index,
@@ -263,7 +263,7 @@ def prepare_ccfs_references_data(data, rows, cols):
 
 
 def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr,
-                                      line_name_and_ref_name, only_one_label=False):
+                                      line_name_and_ref_name, centroid_data=None, only_one_label=False):
     """
     Configures a single subplot axis to display either a normalized lightcurve pair
     or a CCF, depending on the data provided.
@@ -324,6 +324,11 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         ax.legend(fontsize=8)
     else:
         ax.plot(x_values_ccfs, line_data["ccfs"], color=color)
+        if centroid_data:
+            try:
+                ax.axvline(centroid_data[line_name]["tau_cent"], color="red", linestyle="--")
+            except KeyError:
+                print(f"No centroid data found for line {line_name}")
         ax.text(9.5,0.95, format_label(line_name, as_latex=False),  ha='right', va='top', fontsize=8)
         configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label)
 
@@ -460,9 +465,10 @@ def save_1d_corr_and_lightcurves_in_groups_for_bowen_fluorescence_lines(output_d
     final_sorted_keys = ["time shift (tau)", 'OI8446', "LyAlpha_not_optical_calibrated", 'HBeta', 'HAlpha']
 
     one_dim_correlation_data = import_1d_correlation_data()
+    centroid_data = load_centroid_data_as_dict()
     lightcurves_data = import_1d_lightcurve_data()
     lightcurves_ccfs_dict = {"lightcurves": lightcurves_data["NGC4593_optical_calibrated"], "ccfs": one_dim_correlation_data["NGC4593_optical_calibrated"]}
-    plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, "NGC4593_optical_calibrated", output_dir, keyorders, file_name="bowen_fluorescence_ccfs_and_reference_lightcurves", final_key_order=final_sorted_keys, rows = 9, only_one_label = True)
+    plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, "NGC4593_optical_calibrated", output_dir, keyorders, file_name="bowen_fluorescence_ccfs_and_reference_lightcurves", final_key_order=final_sorted_keys, rows = 9, centroid_data=centroid_data, only_one_label = True)
 
 
 def save_1d_corr_and_lightcurves_in_groups_for_UVW2(output_dir=DEFAULT_OUTPUT_DIR):
@@ -485,13 +491,14 @@ def save_1d_corr_and_lightcurves_in_groups_for_UVW2(output_dir=DEFAULT_OUTPUT_DI
 
     keyorders_dict = {"NGC4593_optical_calibrated": keyorders_optical, "NGC4593_not_optical_calibrated": keyorders_UV}
 
-    rows = 7
+    rows = 8
 
     one_dim_correlation_data = import_1d_correlation_data()
+    centroid_data = load_centroid_data_as_dict()
     lightcurves_data = import_1d_lightcurve_data()
     for campaign, data_dict in one_dim_correlation_data.items():
         lightcurves_ccfs_dict = {"lightcurves": lightcurves_data[campaign], "ccfs": data_dict}
-        plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders_dict[campaign], file_name="UVW2_ccfs_and_reference_lightcurves", final_key_order=keyorders_dict[campaign], rows=rows, only_one_label = True)
+        plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders_dict[campaign], file_name="UVW2_ccfs_and_reference_lightcurves", final_key_order=keyorders_dict[campaign], rows=rows, centroid_data=centroid_data, only_one_label = True)
 
 
 def save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha(output_dir=DEFAULT_OUTPUT_DIR):
@@ -521,6 +528,7 @@ def save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha(output_d
 
     one_dim_correlation_data = import_1d_correlation_data()
     lightcurves_data = import_1d_lightcurve_data()
+    centroid_data = load_centroid_data_as_dict()
 
     lightcurves_ccfs_dict_combined = {
         "lightcurves": {
@@ -541,11 +549,13 @@ def save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha(output_d
 
     plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict_combined, "NGC4593_Combined", output_dir, keyorders,
                                            file_name="UV_to_HAlpha_ccfs_and_reference_lightcurves", final_key_order=keyorders,
-                                           rows=rows, cols=2, only_one_label = True)
+                                           rows=rows, cols=2, centroid_data=centroid_data ,only_one_label = True)
 
 
 
-save_1d_corr_and_lightcurves_in_groups_for_UVW2()
+
 save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha()
-save_1d_corr_and_lightcurves_in_groups_for_bowen_fluorescence_lines()
+
+# save_1d_corr_and_lightcurves_in_groups_for_UVW2()
+# save_1d_corr_and_lightcurves_in_groups_for_bowen_fluorescence_lines()
 
