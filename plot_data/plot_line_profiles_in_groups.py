@@ -10,33 +10,35 @@ from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
 matplotlib.use('Qt5Agg')
 
 def plot_normalized_line_profiles_in_groups(data, save_only=False, output_dir=None,
-                                            rows=4, cols=2, key_order=None, title="Normalized Line Profiles", shared_y=False):
+                                            rows=4, cols=2, key_order=None,
+                                            title="Normalized Line Profiles", shared_y=False):
     """
-    Plottet normalisierte Linienprofile (AVG und RMS) gruppiert in Subplots (z. B. 4x2).
+    Plots normalized AVG and RMS line profiles in a grid of subplots (e.g., 4x2).
 
-    Parameter:
+    Parameters:
     -----------
     data : dict
-        Dictionary mit 'avg' und 'rms'-Daten.
-    compare_cont : str
-        Bezeichner für Dateinamen-Suffix.
+        Dictionary containing normalized 'avg' and 'rms' line profiles per line.
     save_only : bool
-        Nur speichern oder auch anzeigen.
-    output_dir : Path oder None
-        Verzeichnis zum Speichern der Plots.
+        If True, save the plots without displaying them.
+    output_dir : Path or None
+        Directory to save the plots. Default is DEFAULT_OUTPUT_DIR / "plot_line_profiles".
     rows : int
-        Anzahl der Subplot-Zeilen.
+        Number of subplot rows.
     cols : int
-        Anzahl der Subplot-Spalten.
-    key_order : list oder None
-        Falls angegeben, wird diese Reihenfolge für die Linien verwendet.
+        Number of subplot columns.
+    key_order : list or None
+        Custom order of lines to plot. If None, all available lines are used in default order.
     title : str
-        Titel der Abbildung.
+        Title of the full figure.
+    shared_y : bool
+        If True, share the y-axis across subplots.
 
     Returns:
-    -----------
+    --------
     None
     """
+
 
     x_key = 'velocity space (km/s)'
     y_key = 'normalized flux'
@@ -103,33 +105,32 @@ def plot_normalized_line_profiles_in_groups(data, save_only=False, output_dir=No
 def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y, line_name,
                                  line_lightcurves=False):
     """
-    Konfiguriert eine Achse für das Linienprofil (AVG und RMS).
+    Configures a subplot axis to display normalized AVG and RMS line profiles.
 
-    Parameter:
+    Parameters:
     -----------
     ax : matplotlib.axes.Axes
-        Achse für den aktuellen Subplot.
+        Axis object of the subplot.
     row : int
-        Zeilenindex im Grid.
+        Row index in the subplot grid.
     col : int
-        Spaltenindex im Grid.
+        Column index in the subplot grid.
+    ylabel : str
+        Label for the y-axis.
     avg_x, avg_y : array-like
-        Daten für den AVG-Plot.
+        Velocity and normalized flux arrays for the AVG spectrum.
     rms_x, rms_y : array-like
-        Daten für den RMS-Plot.
+        Velocity and normalized flux arrays for the RMS spectrum.
     line_name : str
-        Name der Linie (für Titel).
-    rows : int
-        Anzahl der Zeilen (für Achsenlogik).
-    cols : int
-        Anzahl der Spalten (für Achsenlogik).
+        Name of the line (used in subplot label).
     line_lightcurves : bool
-        (Optional) für alternative Achsenbeschriftung.
+        If True, adjusts the y-axis label for lightcurves (optional/legacy).
 
     Returns:
-    -----------
+    --------
     None
     """
+
 
     ax.plot(avg_x, avg_y, label=f'AVG', color='black')
     ax.plot(rms_x, rms_y, label=f'RMS', color='red')
@@ -201,10 +202,31 @@ pseudo_conts_for_line_rms = {
 }
 
 
-def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_dir=DEFAULT_OUTPUT_DIR,  plot=False):
+def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_dir=DEFAULT_OUTPUT_DIR, plot=False):
     """
-    Berechnet das pseudo-continum-subtrahierte Spektrum und speichert die Daten in Dateien.
+    Processes a spectrum: subtracts pseudo-continuum, normalizes the line,
+    converts to velocity space, saves outputs, and optionally plots.
+
+    Parameters:
+    -----------
+    wavelength : np.ndarray
+        Array of wavelength values (Å).
+    intensity : np.ndarray
+        Array of flux values.
+    line_name : str
+        Name of the emission line (e.g. 'HAlpha').
+    spec_type : str
+        Either 'avg' or 'rms' to choose pseudo-continuum ranges.
+    output_dir : Path
+        Directory to save the processed spectrum and line profile.
+    plot : bool
+        If True, show diagnostic plots for the spectrum and line profile.
+
+    Returns:
+    --------
+    None
     """
+
     line_wavelength = CENTRAL_WAVELENGTH[line_name]
 
     if spec_type == "avg":
@@ -265,8 +287,34 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
         plt.show()
 
 
-def plot_cut_out_line_profile(cut_out_range, intensity_avg, intensity_rms, line_name, output_path, plot, velocity_avg,
-                              velocity_rms):
+def plot_cut_out_line_profile(cut_out_range, intensity_avg, intensity_rms, line_name, output_path, plot, velocity_avg, velocity_rms):
+    """
+    Plots and saves a velocity-space cut-out of a line profile (AVG and RMS).
+
+    Parameters:
+    -----------
+    cut_out_range : tuple of float
+        Velocity range (min, max) for the cut-out.
+    intensity_avg : np.ndarray
+        Normalized AVG profile intensities.
+    intensity_rms : np.ndarray
+        Normalized RMS profile intensities.
+    line_name : str
+        Name of the emission line.
+    output_path : Path
+        Directory to save the .txt output files.
+    plot : bool
+        If True, display a plot of both AVG and RMS profiles.
+    velocity_avg : np.ndarray
+        Velocity array for AVG profile.
+    velocity_rms : np.ndarray
+        Velocity array for RMS profile.
+
+    Returns:
+    --------
+    None
+    """
+
     range_str = f"{cut_out_range[0]}_{cut_out_range[1]}"
     save_velocity_data_to_txt(output_path / f"{line_name}_avg_profile_{range_str}.txt", velocity_avg, intensity_avg)
     save_velocity_data_to_txt(output_path / f"{line_name}_rms_profile_{range_str}.txt", velocity_rms, intensity_rms)

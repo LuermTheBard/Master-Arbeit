@@ -7,7 +7,36 @@ from plot_data.general_plot import prepare_data, finalize_figure, format_relativ
 from settings import BASE_MJD, COLORCODE_CONTINUA_NORMALIZED
 
 
-def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont, key_order_lines=None, key_order_conts=None, save_only=False):
+def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont,
+                                      key_order_lines=None, key_order_conts=None, save_only=False):
+    """
+    Plots all available 1D lightcurves (emission lines and continua) in grouped subplots.
+
+    Emission line lightcurves are plotted together with the selected comparison continuum.
+    Continuum lightcurves are plotted separately using a custom color dictionary.
+
+    Parameters:
+    -----------
+    data_dict : dict
+        Dictionary with structure {"lines": {line_name: dict}, "continua": {cont_name: dict}}.
+    campaign : str
+        Campaign identifier (used in output directory structure and titles).
+    output_dir : str or Path
+        Base output directory for saving plots.
+    compare_cont : str
+        Continuum name to be used for comparison in line plots.
+    key_order_lines : list of str, optional
+        Custom order for line lightcurve plotting.
+    key_order_conts : list of str, optional
+        Custom order for continuum plotting.
+    save_only : bool, optional
+        If True, saves the plots without displaying them.
+
+    Returns:
+    -----------
+    None
+    """
+
     base_mjd = BASE_MJD
 
     xlabel = f"MJD - {base_mjd:.2f}"
@@ -63,41 +92,48 @@ def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis'
                                yerr_name=None, title=None, save_only=False,
                                output_dir=None, color_dict=None, rows=4, cols=2, line_light_curves=False):
     """
-    Plots 1D-Daten in Gruppen für Lightcurves.
+    Plots lightcurves grouped in subplots with optional error bars and custom layout.
 
-    Parameter:
+    Supports both continuum and emission line lightcurves, and handles unit normalization for flux values.
+
+    Parameters:
     -----------
     data : dict
-        Dictionary containing the data for the plots.
+        Dictionary with {name: lightcurve_dict}. Each lightcurve_dict must include `x_key`, `y_key`, and optionally `yerr_name`.
     x_key : str
-        Key für die x-Daten in den Dictionaries der Daten.
+        Key for time (x-axis) values in each lightcurve dictionary.
     y_key : str
-        Key für die y-Daten in den Dictionaries der Daten.
+        Key for flux (y-axis) values.
+    compare_cont : str
+        Reference continuum name, used for naming output and labels.
     xlabel : str, optional
-        Label für die X-Achse (nicht immer verwendet).
+        Label for the x-axis. Default is 'X-axis'.
     ylabel : str, optional
-        Label für die Y-Achse.
+        Label for the y-axis. Default is 'Y-axis'.
     shared_y : bool, optional
-        Wenn True, teilen sich alle Subplots die Y-Achse.
+        If True, subplots share y-axis limits.
     yerr_name : str, optional
-        Key für die Fehlerbalken im Dictionary.
+        Key for flux error values. If None, no error bars will be plotted.
     title : str, optional
-        Titel für die gesamte Figure.
+        Figure title.
     save_only : bool, optional
-        Ob die Abbildungen gespeichert werden sollen, ohne sie anzuzeigen.
+        If True, saves the plot instead of displaying it.
     output_dir : str or Path, optional
-        Verzeichnis, in dem die Abbildungen gespeichert werden.
+        Output directory for plot files.
     color_dict : dict, optional
-        Dictionary mit Farben für jede Datenserie.
+        Optional color override for individual lines.
     rows : int, optional
-        Anzahl der Subplot-Reihen.
+        Number of subplot rows per group. Default is 4.
     cols : int, optional
-        Anzahl der Subplot-Spalten.
+        Number of subplot columns per group. Default is 2.
+    line_light_curves : bool, optional
+        If True, adjusts axis labeling for emission line lightcurves.
 
     Returns:
     -----------
     None
     """
+
     for current_data, group_index in prepare_data(data, rows, cols):
         fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=True, sharey=shared_y)
         fig.subplots_adjust(hspace=0, wspace=0)
@@ -136,35 +172,41 @@ def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis'
                         save_only=save_only, output_dir=output_dir, compare_cont=compare_cont)
 
 
-def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name, line_lightcurves=False):
+def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
+                                line_name, line_lightcurves=False):
     """
-    Konfiguriert die Achse für Lightcurves.
+    Configures a subplot axis for a single lightcurve, including error bars, labels, ticks, and legends.
 
-    Parameter:
+    Supports both continuum and line lightcurves and applies formatting for relative time axes and LaTeX-ready labels.
+
+    Parameters:
     -----------
     ax : matplotlib.axes.Axes
-        Die jeweilige Achse, auf der geplottet wird.
+        Axis to configure.
     row : int
-        Zeilenindex des Subplots.
+        Row index of the subplot.
     col : int
-        Spaltenindex des Subplots.
+        Column index of the subplot.
     ylabel : str
-        Beschriftung der Y-Achse.
+        Y-axis label (with optional unit scaling).
     color : str
-        Linienfarbe.
+        Line color.
     x_values : np.ndarray
-        X-Daten für den Plot.
+        Time values (typically MJD).
     y_values : np.ndarray
-        Y-Daten für den Plot.
+        Normalized flux values.
     yerr_values : np.ndarray or None
-        Fehlerbalkendaten, falls vorhanden.
+        Flux uncertainty values for error bars.
     line_name : str
-        Name / Label für die Datenlinie.
+        Name of the plotted component (used in legend).
+    line_lightcurves : bool, optional
+        Whether the plotted data are emission line lightcurves (used for axis labeling).
 
     Returns:
     -----------
     None
     """
+
     if x_values.size > 0 and y_values.size > 0:
         if yerr_values is not None:
             ax.errorbar(

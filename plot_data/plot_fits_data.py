@@ -1,5 +1,3 @@
-from turtle import pd
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -8,15 +6,19 @@ from settings import All_LINES, All_LINE_GROUPS
 
 def validate_fits_data(fits_data):
     """
-    Validates the structure of the input FITS-like data dictionary.
+    Validates the structure of the FITS-like data dictionary.
 
     Parameters:
-    - fits_data: dict
-        The input data dictionary to validate.
+    -----------
+    fits_data : dict
+        Dictionary where each value must be another dict containing 'x_axis' and 'data' keys.
 
     Raises:
-    - ValueError: If the data structure is invalid.
+    -------
+    ValueError
+        If the structure does not match the expected format.
     """
+
     if not isinstance(fits_data, dict):
         raise ValueError("The input fits_data must be a dictionary.")
 
@@ -33,18 +35,25 @@ def validate_fits_data(fits_data):
 
 def plot_avg_rms(fits_data, save_path=None, log_scale=False):
     """
-    Plots the average (AVG) and RMS flux for a given galaxy spectrum and saves the data to files.
+    Extracts and plots AVG and RMS spectra from FITS-like data.
+    Also saves the flux data and plot if a save path is provided.
 
     Parameters:
-    - fits_data: dict
-        A dictionary containing FITS-like data. Expected keys are:
-        - "<galaxy_name>_avg": dict
-        - "<galaxy_name>_rms": dict
-    - save_path: Path object or None
-        Path to save the plot and data files. If None, only the plot is displayed.
-    - log_scale: bool
-        If True, use a logarithmic y-scale for the plots.
+    -----------
+    fits_data : dict
+        Dictionary containing entries like '<name>_avg' and '<name>_rms',
+        each with 'x_axis' and 'data' arrays.
+    save_path : Path or None
+        Directory path to save the plot and output .txt files. If None, only plots.
+    log_scale : bool
+        If True, use a logarithmic y-axis for the plot.
+
+    Raises:
+    -------
+    ValueError
+        If AVG or RMS data is missing or improperly formatted.
     """
+
     validate_fits_data(fits_data)
 
     avg_dict = None
@@ -102,12 +111,44 @@ def plot_avg_rms(fits_data, save_path=None, log_scale=False):
                    delimiter=" ", header=header_line, comments='')
 
 def plot_avg_rms_spectra(
-        x, y1, y2, xlabel, ylabel, title1, title2, super_title, lines, groups, save_path=None, log_scale=False,
-        xlim=None,
-        ylim=None):
+    x, y1, y2, xlabel, ylabel, title1, title2, super_title,
+    lines, groups, save_path=None, log_scale=False, xlim=None, ylim=None
+):
     """
-    Plots two spectra in the same figure, scaling the first spectrum to overlay it above the second spectrum.
+    Plots the AVG and RMS spectra in one figure with custom scaling and line annotations.
+
+    Parameters:
+    -----------
+    x : array-like
+        Wavelength values.
+    y1 : array-like
+        Flux values for the AVG spectrum.
+    y2 : array-like
+        Flux values for the RMS spectrum.
+    xlabel : str
+        X-axis label.
+    ylabel : str
+        Base Y-axis label (will be scaled with power of 10).
+    title1 : str
+        Label for the AVG spectrum.
+    title2 : str
+        Label for the RMS spectrum.
+    super_title : str
+        Main plot title.
+    lines : dict
+        Dictionary of emission lines with their properties (position, label, etc.).
+    groups : dict
+        Dictionary of grouped line annotations.
+    save_path : Path or None
+        If set, the figure is saved as both .pdf and .png.
+    log_scale : bool
+        Whether to use a log y-axis.
+    xlim : tuple or None
+        Tuple of (xmin, xmax) for limiting x-axis.
+    ylim : tuple or None
+        Tuple of (ymin, ymax) for limiting y-axis.
     """
+
 
     if xlim:
         x = np.array(x) if isinstance(x, list) else x
@@ -216,9 +257,44 @@ def plot_avg_rms_spectra(
     plt.show()
 
 
-def plot_line_group(ax_obj, positions, x, y1_filtered, y2_scaled, group, line_length=0.5, tick_vertical_shift_avg=0.5, tick_vertical_shift_rms=0.5, all_lines=False,
-                    show_in_rms=False):
-    """Funktion, um verbundene Linien zu zeichnen."""
+def plot_line_group(
+    ax_obj, positions, x, y1_filtered, y2_scaled, group,
+    line_length=0.5, tick_vertical_shift_avg=0.5, tick_vertical_shift_rms=0.5,
+    all_lines=False, show_in_rms=False
+):
+    """
+    Draws vertical line annotations for a group of emission lines on the plot.
+
+    Parameters:
+    -----------
+    ax_obj : matplotlib.axes.Axes
+        The plot axis to draw on.
+    positions : list of float
+        Wavelength positions of the group lines.
+    x : np.ndarray
+        Wavelength array used to align annotations with spectrum data.
+    y1_filtered : np.ndarray
+        Shifted AVG spectrum for vertical positioning.
+    y2_scaled : np.ndarray
+        Scaled RMS spectrum for optional RMS annotations.
+    group : str
+        Name of the line group (e.g., "Balmer", "Helium").
+    line_length : float, optional
+        Height of the vertical tick marks.
+    tick_vertical_shift_avg : float, optional
+        Vertical offset for AVG ticks.
+    tick_vertical_shift_rms : float, optional
+        Vertical offset for RMS ticks.
+    all_lines : bool, optional
+        If True, draw a tick for every position in `positions`.
+    show_in_rms : bool, optional
+        If True, also draw ticks for RMS spectrum.
+
+    Returns:
+    --------
+    None
+    """
+
     min_pos = min(positions)
     max_pos = max(positions)
 

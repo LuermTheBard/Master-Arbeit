@@ -8,6 +8,36 @@ from plot_data.general_plot import prepare_data, finalize_figure, format_yaxis
 
 def plot_all_1d_ccfs_in_groups_for_cont(data_dict, campaign, cont_name, output_dir, key_order=None,
                                         save_only=False, file_name=None, only_key_order=False):
+    """
+    Sorts and plots 1D CCFs for a specific continuum reference in grouped subplots.
+
+    This function selects CCFs from `data_dict` based on a continuum name, sorts them according to a custom order,
+    and delegates the grouped plotting to `plot_ccfs_in_groups()`.
+
+    Parameters:
+    -----------
+    data_dict : dict
+        Dictionary of CCF data structured as {continuum_name: {line_name: array-like, ...}, ...}.
+    campaign : str
+        Campaign identifier (used in output folder structure).
+    cont_name : str
+        Name of the continuum lightcurve serving as the reference.
+    output_dir : str or pathlib.Path
+        Base directory to store the output plots.
+    key_order : list of str, optional
+        Specific order of emission lines to plot.
+    save_only : bool, optional
+        If True, saves the plot(s) without displaying them. Default is False.
+    file_name : str, optional
+        Custom base name for saved files. Default is None.
+    only_key_order : bool, optional
+        If True, only includes emission lines listed in `key_order`. Default is False.
+
+    Returns:
+    -----------
+    None
+    """
+
     xlabel = "Time Lag $\\tau$ [d]"
     ylabel = "Correlation Coefficient"
 
@@ -40,41 +70,45 @@ def plot_all_1d_ccfs_in_groups_for_cont(data_dict, campaign, cont_name, output_d
 
 
 def plot_ccfs_in_groups(data, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
-                        title=None, save_only=False, output_dir=None, color_dict=None, rows=4, cols=2, file_name = None):
+                        title=None, save_only=False, output_dir=None, color_dict=None, rows=4, cols=2, file_name=None):
     """
-    Plots 1D-Daten in Gruppen für CCFs.
+    Plots multiple 1D CCFs in subplot groups for a single reference continuum.
 
-    Parameter:
+    Each emission line is plotted in a separate subplot, organized into grids of (rows x cols).
+    Optionally uses shared y-axes and color coding.
+
+    Parameters:
     -----------
     data : dict
-        Dictionary containing the data for the plots.
-    x_key : str
-        Key für die x-Daten in den Dictionaries der Daten.
-    y_key : str
-        Key für die y-Daten in den Dictionaries der Daten.
+        Dictionary with {line_name: y_values} pairs. Must include 'time shift (tau)' key for x-values.
+    compare_cont : str
+        Name of the reference continuum, used for labeling and file naming.
     xlabel : str, optional
-        Label für die X-Achse (nicht immer verwendet).
+        X-axis label for all plots. Default is 'X-axis'.
     ylabel : str, optional
-        Label für die Y-Achse.
+        Y-axis label. Default is 'Y-axis'.
     shared_y : bool, optional
-        Wenn True, teilen sich alle Subplots die Y-Achse.
+        If True, all subplots share the same y-axis limits.
     title : str, optional
-        Titel für die gesamte Figure.
+        Title for the overall figure.
     save_only : bool, optional
-        Ob die Abbildungen gespeichert werden sollen, ohne sie anzuzeigen.
+        If True, saves the figure without displaying it.
     output_dir : str or Path, optional
-        Verzeichnis, in dem die Abbildungen gespeichert werden.
+        Output directory where plots will be saved.
     color_dict : dict, optional
-        Dictionary mit Farben für jede Datenserie.
+        Optional dictionary that maps line names to specific colors.
     rows : int, optional
-        Anzahl der Subplot-Reihen.
+        Number of subplot rows. Default is 4.
     cols : int, optional
-        Anzahl der Subplot-Spalten.
+        Number of subplot columns. Default is 2.
+    file_name : str, optional
+        Optional custom filename (used as prefix).
 
     Returns:
     -----------
     None
     """
+
     x_values_ccfs = data['time shift (tau)']
     data.pop('time shift (tau)')
 
@@ -101,33 +135,37 @@ def plot_ccfs_in_groups(data, compare_cont, xlabel='X-axis', ylabel='Y-axis', sh
 
 def configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values, line_name):
     """
-    Konfiguriert die Achse für CCFs.
+    Configures a subplot axis for plotting a CCF.
 
-    Parameter:
+    Includes line plotting, optional error bars, vertical zero-line, legends,
+    and dual y-axes for the right column. Also sets tick formatting and limits.
+
+    Parameters:
     -----------
     ax : matplotlib.axes.Axes
-        Die jeweilige Achse, auf der geplottet wird.
+        The axis object to configure.
     row : int
-        Zeilenindex des Subplots.
+        Row index in the subplot grid.
     col : int
-        Spaltenindex des Subplots.
+        Column index in the subplot grid.
     ylabel : str
-        Beschriftung der Y-Achse.
+        Label for the y-axis.
     color : str
-        Linienfarbe.
+        Line color for the plot.
     x_values : np.ndarray
-        X-Daten für den Plot.
+        X-axis values (e.g., time lags).
     y_values : np.ndarray
-        Y-Daten für den Plot.
+        Y-axis values (e.g., correlation coefficients).
     yerr_values : np.ndarray or None
-        Fehlerbalkendaten, falls vorhanden.
+        Optional error bars.
     line_name : str
-        Name / Label für die Datenlinie.
+        Label for the line (used in legend).
 
     Returns:
     -----------
     None
     """
+
 
     if x_values.size > 0 and y_values.size > 0:
         if yerr_values is not None:
