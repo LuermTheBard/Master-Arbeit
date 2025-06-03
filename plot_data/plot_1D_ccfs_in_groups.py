@@ -215,7 +215,7 @@ def configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_va
 
 # methods to run:
 
-def plot_1d_corr_in_groups_for_cont_optical_calibrated(cont_name=None, output_dir=DEFAULT_OUTPUT_DIR):
+def plot_1d_corr_in_groups(cont_name, campaign_name,  output_dir=DEFAULT_OUTPUT_DIR):
 
     # Prüfen, ob cont_name definiert ist
     if not cont_name:
@@ -226,11 +226,11 @@ def plot_1d_corr_in_groups_for_cont_optical_calibrated(cont_name=None, output_di
     key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875',  'HeII4685', 'OI8446']
     one_dim_correlation_data = import_1d_correlation_data()
 
-    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data["NGC4593_optical_calibrated"], "NGC4593_optical_calibrated", cont_name=cont_name, output_dir=output_dir,
+    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data[campaign_name], campaign_name, cont_name=cont_name, output_dir=output_dir,
                                             key_order=key_order)
 
 
-def save_1d_corr_in_groups_for_cont_optical_calibrated(cont_name=None, output_dir=DEFAULT_OUTPUT_DIR):
+def save_1d_corr_in_groups(cont_name, campaign_name, output_dir=DEFAULT_OUTPUT_DIR):
 
 
     # Prüfen, ob cont_name definiert ist
@@ -243,8 +243,8 @@ def save_1d_corr_in_groups_for_cont_optical_calibrated(cont_name=None, output_di
     # key_order = ["time shift (tau)", 'HeI5015', 'HeI5875', 'HeI4471', 'HeI7065', 'HeII4685','HAlpha', 'HBeta', 'HGamma', 'HDelta',  'OI8446']
     one_dim_correlation_data = import_1d_correlation_data()
 
-    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data["NGC4593_optical_calibrated"],
-                                        "NGC4593_optical_calibrated", cont_name=cont_name, output_dir=output_dir,
+    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data[campaign_name],
+                                        campaign_name, cont_name=cont_name, output_dir=output_dir,
                                         key_order=key_order, save_only=True)
 
 
@@ -274,6 +274,6 @@ def save_1d_corr_in_groups_bowen_fluorescence_for_cont(output_dir=DEFAULT_OUTPUT
 
 
 
-# plot_1d_corr_in_groups_for_cont_optical_calibrated("UVW2")
-# save_1d_corr_in_groups_for_cont_optical_calibrated("UVW2")
+save_1d_corr_in_groups("UVW2", "NGC4593_optical_calibrated")
+save_1d_corr_in_groups("UVW2", "NGC4593_not_optical_calibrated")
 # save_1d_corr_in_groups_bowen_fluorescence_for_cont()

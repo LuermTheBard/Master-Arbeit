@@ -273,4 +273,4 @@ def save_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
 
 # plot_1d_lightcurves_in_groups()
-# save_1d_lightcurves_in_groups()
+save_1d_lightcurves_in_groups()
