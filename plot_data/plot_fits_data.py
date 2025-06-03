@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from settings import All_LINES, All_LINE_GROUPS
+from import_data.import_data import import_fits_data
+from settings import All_LINES, All_LINE_GROUPS, DEFAULT_OUTPUT_DIR
 
 
 def validate_fits_data(fits_data):
@@ -335,3 +336,18 @@ def plot_line_group(
                 va="bottom")
     # Horizontale Verbindungslinie
     ax_obj.hlines(y=line_ymax_avg, xmin=min_pos, xmax=max_pos, color='black', linewidth=1.2)
+
+# methods to run
+
+def plot_avg_rms_spec(output_dir=DEFAULT_OUTPUT_DIR):
+    avg_rms_spec_dir = output_dir / "avg_rms_spec"
+
+    avg_rms_spec_dir.mkdir(parents=True, exist_ok=True)
+
+    avg_rms_spec_file = avg_rms_spec_dir
+
+    fits_data = import_fits_data()
+    plot_avg_rms(fits_data, save_path=avg_rms_spec_file)
+
+
+#plot_avg_rms_spec()

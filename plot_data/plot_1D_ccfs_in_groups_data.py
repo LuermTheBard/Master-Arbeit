@@ -2,8 +2,12 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 
-from plot_utils import format_label
+from import_data.import_data import import_1d_correlation_data
+from plot_utils import format_label, ensure_output_dir
 from plot_data.general_plot import prepare_data, finalize_figure, format_yaxis
+from settings import DEFAULT_OUTPUT_DIR
+
+# logic methods
 
 
 def plot_all_1d_ccfs_in_groups_for_cont(data_dict, campaign, cont_name, output_dir, key_order=None,
@@ -207,3 +211,69 @@ def configure_ccfs_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_va
         ax_top = ax.secondary_xaxis('top')
         ax_top.xaxis.set_major_locator(MultipleLocator(5))
         ax_top.tick_params(axis='x')
+
+
+# methods to run:
+
+def plot_1d_corr_in_groups_for_cont_optical_calibrated(cont_name=None, output_dir=DEFAULT_OUTPUT_DIR):
+
+    # Prüfen, ob cont_name definiert ist
+    if not cont_name:
+        raise ValueError("Please specify a cont_name in the following form: plot_line_1d_corr::cont_name")
+
+    ensure_output_dir(output_dir)
+
+    key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875',  'HeII4685', 'OI8446']
+    one_dim_correlation_data = import_1d_correlation_data()
+
+    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data["NGC4593_optical_calibrated"], "NGC4593_optical_calibrated", cont_name=cont_name, output_dir=output_dir,
+                                            key_order=key_order)
+
+
+def save_1d_corr_in_groups_for_cont_optical_calibrated(cont_name=None, output_dir=DEFAULT_OUTPUT_DIR):
+
+
+    # Prüfen, ob cont_name definiert ist
+    if not cont_name:
+        raise ValueError("Please specify a cont_name in the following form: plot_line_1d_corr::cont_name")
+
+    ensure_output_dir(output_dir)
+
+    key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
+    # key_order = ["time shift (tau)", 'HeI5015', 'HeI5875', 'HeI4471', 'HeI7065', 'HeII4685','HAlpha', 'HBeta', 'HGamma', 'HDelta',  'OI8446']
+    one_dim_correlation_data = import_1d_correlation_data()
+
+    plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data["NGC4593_optical_calibrated"],
+                                        "NGC4593_optical_calibrated", cont_name=cont_name, output_dir=output_dir,
+                                        key_order=key_order, save_only=True)
+
+
+def save_1d_corr_in_groups_bowen_fluorescence_for_cont(output_dir=DEFAULT_OUTPUT_DIR):
+
+    ensure_output_dir(output_dir)
+
+    output_dir = output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    key_order_cont1150 = ["time shift (tau)", 'HAlpha', 'HBeta', "LyAlpha_not_optical_calibrated", 'OI8446']
+    key_order_cont1460 = ["time shift (tau)", 'HAlpha', 'HBeta', "LyAlpha_not_optical_calibrated", 'OI8446']
+    key_order_lyalpha = ["time shift (tau)", 'HAlpha', 'HBeta', 'OI8446']
+    key_order_halpha = ["time shift (tau)", 'OI8446']
+    key_order_hbeta= ["time shift (tau)", 'OI8446']
+
+    keyorders = {"Cont1150_not_optical_calibrated": key_order_cont1150,
+                 "Cont1460_not_optical_calibrated": key_order_cont1460,
+                 "LyAlpha_not_optical_calibrated": key_order_lyalpha,
+                 "HAlpha": key_order_halpha,
+                 "HBeta": key_order_hbeta}
+
+    one_dim_correlation_data = import_1d_correlation_data()
+    for reference_lightcurve, key_order in keyorders.items():
+        plot_all_1d_ccfs_in_groups_for_cont(one_dim_correlation_data["NGC4593_optical_calibrated"], "NGC4593_optical_calibrated", cont_name=reference_lightcurve, output_dir=output_dir,
+                                            key_order=key_order, save_only=True, file_name=f"{reference_lightcurve}_bowen_fluorescence_ccfs", only_key_order=True)
+
+
+
+# plot_1d_corr_in_groups_for_cont_optical_calibrated("UVW2")
+# save_1d_corr_in_groups_for_cont_optical_calibrated("UVW2")
+# save_1d_corr_in_groups_bowen_fluorescence_for_cont()

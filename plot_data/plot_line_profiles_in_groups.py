@@ -3,7 +3,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
-from plot_utils import format_label, subtract_continuum, convert_to_velocity, save_velocity_data_to_txt
+from import_data.import_data import import_line_profile_data, import_fits_data
+from plot_utils import format_label, subtract_continuum, convert_to_velocity, save_velocity_data_to_txt, \
+    ensure_output_dir, cut_normalized_line_out, cut_line_out
 from plot_data.general_plot import finalize_figure, prepare_data
 from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
 
@@ -333,3 +335,91 @@ def plot_cut_out_line_profile(cut_out_range, intensity_avg, intensity_rms, line_
         plt.suptitle(f"Line Profile: {line_name}")
         plt.show()
 
+#methodes to run
+
+def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
+    ensure_output_dir(output_dir)
+
+    profile_data = import_line_profile_data(normalized=True)
+
+    # key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeII4685',
+                 'OI8446']
+
+    plot_normalized_line_profiles_in_groups(profile_data, key_order=key_order)
+
+
+def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT_DIR):
+    ensure_output_dir(output_dir)
+
+    fits_data = import_fits_data()
+
+    wavelenghts = np.array(fits_data['NGC4593_avg.fits']['x_axis'][0])
+    avg_data = np.array(fits_data['NGC4593_avg.fits']['data'][0])
+    rms_data = np.array(fits_data['NGC4593_rms.fits']['data'][0])
+
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685',
+                 'OI8446', "OIII5007"]
+
+    for line in key_order:
+        process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot)
+        process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=plot)
+
+
+def cut_line_profile(
+    line_name,
+    cut_out_range=(-1000, 1000),
+    normalized=True,
+    plot=False,
+    output_dir=DEFAULT_OUTPUT_DIR,
+):
+    def str_to_bool(val):
+        if isinstance(val, bool):
+            return val
+        if isinstance(val, str):
+            return val.strip().lower() in ("true", "1", "yes")
+        return False  # fallback
+
+    normalized = str_to_bool(normalized)
+    plot = str_to_bool(plot)
+
+    if isinstance(cut_out_range, str):
+        cut_out_range = tuple(map(int, cut_out_range.strip("() ").split(',')))
+
+    # Sicherstellen, dass Hauptausgabeverzeichnis existiert
+    output_dir_path = ensure_output_dir(output_dir)
+
+    # Sicherstellen, dass Unterordner existiert
+    output_path = output_dir_path / "Line_Profiles_cut_out"
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    # Daten importieren
+    line_profile_dict = import_line_profile_data(normalized=normalized)
+    line_data_avg = line_profile_dict["avg"][line_name]["data_dict"]
+    line_data_rms = line_profile_dict["rms"][line_name]["data_dict"]
+
+    if normalized is True:
+        velocity = line_data_avg.get("velocity space (km/s)")
+        intensities_avg = line_data_avg.get("normalized flux")
+        intensities_rms = line_data_rms.get("normalized flux")
+        intensity_avg, velocity_avg = cut_normalized_line_out(intensities_avg, velocity, cut_out_range)
+        intensity_rms, velocity_rms = cut_normalized_line_out(intensities_rms, velocity, cut_out_range)
+    else:
+        central_wave_length = CENTRAL_WAVELENGTH[line_name]
+        cut_range_absolute = (
+            central_wave_length + cut_out_range[0],
+            central_wave_length + cut_out_range[1]
+        )
+        wavelengths = line_data_avg.get("velocity space (km/s)")
+        intensities_avg = line_data_avg.get('flux ergs/s/cm2/A')
+        intensities_rms = line_data_rms.get('flux ergs/s/cm2/A')
+        intensity_avg, velocity_avg = cut_line_out(intensities_avg, wavelengths, cut_range_absolute)
+        intensity_rms, velocity_rms = cut_line_out(intensities_rms, wavelengths, cut_range_absolute)
+
+    # Plotten/Speichern
+    plot_cut_out_line_profile(
+        cut_out_range, intensity_avg, intensity_rms, line_name,
+        output_path, plot, velocity_avg, velocity_rms
+    )
+
+# run_normalized_profiles_together_in_groups()

@@ -2,9 +2,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, MaxNLocator, FuncFormatter
 
-from plot_utils import calculate_standard_error_for_lightcurves, format_label
+from import_data.import_data import import_1d_lightcurve_data
+from plot_utils import calculate_standard_error_for_lightcurves, format_label, ensure_output_dir
 from plot_data.general_plot import prepare_data, finalize_figure, format_relative_days, format_yaxis, format_month_day
-from settings import BASE_MJD, COLORCODE_CONTINUA_NORMALIZED
+from settings import BASE_MJD, COLORCODE_CONTINUA_NORMALIZED, DEFAULT_OUTPUT_DIR
 
 
 def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont,
@@ -248,3 +249,28 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
         ax_top.xaxis.set_major_locator(MultipleLocator(5))
         ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
         ax_top.tick_params(axis='x', rotation=45, labelsize=10)
+
+
+
+def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
+    ensure_output_dir(output_dir)
+    data = import_1d_lightcurve_data()
+    for cont in ["Cont1150_not_optical_calibrated", "Cont5100"]:
+        key_order_lines = [cont, 'HAlpha', 'HBeta', 'HGamma', 'LyAlpha_not_optical_calibrated', 'HeI5875', 'HeII4685', 'OI8446']
+        key_order_conts = ["Cont1150_not_optical_calibrated", "Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015", "Cont8900"]
+        for campaign, data_dict in data.items():
+            plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont=cont, key_order_lines=key_order_lines, key_order_conts=key_order_conts, save_only=save_only)
+
+# methods to run
+
+
+def plot_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
+    run_1d_lightcurves_groups(output_dir)
+
+
+def save_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
+    run_1d_lightcurves_groups(output_dir, save_only=True)
+
+
+# plot_1d_lightcurves_in_groups()
+# save_1d_lightcurves_in_groups()

@@ -3,9 +3,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
-from plot_utils import format_label, calculate_standard_error_for_lightcurves
+from import_data.import_data import import_1d_correlation_data, import_1d_lightcurve_data
+from plot_utils import format_label, calculate_standard_error_for_lightcurves, ensure_output_dir
 from plot_data.general_plot import finalize_figure, format_yaxis, format_month_day
-from settings import BASE_MJD
+from settings import BASE_MJD, DEFAULT_OUTPUT_DIR
 
 matplotlib.use('Qt5Agg')
 
@@ -327,9 +328,6 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label)
 
 
-
-
-
 def normalize_lightcurve(y, yerr_vals):
     yerr_vals = calculate_standard_error_for_lightcurves(y, yerr_vals)
     y_mean = y.mean()
@@ -430,3 +428,124 @@ def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label=False):
         ax_top = ax.secondary_xaxis('top')
         ax_top.xaxis.set_major_locator(MultipleLocator(2))
         ax_top.tick_params(axis='x')
+
+
+
+
+# methods to run:
+
+def save_1d_corr_and_lightcurves_in_groups_for_bowen_fluorescence_lines(output_dir=DEFAULT_OUTPUT_DIR):
+
+    ensure_output_dir(output_dir)
+
+    output_dir = output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    key_order_cont1150 = ["time shift (tau)",
+                          'HAlpha',
+                          'HBeta',
+                          "LyAlpha_not_optical_calibrated",
+                          'OI8446']
+    # key_order_cont1460 = ["time shift (tau)", 'HAlpha', 'HBeta', "LyAlpha_not_optical_calibrated", 'OI8446']
+    key_order_lyalpha = ["time shift (tau)", 'HAlpha', 'HBeta', 'OI8446']
+    key_order_halpha = ["time shift (tau)", 'OI8446']
+    key_order_hbeta= ["time shift (tau)", 'OI8446']
+
+    keyorders = {"Cont1150_not_optical_calibrated": key_order_cont1150,
+                 # "Cont1460_not_optical_calibrated": key_order_cont1460,
+                 "LyAlpha_not_optical_calibrated": key_order_lyalpha,
+                 "HAlpha": key_order_halpha,
+                 "HBeta": key_order_hbeta}
+
+    final_sorted_keys = ["time shift (tau)", 'OI8446', "LyAlpha_not_optical_calibrated", 'HBeta', 'HAlpha']
+
+    one_dim_correlation_data = import_1d_correlation_data()
+    lightcurves_data = import_1d_lightcurve_data()
+    for campaign, data_dict in one_dim_correlation_data.items():
+        lightcurves_ccfs_dict = {"lightcurves": lightcurves_data[campaign], "ccfs": data_dict}
+        plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders, file_name="ccfs_and_reference_lightcurves", final_key_order=final_sorted_keys)
+
+
+def save_1d_corr_and_lightcurves_in_groups_for_UVW2(output_dir=DEFAULT_OUTPUT_DIR):
+
+    ensure_output_dir(output_dir)
+
+    output_dir = output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    key_order_UVW2_optical  = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
+
+    key_order_UVW2_UV = ["time shift (tau)", "SiIV1393_not_optical_calibrated", "NV1238_not_optical_calibrated", "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated", "OIII]1660_not_optical_calibrated"]
+
+
+
+    keyorders_optical = {"UVW2": key_order_UVW2_optical,}
+
+
+    keyorders_UV = {"UVW2": key_order_UVW2_UV, }
+
+    keyorders_dict = {"NGC4593_optical_calibrated": keyorders_optical, "NGC4593_not_optical_calibrated": keyorders_UV}
+
+
+    one_dim_correlation_data = import_1d_correlation_data()
+    lightcurves_data = import_1d_lightcurve_data()
+    for campaign, data_dict in one_dim_correlation_data.items():
+        lightcurves_ccfs_dict = {"lightcurves": lightcurves_data[campaign], "ccfs": data_dict}
+        plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict, campaign, output_dir, keyorders_dict[campaign], file_name="ccfs_and_reference_lightcurves", final_key_order=keyorders_dict[campaign])
+
+
+def save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha(output_dir=DEFAULT_OUTPUT_DIR):
+
+    ensure_output_dir(output_dir)
+
+    output_dir = output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+
+    key_order_UVW2 = ["time shift (tau)",
+                      "LyAlpha_not_optical_calibrated",
+                      "NV1238_not_optical_calibrated",
+                      "SiIV1393_not_optical_calibrated",
+                      "CIV1548_not_optical_calibrated",
+                      "HeII1640_not_optical_calibrated",
+                      "HDelta",
+                      "HGamma",
+                      'HeII4685',
+                      "HBeta",
+                      'HeI5875',
+                      "HAlpha"
+                      ]
+
+    keyorders= {"UVW2": key_order_UVW2, }
+
+
+    one_dim_correlation_data = import_1d_correlation_data()
+    lightcurves_data = import_1d_lightcurve_data()
+
+    lightcurves_ccfs_dict_combined = {
+        "lightcurves": {
+            "lines": {
+                **lightcurves_data["NGC4593_optical_calibrated"]["lines"],
+                **lightcurves_data["NGC4593_not_optical_calibrated"]["lines"]
+            },
+            "continua": {
+                **lightcurves_data["NGC4593_optical_calibrated"]["continua"],
+                **lightcurves_data["NGC4593_not_optical_calibrated"]["continua"]
+            }
+        },
+        "ccfs": {"UVW2":{**one_dim_correlation_data["NGC4593_optical_calibrated"]["UVW2"],
+                 **one_dim_correlation_data["NGC4593_not_optical_calibrated"]["UVW2"]}}
+    }
+
+
+
+    plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccfs_dict_combined, "NGC4593_Combined", output_dir, keyorders,
+                                           file_name="ccfs_and_reference_lightcurves", final_key_order=keyorders,
+                                           rows=11, cols=2, only_one_label = True)
+
+
+
+# save_1d_corr_and_lightcurves_in_groups_for_UVW2()
+# save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha()
+save_1d_corr_and_lightcurves_in_groups_for_bowen_fluorescence_lines()
+

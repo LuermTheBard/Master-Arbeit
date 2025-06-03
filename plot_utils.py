@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 from astropy.constants.codata2018 import c
 from scipy.interpolate import interp1d
@@ -536,3 +538,10 @@ def save_velocity_data_to_txt(filename, velocity, intensity):
         file.write("# velocity space (km/s) \t normalized flux\n")
         for v, i in zip(velocity, intensity):
             file.write(f"{v}\t{i}\n")
+
+
+def ensure_output_dir(output_dir):
+    output_dir_path = Path(output_dir)
+    if not output_dir_path.exists():
+        output_dir_path.mkdir(parents=True, exist_ok=True)
+    return output_dir_path
