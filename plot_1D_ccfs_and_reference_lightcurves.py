@@ -6,7 +6,7 @@ from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
 from import_data import import_1d_correlation_data, import_1d_lightcurve_data, load_centroid_data_as_dict
 from plot_utils import format_label, calculate_standard_error_for_lightcurves, ensure_output_dir
-from general_plot import format_yaxis, format_month_day
+from general_plot import format_month_day
 
 
 
@@ -323,7 +323,17 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
 
     for current_data, group_index in prepare_ccfs_references_data(final_sorted_data_dict, rows, cols):
         fig, axes = plt.subplots(rows, cols, figsize=figsize, sharex=False, sharey=shared_y,
-                                 gridspec_kw={'width_ratios': [4, 1]})  # 2/3 : 1/3 Verhältnis
+                                 gridspec_kw={'width_ratios': [4, 1]})
+
+        # Spaltenweise X-Achse sharen
+        # Linke Spalte (Spalte 0)
+        for i in range(1, rows):
+            axes[i, 0].sharex(axes[0, 0])
+
+        # Rechte Spalte (Spalte 1)
+        for i in range(1, rows):
+            axes[i, 1].sharex(axes[0, 1])
+
         fig.subplots_adjust(hspace=0, wspace=0)
         #fig.tight_layout()
         if only_one_label is True:
@@ -416,7 +426,7 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         if line_name != "UVW2":
             ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, color=color[1], fmt='.:', capsize=3, markersize=4,)
 
-        configure_axes_for_lightcurves(ax, row, col, only_one_label)
+        configure_axes_for_lightcurves(ax, row, only_one_label)
         ax.legend(fontsize=8)
     else:
         ax.plot(x_values_ccfs, line_data["ccfs"], color=color)
@@ -426,10 +436,10 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
             except KeyError:
                 print(f"No centroid data found for line {line_name}")
         ax.text(9.5,0.95, format_label(line_name, as_latex=False),  ha='right', va='top', fontsize=8)
-        configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label)
+        configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label)
 
 
-def configure_axes_for_lightcurves(ax, row, col, only_one_label=False):
+def configure_axes_for_lightcurves(ax, row, only_one_label=False):
     """
     Configures axis formatting and ticks for a normalized lightcurve subplot.
 
@@ -449,26 +459,31 @@ def configure_axes_for_lightcurves(ax, row, col, only_one_label=False):
     None
     """
 
-    if col == 0:
-        if only_one_label is False:
-            ax.set_ylabel("Normalized Lightcurves", fontsize=12)
-        ax.yaxis.set_label_coords(-0.15, 0.5)
-
-    if row < 3:
-        ax.set_xticklabels([])
+    if only_one_label is False:
+        ax.set_ylabel("Normalized Lightcurves", fontsize=12)
+    ax.yaxis.set_label_coords(-0.15, 0.5)
 
     ax.xaxis.set_major_locator(MultipleLocator(5))
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
     ax.set_ylim(-2.7, 3)
 
+    ax.xaxis.set_major_locator(MultipleLocator(5))
+    ax.tick_params(axis='x', which='both', direction='inout')
+
+
+
+    ax_top = ax.secondary_xaxis('top')
+    ax_top.xaxis.set_major_locator(MultipleLocator(5))
+    ax_top.tick_params(axis='x', which='both', direction='in')
+
+    ax_top.set_xticklabels([])
+
     if row == 0:
-        ax_top = ax.secondary_xaxis('top')
-        ax_top.xaxis.set_major_locator(MultipleLocator(5))
         ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
-        ax_top.tick_params(axis='x', rotation=45, labelsize=10)
 
 
-def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label=False):
+
+def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False):
     """
     Configures axis formatting and ticks for a cross-correlation function (CCF) subplot.
 
@@ -494,7 +509,6 @@ def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label=False):
     ax.set_xlim(-4.999, 9.999)
     ax.set_ylim(0, 0.999)
     ax.yaxis.set_major_locator(MultipleLocator(0.5))
-    ax.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
     ax.secondary_yaxis('right')
 
     ax.yaxis.tick_right()
@@ -503,13 +517,18 @@ def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label=False):
         ax.yaxis.set_label_position("right")
 
 
-    if row < 3:
-        ax.set_xticklabels([])
+    ax.xaxis.set_major_locator(MultipleLocator(2))
+    ax.tick_params(axis='x', which='both', direction='in')
+
+
+    ax_top = ax.secondary_xaxis('top')
+    ax_top.xaxis.set_major_locator(MultipleLocator(2))
+    ax_top.tick_params(axis='x', which='both', direction='in')
+    ax_top.set_xticklabels([])
 
     if row == 0:
-        ax_top = ax.secondary_xaxis('top')
-        ax_top.xaxis.set_major_locator(MultipleLocator(2))
-        ax_top.tick_params(axis='x', which='both', direction='in')
+        ax_top.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
+
 
 
 def check_for_empty_rows_ccfs_and_reference(axes, fig, x_label):
@@ -545,14 +564,10 @@ def check_for_empty_rows_ccfs_and_reference(axes, fig, x_label):
                     axes[row, col].xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
 
                     if row == lowest_row:
-                        axes[row, col].set_xlabel(x_label[col], fontsize=12)
-                        if col == 0:
-                            axes[row, col].xaxis.set_major_locator(MultipleLocator(5))
-                        elif col == 1:
-                            axes[row, col].xaxis.set_major_locator(MultipleLocator(2))
-
-
                         axes[row, col].tick_params(axis='x', which='both', direction='in', labelbottom=True)
+                    else:
+                        axes[row, col].tick_params(axis='x', which='both', direction='in', labelbottom=False)
+                        axes[row, col].set_xticklabels([])
 
 
 def finalize_figure_ccfs_and_reference(fig, filename, save_only, output_dir):
