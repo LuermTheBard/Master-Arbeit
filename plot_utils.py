@@ -4,7 +4,7 @@ import numpy as np
 from astropy.constants.codata2018 import c
 from scipy.interpolate import interp1d
 
-from import_data.import_data import find_prime_data_folder
+from import_data import find_prime_data_folder
 from settings import F_MEAN, F_SIGMA, CENTRAL_WAVELENGTH
 
 

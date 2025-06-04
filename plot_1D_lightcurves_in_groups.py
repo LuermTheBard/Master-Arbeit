@@ -2,9 +2,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, MaxNLocator, FuncFormatter
 
-from import_data.import_data import import_1d_lightcurve_data
+from import_data import import_1d_lightcurve_data
 from plot_utils import calculate_standard_error_for_lightcurves, format_label, ensure_output_dir
-from plot_data.general_plot import prepare_data, finalize_figure, format_relative_days, format_yaxis, format_month_day
+from general_plot import prepare_data, finalize_figure, format_relative_days, format_month_day
 from settings import BASE_MJD, COLORCODE_CONTINUA_NORMALIZED, DEFAULT_OUTPUT_DIR
 
 

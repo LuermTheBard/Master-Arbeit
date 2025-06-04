@@ -4,7 +4,7 @@ import numpy as np
 
 from Malte_get_BH_mass import Line
 from plot_utils import print_table_for_one_reference, print_table_for_multiple_reference, save_centroid_as_txt
-from import_data.import_data import find_prime_data_folder
+from import_data import find_prime_data_folder
 from settings import FWHM_RMS, FWHM_ERR
 
 

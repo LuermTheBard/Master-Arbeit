@@ -3,10 +3,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
-from import_data.import_data import import_line_profile_data, import_fits_data
+from import_data import import_line_profile_data, import_fits_data
 from plot_utils import format_label, subtract_continuum, convert_to_velocity, save_velocity_data_to_txt, \
     ensure_output_dir, cut_normalized_line_out, cut_line_out
-from plot_data.general_plot import finalize_figure, prepare_data
+from general_plot import finalize_figure, prepare_data
 from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
 
 matplotlib.use('Qt5Agg')

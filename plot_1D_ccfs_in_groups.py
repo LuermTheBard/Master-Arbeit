@@ -2,9 +2,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 
-from import_data.import_data import import_1d_correlation_data
+from import_data import import_1d_correlation_data
 from plot_utils import format_label, ensure_output_dir
-from plot_data.general_plot import prepare_data, finalize_figure, format_yaxis
+from general_plot import prepare_data, finalize_figure, format_yaxis
 from settings import DEFAULT_OUTPUT_DIR
 
 # logic methods

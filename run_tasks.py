@@ -1,21 +1,21 @@
 import sys
 from inspect import signature
 
-from plot_data.plot_avg_rms import plot_avg_rms_spec
-from plot_data.plot_1D_lightcurves_in_groups import (
+from plot_avg_rms import plot_avg_rms_spec
+from plot_1D_lightcurves_in_groups import (
     plot_1d_lightcurves_in_groups,
     save_1d_lightcurves_in_groups
 )
-from plot_data.plot_1D_ccfs_in_groups import (
+from plot_1D_ccfs_in_groups import (
     plot_1d_corr_in_groups, save_1d_corr_in_groups,
     save_1d_corr_in_groups_bowen_fluorescence_for_cont
 )
-from plot_data.plot_1D_ccfs_and_reference_lightcurves import (
+from plot_1D_ccfs_and_reference_lightcurves import (
     save_1d_corr_and_lightcurves_in_groups_for_bowen_fluorescence_lines,
     save_1d_corr_and_lightcurves_in_groups_for_UVW2,
     save_1d_corr_and_lightcurves_in_groups_UVW2_from_UV_Lines_to_HAlpha
 )
-from plot_data.plot_line_profiles_in_groups import (
+from plot_line_profiles_in_groups import (
     run_normalized_profiles_together_in_groups,
     substract_pseudo_continua_from_spectra,
     cut_line_profile

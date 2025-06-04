@@ -3,10 +3,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
-from import_data.import_data import import_1d_correlation_data, import_1d_lightcurve_data, load_centroid_data_as_dict
+from import_data import import_1d_correlation_data, import_1d_lightcurve_data, load_centroid_data_as_dict
 from plot_utils import format_label, calculate_standard_error_for_lightcurves, ensure_output_dir
-from plot_data.general_plot import finalize_figure, format_yaxis, format_month_day
-from settings import BASE_MJD, DEFAULT_OUTPUT_DIR
+from general_plot import finalize_figure, format_yaxis, format_month_day
+from settings import DEFAULT_OUTPUT_DIR
 
 matplotlib.use('Qt5Agg')
 
@@ -45,11 +45,10 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
     None
     """
 
-    base_mjd = BASE_MJD
     xlabel_ccfs = "Time Lag $\\tau$ [d]"
     ylabel_ccfs = "Correlation Coefficient"
 
-    xlabel_lightcurves = f"MJD - {base_mjd:.2f}"
+    xlabel_lightcurves = f"MJD"
     ylabel_cont_lightcurves = (r"$F_{\lambda}$ $[\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, "
                    r"\mathrm{\AA}^{-1}]$")
     ylabel_line_lightcurves = (r"$F_{\lambda}$ $[\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1}]$")

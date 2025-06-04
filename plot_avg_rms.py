@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from import_data.import_data import import_fits_data
+from import_data import import_fits_data
 from settings import All_LINES, All_LINE_GROUPS, DEFAULT_OUTPUT_DIR
 
 
