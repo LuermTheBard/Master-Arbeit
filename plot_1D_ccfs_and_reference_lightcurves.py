@@ -465,16 +465,23 @@ def configure_axes_for_lightcurves(ax, row, only_one_label=False):
 
     ax.xaxis.set_major_locator(MultipleLocator(5))
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+    ax.yaxis.set_minor_locator(MultipleLocator(0.5))
+    ax.tick_params(axis='y', which='major', direction='in', length=4)
+    ax.tick_params(axis='y', which='minor', direction='in', length=2)
     ax.set_ylim(-2.7, 3)
 
     ax.xaxis.set_major_locator(MultipleLocator(5))
-    ax.tick_params(axis='x', which='both', direction='inout')
+    ax.tick_params(axis='x', which='major', direction='inout', length=4)
+    ax.xaxis.set_minor_locator(MultipleLocator(1))
+    ax.tick_params(axis='x', which='minor', direction='in', length=2)
 
 
 
     ax_top = ax.secondary_xaxis('top')
     ax_top.xaxis.set_major_locator(MultipleLocator(5))
-    ax_top.tick_params(axis='x', which='both', direction='in')
+    ax_top.tick_params(axis='x', which='major', direction='in')
+    ax_top.xaxis.set_minor_locator(MultipleLocator(1))
+    ax_top.tick_params(axis='x', which='minor', direction='in', length=2)
 
     ax_top.set_xticklabels([])
 
@@ -509,6 +516,10 @@ def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False):
     ax.set_xlim(-4.999, 9.999)
     ax.set_ylim(0, 0.999)
     ax.yaxis.set_major_locator(MultipleLocator(0.5))
+    ax.yaxis.set_minor_locator(MultipleLocator(0.1))
+    ax.tick_params(axis='y', which='major', direction='in', length=4)
+    ax.tick_params(axis='y', which='minor', direction='in', length=2)
+    ax.set_yticklabels([])
     ax.secondary_yaxis('right')
 
     ax.yaxis.tick_right()
@@ -518,12 +529,16 @@ def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False):
 
 
     ax.xaxis.set_major_locator(MultipleLocator(2))
-    ax.tick_params(axis='x', which='both', direction='in')
+    ax.tick_params(axis='x', which='major', direction='inout', length=4)
+    ax.xaxis.set_minor_locator(MultipleLocator(1))
+    ax.tick_params(axis='x', which='minor', direction='in', length=2)
 
 
     ax_top = ax.secondary_xaxis('top')
     ax_top.xaxis.set_major_locator(MultipleLocator(2))
     ax_top.tick_params(axis='x', which='both', direction='in')
+    ax_top.xaxis.set_minor_locator(MultipleLocator(1))
+    ax_top.tick_params(axis='x', which='minor', direction='in', length=2)
     ax_top.set_xticklabels([])
 
     if row == 0:
