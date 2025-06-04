@@ -99,7 +99,7 @@ def save_1d_corr_and_lightcurves_general(
 # =======================
 
 
-def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, only_one_label=False, centroid_data=None):
+def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, figsize=None, only_one_label=False, centroid_data=None):
     """
     Organizes and plots CFFs and their corresponding lightcurves
     in subplot groups, based on specified key orders.
@@ -210,7 +210,7 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
 
 
     plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs, xlabel_lightcurves, centroid_data=centroid_data,
-                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name + " " + campaign, rows=rows, cols=cols, only_one_label=only_one_label)
+                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name + " " + campaign, rows=rows, cols=cols, figsize=figsize, only_one_label=only_one_label)
 
 
 def prepare_ccfs_references_data(data, rows, cols):
@@ -276,7 +276,7 @@ def normalize_lightcurve(y, yerr_vals):
 
 def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs,
                                                   xlabel_lightcurves, save_only, output_dir, shared_y,
-                                                  file_name, centroid_data=None, rows=4, cols=2, only_one_label=False):
+                                                  file_name, centroid_data=None, rows=4, cols=2, figsize=None, only_one_label=False):
     """
     Plots CCFs and their associated normalized lightcurves
     in a side-by-side subplot layout.
@@ -313,12 +313,16 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
     -----------
     None
     """
+    if figsize is None:
+        figsize = (6, 12)
+
+
     x_values_ccfs = final_sorted_data_dict['time shift (tau)']
     final_sorted_data_dict.pop('time shift (tau)')
 
 
     for current_data, group_index in prepare_ccfs_references_data(final_sorted_data_dict, rows, cols):
-        fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=False, sharey=shared_y,
+        fig, axes = plt.subplots(rows, cols, figsize=figsize, sharex=False, sharey=shared_y,
                                  gridspec_kw={'width_ratios': [4, 1]})  # 2/3 : 1/3 Verhältnis
         fig.subplots_adjust(hspace=0, wspace=0)
         #fig.tight_layout()
@@ -409,7 +413,8 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
                                                           line_data["lightcurves_ref"][yerr_key])
 
         ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm, label=format_label(line_name, as_latex=False), color=color[0], fmt='.:', capsize=3, markersize=4,)
-        ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, label=format_label(reference_name, as_latex=False), color=color[1], fmt='.:', capsize=3, markersize=4,)
+        if line_name != "UVW2":
+            ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, color=color[1], fmt='.:', capsize=3, markersize=4,)
 
         configure_axes_for_lightcurves(ax, row, col, only_one_label)
         ax.legend(fontsize=8)
@@ -454,7 +459,7 @@ def configure_axes_for_lightcurves(ax, row, col, only_one_label=False):
 
     ax.xaxis.set_major_locator(MultipleLocator(5))
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-    ax.set_ylim(-2.99, 4.499)
+    ax.set_ylim(-2.7, 3)
 
     if row == 0:
         ax_top = ax.secondary_xaxis('top')
@@ -488,21 +493,15 @@ def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label=False):
     ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
     ax.set_xlim(-4.999, 9.999)
     ax.set_ylim(0, 0.999)
-    ax.yaxis.set_major_locator(MultipleLocator(0.2))
-    ax.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
+    ax.yaxis.set_major_locator(MultipleLocator(0.5))
+    ax.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
+    ax.secondary_yaxis('right')
 
-    if col == 0:
-        if only_one_label is False:
-            ax.set_ylabel("Lightcurves", fontsize=12)
-        ax.yaxis.set_label_coords(-0.15, 0.5)
-    else:
-        ax.yaxis.tick_right()
-        if only_one_label is False:
-            ax.set_ylabel(ylabel_ccfs, fontsize=12)
-            ax.yaxis.set_label_position("right")
-        ax_right = ax.secondary_yaxis('right')
-        ax_right.yaxis.set_major_locator(MultipleLocator(0.2))
-        ax_right.yaxis.set_major_formatter(FuncFormatter(format_yaxis))
+    ax.yaxis.tick_right()
+    if only_one_label is False:
+        ax.set_ylabel(ylabel_ccfs, fontsize=12)
+        ax.yaxis.set_label_position("right")
+
 
     if row < 3:
         ax.set_xticklabels([])
@@ -510,7 +509,7 @@ def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label=False):
     if row == 0:
         ax_top = ax.secondary_xaxis('top')
         ax_top.xaxis.set_major_locator(MultipleLocator(2))
-        ax_top.tick_params(axis='x')
+        ax_top.tick_params(axis='x', which='both', direction='in')
 
 
 def check_for_empty_rows_ccfs_and_reference(axes, fig, x_label):
@@ -553,7 +552,7 @@ def check_for_empty_rows_ccfs_and_reference(axes, fig, x_label):
                             axes[row, col].xaxis.set_major_locator(MultipleLocator(2))
 
 
-                        axes[row, col].tick_params(axis='x', which='both', direction='out', labelbottom=True)
+                        axes[row, col].tick_params(axis='x', which='both', direction='in', labelbottom=True)
 
 
 def finalize_figure_ccfs_and_reference(fig, filename, save_only, output_dir):
@@ -624,6 +623,7 @@ def is_valid_axis(ax, fig):
 
 
 uv_to_halpha_keyorder = ["time shift (tau)",
+                         "UVW2",
                          "LyAlpha_not_optical_calibrated",
                          "NV1238_not_optical_calibrated",
                          "SiIV1393_not_optical_calibrated",
@@ -651,7 +651,7 @@ save_1d_corr_and_lightcurves_general(
     campaign_label="NGC4593_Combined"
 )
 
-
+"""
 
 uvw2_keyorders = {
     "NGC4593_optical_calibrated": {"UVW2":
@@ -702,3 +702,4 @@ save_1d_corr_and_lightcurves_general(
 )
 
 
+"""
