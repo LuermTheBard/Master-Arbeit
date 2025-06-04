@@ -1,3 +1,4 @@
+from pathlib import Path
 import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
@@ -5,8 +6,11 @@ from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
 from import_data import import_1d_correlation_data, import_1d_lightcurve_data, load_centroid_data_as_dict
 from plot_utils import format_label, calculate_standard_error_for_lightcurves, ensure_output_dir
-from general_plot import finalize_figure, format_yaxis, format_month_day
-from settings import DEFAULT_OUTPUT_DIR
+from general_plot import format_yaxis, format_month_day
+
+
+
+DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "default_output"
 
 matplotlib.use('Qt5Agg')
 
@@ -49,12 +53,6 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
     ylabel_ccfs = "Correlation Coefficient"
 
     xlabel_lightcurves = f"MJD"
-    ylabel_cont_lightcurves = (r"$F_{\lambda}$ $[\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, "
-                   r"\mathrm{\AA}^{-1}]$")
-    ylabel_line_lightcurves = (r"$F_{\lambda}$ $[\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1}]$")
-    yerr_name_lightcurves = 'fluxerrs [ergs/s/cm2/A]'
-
-
 
 
     save_folder = output_dir / campaign / "plot_1d_ccfs" / "corr_and_lightcurves"
@@ -207,9 +205,9 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
 
             configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name_and_ref_name=line_name, centroid_data=centroid_data, only_one_label=only_one_label)
 
+        check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs))
 
-        finalize_figure(fig, axes, x_label=(xlabel_lightcurves, xlabel_ccfs), title=title, group_index=group_index,
-                        save_only=save_only, output_dir=output_dir, file_name=file_name)
+        finalize_figure_ccfs_and_reference(fig, title=title, save_only=save_only, output_dir=output_dir)
 
 
 def prepare_ccfs_references_data(data, rows, cols):
@@ -434,6 +432,105 @@ def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label=False):
         ax_top.tick_params(axis='x')
 
 
+def is_valid_axis(ax, fig):
+    """
+    Checks whether a given axis is part of the figure and contains visible content.
+
+    Parameters:
+    -----------
+    ax : matplotlib.axes.Axes
+        The axis to check.
+    fig : matplotlib.figure.Figure
+        The Matplotlib figure containing the axis.
+
+    Returns:
+    -----------
+    bool
+        True if the axis is in the figure and contains lines, containers, or images.
+    """
+    return ax in fig.axes and (len(ax.lines) > 0 or len(ax.containers) > 0 or len(ax.images) > 0)
+
+
+def check_for_empty_rows_ccfs_and_reference(axes, fig, x_label):
+    """
+    Removes completely empty subplot rows from a figure and sets x-axis labels
+    and tick formatting for the lowest visible row.
+
+    Parameters:
+    -----------
+    axes : numpy.ndarray
+        2D array of Matplotlib Axes objects.
+    fig : matplotlib.figure.Figure
+        The figure containing the subplots.
+    x_label : str or tuple of str
+        X-axis label(s). If a tuple is provided, each column gets a different label.
+    """
+
+    n_rows = axes.shape[0]
+    for row in range(n_rows):
+        if all(not is_valid_axis(axes[row, col], fig) for col in range(2)):
+            for col in range(2):
+                fig.delaxes(axes[row, col])
+
+    # Ermittlung der untersten verbleibenden Reihe
+    remaining_rows = [row for row in range(n_rows) if any(is_valid_axis(axes[row, col], fig) for col in range(2))]
+    if remaining_rows:
+        lowest_row = max(remaining_rows)
+
+        for row in remaining_rows:
+            for col in range(2):
+                if is_valid_axis(axes[row, col], fig):
+
+                    axes[row, col].xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
+
+                    if row == lowest_row:
+                        axes[row, col].set_xlabel(x_label[col], fontsize=12)
+                        if col == 0:
+                            axes[row, col].xaxis.set_major_locator(MultipleLocator(5))
+                        elif col == 1:
+                            axes[row, col].xaxis.set_major_locator(MultipleLocator(2))
+
+
+                        axes[row, col].tick_params(axis='x', which='both', direction='out', labelbottom=True)
+
+
+def finalize_figure_ccfs_and_reference(fig, title, save_only, output_dir):
+    """
+    Finalizes the layout of a Matplotlib figure: removes empty subplot rows, sets title,
+    saves the figure as PDF and PNG, and optionally displays it.
+
+    Parameters:
+    -----------
+    fig : matplotlib.figure.Figure
+        The figure to finalize.
+    axes : numpy.ndarray
+        2D array of Matplotlib Axes objects.
+    title : str
+        Title of the figure.
+    group_index : int
+        Index of the current group (used in filenames).
+    save_only : bool
+        If True, the figure will only be saved (not shown).
+    output_dir : str or pathlib.Path
+        Directory where the figure will be saved.
+    x_label : str or tuple of str
+        Label(s) for the x-axis. Tuple assigns different labels per column.
+
+    Returns:
+    -----------
+    None
+    """
+
+    save_path = output_dir / f"{title}.pdf"
+    plt.savefig(save_path, bbox_inches='tight')
+    save_path = output_dir / f"{title}.png"
+    plt.savefig(save_path, bbox_inches='tight')
+
+    print(f"Figure saved to {save_path}")
+
+    if not save_only:
+        plt.show()
+    plt.close(fig)
 
 
 # methods to run:
@@ -553,7 +650,7 @@ def save_1d_corr_and_lightcurves_in_groups_UVW2_from_UV_Lines_to_HAlpha(output_d
 
 
 
-# save_1d_corr_and_lightcurves_in_groups_UVW2_form_UV_Lines_to_HAlpha()
+save_1d_corr_and_lightcurves_in_groups_UVW2_from_UV_Lines_to_HAlpha()
 
 # save_1d_corr_and_lightcurves_in_groups_for_UVW2()
 # save_1d_corr_and_lightcurves_in_groups_for_bowen_fluorescence_lines()
