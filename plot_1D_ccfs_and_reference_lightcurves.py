@@ -311,10 +311,8 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         y_ref_norm, yerr_ref_norm = normalize_lightcurve(line_data["lightcurves_ref"][y_key],
                                                           line_data["lightcurves_ref"][yerr_key])
 
-        plot_normalized_lightcurve(ax, line_data["lightcurves"][x_key], y_norm, yerr_norm,
-                                   format_label(line_name, as_latex=False), color[0])
-        plot_normalized_lightcurve(ax, line_data["lightcurves_ref"][x_key], y_ref_norm, yerr_ref_norm,
-                                   format_label(reference_name, as_latex=False), color[1])
+        ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm, label=format_label(line_name, as_latex=False), color=color[0], fmt='.:', capsize=3, markersize=4,)
+        ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, label=format_label(reference_name, as_latex=False), color=color[1], fmt='.:', capsize=3, markersize=4,)
 
         configure_axes_for_lightcurves(ax, row, col, only_one_label)
         ax.legend(fontsize=8)
@@ -336,10 +334,6 @@ def normalize_lightcurve(y, yerr_vals):
     y_norm = (y - y_mean) / y_std
     yerr_norm = yerr_vals / y_std
     return y_norm, yerr_norm
-
-
-def plot_normalized_lightcurve(ax, x, y_norm, yerr_norm, label, color):
-    ax.errorbar(x, y_norm, yerr=yerr_norm, fmt='.:', capsize=3, markersize=4, label=label, color=color)
 
 
 def configure_axes_for_lightcurves(ax, row, col, only_one_label=False):
