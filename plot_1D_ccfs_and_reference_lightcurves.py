@@ -10,9 +10,93 @@ from general_plot import format_yaxis, format_month_day
 
 
 
-DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "default_output"
+# =======================
+#   KONSTANTEN & EINSTELLUNGEN
+# =======================
 
+DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "default_output"
 matplotlib.use('Qt5Agg')
+
+
+# =======================
+#   DATENIMPORT & VORBEREITUNG
+# =======================
+
+def save_1d_corr_and_lightcurves_general(
+    campaign_keys,
+    keyorders_dict,
+    output_dir=DEFAULT_OUTPUT_DIR,
+    file_name="ccfs_and_reference_lightcurves",
+    final_key_order=None,
+    rows=8,
+    cols=2,
+    combine_data=False,
+    campaign_label=None
+):
+    ensure_output_dir(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    one_dim_correlation_data = import_1d_correlation_data()
+    centroid_data = load_centroid_data_as_dict()
+    lightcurves_data = import_1d_lightcurve_data()
+
+    if combine_data:
+        lightcurves_ccfs_dict = {
+            "lightcurves": {
+                "lines": {
+                    **lightcurves_data["NGC4593_optical_calibrated"]["lines"],
+                    **lightcurves_data["NGC4593_not_optical_calibrated"]["lines"]
+                },
+                "continua": {
+                    **lightcurves_data["NGC4593_optical_calibrated"]["continua"],
+                    **lightcurves_data["NGC4593_not_optical_calibrated"]["continua"]
+                }
+            },
+            "ccfs": {
+                "UVW2": {
+                    **one_dim_correlation_data["NGC4593_optical_calibrated"]["UVW2"],
+                    **one_dim_correlation_data["NGC4593_not_optical_calibrated"]["UVW2"]
+                }
+            }
+        }
+
+        plot_1d_corr_and_lightcurves_in_groups(
+            lightcurves_ccfs_dict,
+            campaign_label or "Combined",
+            output_dir,
+            keyorders_dict,
+            file_name=file_name,
+            final_key_order=final_key_order or list(keyorders_dict["UVW2"]),
+            rows=rows,
+            cols=cols,
+            centroid_data=centroid_data,
+            only_one_label=True
+        )
+
+    else:
+        for campaign in campaign_keys:
+            lightcurves_ccfs_dict = {
+                "lightcurves": lightcurves_data[campaign],
+                "ccfs": one_dim_correlation_data[campaign]
+            }
+
+            plot_1d_corr_and_lightcurves_in_groups(
+                lightcurves_ccfs_dict,
+                campaign,
+                output_dir,
+                keyorders_dict[campaign],
+                file_name=file_name,
+                final_key_order=final_key_order or keyorders_dict[campaign],
+                rows=rows,
+                cols=cols,
+                centroid_data=centroid_data,
+                only_one_label=True
+            )
+
+
+# =======================
+#   DATENVERARBEITUNG / SORTIERUNG
+# =======================
 
 
 def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, only_one_label=False, centroid_data=None):
@@ -129,6 +213,67 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
                                                   save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name + " " + campaign, rows=rows, cols=cols, only_one_label=only_one_label)
 
 
+def prepare_ccfs_references_data(data, rows, cols):
+    """
+    Prepares and groups the input data into (rows x cols) chunks for subplot grids.
+    Each item is duplicated so that both a lightcurve and a CCF version can be plotted.
+    Incomplete groups are padded with placeholder entries.
+
+    Parameters:
+    -----------
+    data : dict
+        Dictionary containing CCF/lightcurve data. Keys are line-reference combinations.
+    rows : int
+        Number of rows in each subplot group.
+    cols : int
+        Number of columns in each subplot group.
+
+    Yields:
+    -----------
+    current_data : list of tuples
+        Subset of (key, value) pairs for one subplot group.
+    group_index : int
+        Index of the current group (starting from 0).
+    """
+
+    # Jedes Item zweimal hintereinander einfügen
+    data_items = []
+    for key, value in data.items():
+        data_items.append((key, value))
+        data_items.append((key, value))  # direkt danach nochmal
+
+    total_plots = len(data_items)
+    plots_per_group = rows * cols
+    num_groups = (total_plots + plots_per_group - 1) // plots_per_group
+
+    for group_index in range(num_groups):
+        start_index = group_index * plots_per_group
+        end_index = min(start_index + plots_per_group, total_plots)
+        current_data = data_items[start_index:end_index]
+
+        # Mit Platzhaltern auffüllen, falls unvollständig
+        while len(current_data) < plots_per_group:
+            current_data.append((
+                f'Empty {len(current_data) + 1}',
+                None
+            ))
+
+        yield current_data, group_index
+
+
+
+def normalize_lightcurve(y, yerr_vals):
+    yerr_vals = calculate_standard_error_for_lightcurves(y, yerr_vals)
+    y_mean = y.mean()
+    y_std = y.std()
+    y_norm = (y - y_mean) / y_std
+    yerr_norm = yerr_vals / y_std
+    return y_norm, yerr_norm
+
+# =======================
+#   PLOT-ERSTELLUNG
+# =======================
+
 def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs,
                                                   xlabel_lightcurves, save_only, output_dir, shared_y,
                                                   file_name, centroid_data=None, rows=4, cols=2, only_one_label=False):
@@ -209,54 +354,6 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
         finalize_figure_ccfs_and_reference(fig, file_name, save_only=save_only, output_dir=output_dir)
 
 
-def prepare_ccfs_references_data(data, rows, cols):
-    """
-    Prepares and groups the input data into (rows x cols) chunks for subplot grids.
-    Each item is duplicated so that both a lightcurve and a CCF version can be plotted.
-    Incomplete groups are padded with placeholder entries.
-
-    Parameters:
-    -----------
-    data : dict
-        Dictionary containing CCF/lightcurve data. Keys are line-reference combinations.
-    rows : int
-        Number of rows in each subplot group.
-    cols : int
-        Number of columns in each subplot group.
-
-    Yields:
-    -----------
-    current_data : list of tuples
-        Subset of (key, value) pairs for one subplot group.
-    group_index : int
-        Index of the current group (starting from 0).
-    """
-
-    # Jedes Item zweimal hintereinander einfügen
-    data_items = []
-    for key, value in data.items():
-        data_items.append((key, value))
-        data_items.append((key, value))  # direkt danach nochmal
-
-    total_plots = len(data_items)
-    plots_per_group = rows * cols
-    num_groups = (total_plots + plots_per_group - 1) // plots_per_group
-
-    for group_index in range(num_groups):
-        start_index = group_index * plots_per_group
-        end_index = min(start_index + plots_per_group, total_plots)
-        current_data = data_items[start_index:end_index]
-
-        # Mit Platzhaltern auffüllen, falls unvollständig
-        while len(current_data) < plots_per_group:
-            current_data.append((
-                f'Empty {len(current_data) + 1}',
-                None
-            ))
-
-        yield current_data, group_index
-
-
 
 def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr,
                                       line_name_and_ref_name, centroid_data=None, only_one_label=False):
@@ -325,15 +422,6 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
                 print(f"No centroid data found for line {line_name}")
         ax.text(9.5,0.95, format_label(line_name, as_latex=False),  ha='right', va='top', fontsize=8)
         configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label)
-
-
-def normalize_lightcurve(y, yerr_vals):
-    yerr_vals = calculate_standard_error_for_lightcurves(y, yerr_vals)
-    y_mean = y.mean()
-    y_std = y.std()
-    y_norm = (y - y_mean) / y_std
-    yerr_norm = yerr_vals / y_std
-    return y_norm, yerr_norm
 
 
 def configure_axes_for_lightcurves(ax, row, col, only_one_label=False):
@@ -425,25 +513,6 @@ def configure_axes_for_ccfs(ax, row, col, ylabel_ccfs, only_one_label=False):
         ax_top.tick_params(axis='x')
 
 
-def is_valid_axis(ax, fig):
-    """
-    Checks whether a given axis is part of the figure and contains visible content.
-
-    Parameters:
-    -----------
-    ax : matplotlib.axes.Axes
-        The axis to check.
-    fig : matplotlib.figure.Figure
-        The Matplotlib figure containing the axis.
-
-    Returns:
-    -----------
-    bool
-        True if the axis is in the figure and contains lines, containers, or images.
-    """
-    return ax in fig.axes and (len(ax.lines) > 0 or len(ax.containers) > 0 or len(ax.images) > 0)
-
-
 def check_for_empty_rows_ccfs_and_reference(axes, fig, x_label):
     """
     Removes completely empty subplot rows from a figure and sets x-axis labels
@@ -525,82 +594,34 @@ def finalize_figure_ccfs_and_reference(fig, filename, save_only, output_dir):
         plt.show()
     plt.close(fig)
 
+# =======================
+#   HILFSFUNKTIONEN
+# =======================
 
-# methode to run:
-def save_1d_corr_and_lightcurves_general(
-    campaign_keys,                      # Liste der Kampagnennamen (z.B. ["NGC4593_optical_calibrated"])
-    keyorders_dict,                     # Dictionary mit Schlüsselreihenfolgen je Kampagne oder Label (z.B. {"NGC4593_optical_calibrated": {"UVW2": [...]}})
-    output_dir=DEFAULT_OUTPUT_DIR,     # Speicherort
-    file_name="ccfs_and_reference_lightcurves",  # Name der Ausgabedatei (ohne .png/.pdf)
-    final_key_order=None,              # Optional: finale Reihenfolge der Keys im Plot
-    rows=8,                            # Anzahl der Zeilen pro Plot
-    cols=2,                            # Anzahl der Spalten (Standard 2)
-    combine_data=False,                # Wenn True, kombiniere optical + non-optical (nur für Sonderfall UV→HAlpha)
-    campaign_label=None                # Optionaler Labelname für kombinierten Plot (z.B. "NGC4593_Combined")
-):
-    ensure_output_dir(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+def is_valid_axis(ax, fig):
+    """
+    Checks whether a given axis is part of the figure and contains visible content.
 
-    one_dim_correlation_data = import_1d_correlation_data()
-    centroid_data = load_centroid_data_as_dict()
-    lightcurves_data = import_1d_lightcurve_data()
+    Parameters:
+    -----------
+    ax : matplotlib.axes.Axes
+        The axis to check.
+    fig : matplotlib.figure.Figure
+        The Matplotlib figure containing the axis.
 
-    if combine_data:
-        lightcurves_ccfs_dict = {
-            "lightcurves": {
-                "lines": {
-                    **lightcurves_data["NGC4593_optical_calibrated"]["lines"],
-                    **lightcurves_data["NGC4593_not_optical_calibrated"]["lines"]
-                },
-                "continua": {
-                    **lightcurves_data["NGC4593_optical_calibrated"]["continua"],
-                    **lightcurves_data["NGC4593_not_optical_calibrated"]["continua"]
-                }
-            },
-            "ccfs": {
-                "UVW2": {
-                    **one_dim_correlation_data["NGC4593_optical_calibrated"]["UVW2"],
-                    **one_dim_correlation_data["NGC4593_not_optical_calibrated"]["UVW2"]
-                }
-            }
-        }
-
-        plot_1d_corr_and_lightcurves_in_groups(
-            lightcurves_ccfs_dict,
-            campaign_label or "Combined",
-            output_dir,
-            keyorders_dict,
-            file_name=file_name,
-            final_key_order=final_key_order or list(keyorders_dict["UVW2"]),
-            rows=rows,
-            cols=cols,
-            centroid_data=centroid_data,
-            only_one_label=True
-        )
-
-    else:
-        for campaign in campaign_keys:
-            lightcurves_ccfs_dict = {
-                "lightcurves": lightcurves_data[campaign],
-                "ccfs": one_dim_correlation_data[campaign]
-            }
-
-            plot_1d_corr_and_lightcurves_in_groups(
-                lightcurves_ccfs_dict,
-                campaign,
-                output_dir,
-                keyorders_dict[campaign],
-                file_name=file_name,
-                final_key_order=final_key_order or keyorders_dict[campaign],
-                rows=rows,
-                cols=cols,
-                centroid_data=centroid_data,
-                only_one_label=True
-            )
+    Returns:
+    -----------
+    bool
+        True if the axis is in the figure and contains lines, containers, or images.
+    """
+    return ax in fig.axes and (len(ax.lines) > 0 or len(ax.containers) > 0 or len(ax.images) > 0)
 
 
 
-# Methoden Aufruf
+# =======================
+#   METHODENAUFRUFE
+# =======================
+
 
 uv_to_halpha_keyorder = ["time shift (tau)",
                          "LyAlpha_not_optical_calibrated",
