@@ -4,12 +4,6 @@ import numpy as np
 
 from astropy.io import fits
 
-
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib
-
 DATA_PATH = Path.cwd().parent / "data"
 
 

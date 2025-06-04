@@ -1,3 +1,4 @@
+import datetime
 from pathlib import Path
 import matplotlib
 import numpy as np
@@ -6,7 +7,6 @@ from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
 from import_data import import_1d_correlation_data, import_1d_lightcurve_data, load_centroid_data_as_dict
 from plot_utils import format_label, calculate_standard_error_for_lightcurves, ensure_output_dir
-from general_plot import format_month_day
 
 
 
@@ -408,7 +408,6 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         line_name, reference_name = line_name_and_ref_name.split("_ref_")
     else:
         line_name = None
-        reference_name = None
 
     if len(line_data) == 0:
         return
@@ -435,7 +434,7 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
                 ax.axvline(centroid_data[line_name]["tau_cent"], color="red", linestyle="--")
             except KeyError:
                 print(f"No centroid data found for line {line_name}")
-        ax.text(9.5,0.95, format_label(line_name, as_latex=False),  ha='right', va='top', fontsize=8)
+        ax.text(9.5, 0.90, format_label(line_name, as_latex=False).split("  ")[0],  ha='right', va='top', fontsize=7)
         configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label)
 
 
@@ -487,6 +486,7 @@ def configure_axes_for_lightcurves(ax, row, only_one_label=False):
 
     if row == 0:
         ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
+        plt.setp(ax_top.get_xticklabels(), rotation=45, ha='right')
 
 
 
@@ -513,7 +513,7 @@ def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False):
     """
 
     ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
-    ax.set_xlim(-4.999, 9.999)
+    ax.set_xlim(-5, 10)
     ax.set_ylim(0, 0.999)
     ax.yaxis.set_major_locator(MultipleLocator(0.5))
     ax.yaxis.set_minor_locator(MultipleLocator(0.1))
@@ -535,7 +535,7 @@ def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False):
 
 
     ax_top = ax.secondary_xaxis('top')
-    ax_top.xaxis.set_major_locator(MultipleLocator(2))
+    ax_top.xaxis.set_major_locator(MultipleLocator(5))
     ax_top.tick_params(axis='x', which='both', direction='in')
     ax_top.xaxis.set_minor_locator(MultipleLocator(1))
     ax_top.tick_params(axis='x', which='minor', direction='in', length=2)
@@ -577,12 +577,22 @@ def check_for_empty_rows_ccfs_and_reference(axes, fig, x_label):
                 if is_valid_axis(axes[row, col], fig):
 
                     axes[row, col].xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
+                    axes[row, col].xaxis.set_major_locator(MultipleLocator(5))
 
                     if row == lowest_row:
                         axes[row, col].tick_params(axis='x', which='both', direction='in', labelbottom=True)
                     else:
                         axes[row, col].tick_params(axis='x', which='both', direction='in', labelbottom=False)
                         axes[row, col].set_xticklabels([])
+
+                if row == lowest_row:
+
+                    if col == 0:
+                        axes[row, col].set_xlabel(x_label[0])
+                    else:
+                        axes[row, col].set_xlabel(x_label[1])
+
+
 
 
 def finalize_figure_ccfs_and_reference(fig, filename, save_only, output_dir):
@@ -646,6 +656,44 @@ def is_valid_axis(ax, fig):
     return ax in fig.axes and (len(ax.lines) > 0 or len(ax.containers) > 0 or len(ax.images) > 0)
 
 
+def format_month_day(mjd, pos):
+    """
+    Formatter function for Matplotlib that converts MJD to 'Month Day' format (e.g., 'Aug 01').
+
+    Parameters:
+    -----------
+    mjd : float
+        Modified Julian Date.
+    pos : int
+        Axis position (passed by Matplotlib, not used here).
+
+    Returns:
+    -----------
+    str
+        Date string in the format '%b %d', e.g., 'Aug 01'.
+    """
+
+    date = mjd_to_date(mjd)
+    return date.strftime('%b %d')
+
+
+def mjd_to_date(mjd):
+    """
+    Converts a Modified Julian Date (MJD) to a Gregorian calendar date.
+
+    Parameters:
+    -----------
+    mjd : float
+        The Modified Julian Date value.
+
+    Returns:
+    -----------
+    datetime.datetime
+        The corresponding calendar date based on the MJD epoch (1858-11-17).
+    """
+
+    mjd_start_date = datetime.datetime(1858, 11, 17)  # MJD Startdatum
+    return mjd_start_date + datetime.timedelta(days=mjd)
 
 # =======================
 #   METHODENAUFRUFE
