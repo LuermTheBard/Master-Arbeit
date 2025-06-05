@@ -338,7 +338,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
         #fig.tight_layout()
         if only_one_label is True:
             # Linke Seite oben (y-Achse): "Normalized Lightcurves"
-            fig.text(0.05, 0.5, "Normalized Lightcurves", va='center', ha='left', rotation='vertical', fontsize=12)
+            fig.text(0.07, 0.5, "Normalized Lightcurves", va='center', ha='left', rotation='vertical', fontsize=12)
 
             # Rechte Seite unten (y-Achse): ylabel_ccfs
             fig.text(0.99, 0.5, ylabel_ccfs, va='center', ha='right', rotation='vertical', fontsize=12)
