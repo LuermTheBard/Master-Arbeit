@@ -134,7 +134,7 @@ def calculate_velocity_errors(lines_wavelengths):
     """
     Gibt ein Dictionary mit Liniennamen und geschätztem Fehler im Velocity Space (km/s) zurück.
     """
-    c = 299792.458  # Lichtgeschwindigkeit in km/s
+    c = 299792.458
     velocity_errors = {}
 
     for line, central_wavelength in lines_wavelengths.items():
@@ -166,11 +166,10 @@ def calculate_dispersion_velocity(lines_wavelengths):
     Gibt ein Dictionary mit Liniennamen und der Geschwindigkeitsauflösung (km/s) pro Pixel zurück,
     basierend auf der Dispersion des jeweils passenden STIS-Gitters.
     """
-    c = 299792.458  # Lichtgeschwindigkeit in km/s
+    c = 299792.458
     dispersion_velocity = {}
 
     for line, central_wavelength in lines_wavelengths.items():
-        # Gitterwahl & zugehörige Dispersion
         if 1119 <= central_wavelength <= 1715:
             dispersion = 0.584   # Å/pixel für G140L
         elif 2888 <= central_wavelength <= 5697:
@@ -190,7 +189,7 @@ def calculate_dispersion_velocity(lines_wavelengths):
     return dispersion_velocity
 
 
-# Ursprüngliche Wellenlängen
+
 CENTRAL_WAVELENGTH = {
     'HAlpha': 6562.82,
     'HBeta': 4861.33,
@@ -224,12 +223,8 @@ KM_PER_S_PER_PIXEL = {
     'HGamma': 189.4,     # (Grating: G430L, Dispersion: 2.746 Å/pixel)
     'HDelta': 200.7,     # (Grating: G430L, Dispersion: 2.746 Å/pixel)
     'HeI5875': 249.1,    # (Grating: G750L, Dispersion: 4.882 Å/pixel)
-    #'HeI7065': 207.1,    # (Grating: G750L, Dispersion: 4.882 Å/pixel)
-    #'HeI4471': 184.1,    # (Grating: G430L, Dispersion: 2.746 Å/pixel)
-    #'HeI5015': 164.1,    # (Grating: G430L, Dispersion: 2.746 Å/pixel)
     'HeII4685': 175.7,   # (Grating: G430L, Dispersion: 2.746 Å/pixel)
     'OI8446': 173.3,     # (Grating: G750L, Dispersion: 4.882 Å/pixel)
-    #'OIII5007': 164.1,   # (Grating: G430L, Dispersion: 2.746 Å/pixel)
     'LyAlpha': 143.9     # (Grating: G140L, Dispersion: 0.584 Å/pixel)
 }
 
@@ -239,12 +234,8 @@ FWHM_ERR = {
     'HGamma': 300,
     'HDelta': 300,
     'HeI5875': 300,
-    #'HeI7065': 600.0,
-    #'HeI4471': 400.0,
-    #'HeI5015': 400.0,
     'HeII4685': 200.0,
     'OI8446': 400.0,
-    #'OIII5007': np.nan,
     'LyAlpha': 200.0,
 }
 

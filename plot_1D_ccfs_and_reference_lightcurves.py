@@ -314,7 +314,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
     None
     """
     if figsize is None:
-        figsize = (6, 12)
+        figsize = (6, 16)
 
 
     x_values_ccfs = final_sorted_data_dict['time shift (tau)']
@@ -338,10 +338,10 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
         #fig.tight_layout()
         if only_one_label is True:
             # Linke Seite oben (y-Achse): "Normalized Lightcurves"
-            fig.text(0.02, 0.5, "Normalized Lightcurves", va='center', ha='left', rotation='vertical', fontsize=12)
+            fig.text(0.05, 0.5, "Normalized Lightcurves", va='center', ha='left', rotation='vertical', fontsize=12)
 
             # Rechte Seite unten (y-Achse): ylabel_ccfs
-            fig.text(0.98, 0.5, ylabel_ccfs, va='center', ha='right', rotation='vertical', fontsize=12)
+            fig.text(0.99, 0.5, ylabel_ccfs, va='center', ha='right', rotation='vertical', fontsize=12)
 
         for i, (line_name, line_data) in enumerate(current_data):
 
@@ -421,9 +421,15 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         y_ref_norm, yerr_ref_norm = normalize_lightcurve(line_data["lightcurves_ref"][y_key],
                                                           line_data["lightcurves_ref"][yerr_key])
 
-        ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm, label=format_label(line_name, as_latex=False), color=color[0], fmt='.:', capsize=3, markersize=4,)
+
         if line_name != "UVW2":
+            ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
+                        label=format_label(line_name, as_latex=False), color=color[0], fmt='.:', capsize=3,
+                        markersize=4, )
             ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, color=color[1], fmt='.:', capsize=3, markersize=4,)
+        else:
+            ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
+                        label=format_label(line_name, as_latex=False), color=color[1], fmt='.:', capsize=3,  markersize=4, )
 
         configure_axes_for_lightcurves(ax, row, only_one_label)
         ax.legend(fontsize=8)
@@ -434,7 +440,11 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
                 ax.axvline(centroid_data[line_name]["tau_cent"], color="red", linestyle="--")
             except KeyError:
                 print(f"No centroid data found for line {line_name}")
-        ax.text(9.5, 0.90, format_label(line_name, as_latex=False).split("  ")[0],  ha='right', va='top', fontsize=7)
+        ccfs_labels = format_label(line_name, as_latex=False).split(" ")[0]
+        if "$" in ccfs_labels:
+            ccfs_labels = ccfs_labels + "$"
+
+        ax.text(9, 0.90, ccfs_labels, ha='right', va='top', fontsize=8)
         configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label)
 
 
@@ -467,7 +477,8 @@ def configure_axes_for_lightcurves(ax, row, only_one_label=False):
     ax.yaxis.set_minor_locator(MultipleLocator(0.5))
     ax.tick_params(axis='y', which='major', direction='in', length=4)
     ax.tick_params(axis='y', which='minor', direction='in', length=2)
-    ax.set_ylim(-2.7, 3)
+    ax.set_ylim(-3, 3)
+    ax.set_yticklabels([])
 
     ax.xaxis.set_major_locator(MultipleLocator(5))
     ax.tick_params(axis='x', which='major', direction='inout', length=4)
@@ -520,7 +531,8 @@ def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False):
     ax.tick_params(axis='y', which='major', direction='in', length=4)
     ax.tick_params(axis='y', which='minor', direction='in', length=2)
     ax.set_yticklabels([])
-    ax.secondary_yaxis('right')
+    ax_right = ax.secondary_yaxis('right')
+    ax_right.tick_params(axis='y', which='both', direction='in')
 
     ax.yaxis.tick_right()
     if only_one_label is False:
