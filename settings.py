@@ -205,6 +205,26 @@ CENTRAL_WAVELENGTH = {
     'LyAlpha': 1215.67
 }
 
+IONIZATION_POTENTIAL = {
+    'HAlpha': 13.6,       # H I → H II (Wasserstoff neutral)
+    'HBeta': 13.6,        # H I → H II
+    'HGamma': 13.6,       # H I → H II
+    'HDelta': 13.6,       # H I → H II
+    'HeI5875': 24.6,      # He I → He II (Helium neutral)
+    'HeI7065': 24.6,      # He I → He II
+    'HeI4471': 24.6,      # He I → He II
+    'HeI5015': 24.6,      # He I → He II
+    'HeII4685': 54.4,     # He II → He III (Helium einfach ionisiert)
+    'OI8446': 13.6,       # O I → O II (Sauerstoff neutral)
+    'OIII5007': 35.1,     # O III → O IV (Sauerstoff zweifach ionisiert)
+    'LyAlpha': 13.6,      # H I → H II (Lyman-Alpha)
+    "SiIV1393_not_optical_calibrated": 33.5,   # Si IV → Si V (Silizium dreifach ionisiert)
+    "NV1238_not_optical_calibrated": 77.5,     # N V → N VI (Stickstoff vierfach ionisiert)
+    "CIV1548_not_optical_calibrated": 47.9,    # C IV → C V (Kohlenstoff dreifach ionisiert)
+    "HeII1640_not_optical_calibrated": 54.4,   # He II → He III (Helium einfach ionisiert)
+    "OIII]1660_not_optical_calibrated": 35.1   # O III → O IV (Sauerstoff zweifach ionisiert)
+}
+
 
 FWHM_RMS = {
     'HAlpha': 3054.0, 'HBeta': 3160.0, 'HGamma': 3130.0, 'HDelta': 4940.0,

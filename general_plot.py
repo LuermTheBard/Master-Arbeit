@@ -1,9 +1,15 @@
 import datetime
+
+import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
-from settings import BASE_MJD
+from import_data import load_centroid_data_as_dict
+from plot_utils import format_label, ensure_output_dir
+from settings import BASE_MJD, DEFAULT_OUTPUT_DIR, IONIZATION_POTENTIAL
+
+matplotlib.use('Qt5Agg')
 
 
 def mjd_to_date(mjd):
@@ -240,3 +246,43 @@ def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_labe
     if not save_only:
         plt.show()
     plt.close(fig)
+
+
+
+
+def plot_ion_pot_FWHM_against_lag(output_dir=DEFAULT_OUTPUT_DIR):
+
+    output_file_dir = output_dir / "plot_against_lag"
+    ensure_output_dir(output_file_dir)
+
+    time_lag_data = load_centroid_data_as_dict()
+    ionization = IONIZATION_POTENTIAL
+
+    for line, ionisation_potential in ionization.items():
+        try:
+
+            labels = format_label(line, as_latex=False).split(" ")[0]
+            if "$" in labels:
+                labels = labels + "$"
+            y = time_lag_data[line]["tau_cent"]
+            yerr_low = time_lag_data[line]["tau_cent_err_low"]
+            yerr_high = time_lag_data[line]["tau_cent_err_high"]
+            yerr = np.vstack((yerr_low, yerr_high))
+
+            # Achtung: x und y müssen iterable sein (z. B. [value])
+            plt.errorbar([ionisation_potential], [y], yerr=yerr,
+                         label=format_label(labels),
+                         fmt='.:', capsize=3, markersize=4)
+        except KeyError:
+            print(f"No values found for {line}")
+
+    plt.xlabel("Ionisation Potential [eV]")
+    plt.ylabel("Time Lag τ [days]")
+    plt.legend(loc='upper right')
+    plt.savefig(output_file_dir / "Ionisation_potential.pdf")
+    plt.show()
+
+
+
+
+plot_ion_pot_FWHM_against_lag()
