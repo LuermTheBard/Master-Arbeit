@@ -590,6 +590,7 @@ def save_velocity_data_to_txt(filename, velocity, intensity):
 
 def ensure_output_dir(output_dir):
     output_dir_path = Path(output_dir)
-    if not output_dir_path.exists():
+    is_dir = output_dir_path.is_dir()
+    if not is_dir:
         output_dir_path.mkdir(parents=True, exist_ok=True)
     return output_dir_path

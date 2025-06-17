@@ -229,7 +229,11 @@ IONIZATION_POTENTIAL = {
 FWHM_RMS = {
     'HAlpha': 3054.0, 'HBeta': 3160.0, 'HGamma': 3130.0, 'HDelta': 4940.0,
     'HeI5875': 3588, 'HeI7065': 2542, 'HeI4471': 999, 'HeI5015': np.nan,
-    'HeII4685': 5711, 'OI8446': 3800, 'LyAlpha': 3384
+    'HeII4685': 5711, 'OI8446': 3800, 'LyAlpha': 3384, "LyAlpha_not_optical_calibrated": 4227,
+    "NV1238_not_optical_calibrated": 3250,
+    "SiIV1393_not_optical_calibrated": 9113,
+    "CIV1548_not_optical_calibrated": 7560,
+    "HeII1640_not_optical_calibrated": 6789
 }
 
 #DELTA_V = calculate_velocity_errors(CENTRAL_WAVELENGTH)

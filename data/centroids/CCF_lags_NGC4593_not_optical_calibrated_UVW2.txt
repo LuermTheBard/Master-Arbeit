@@ -1,0 +1,6 @@
+name tau_cent tau_cent_err_low tau_cent_err_high M_Mo M_Mo_err_low M_Mo_err_high
+LyAlpha_not_optical_calibrated 1.0042 0.2429 0.4481 0.0000 0.0000 0.0000
+SiIV1393_not_optical_calibrated 1.2471 0.4729 0.0302 0.0000 0.0000 0.0000
+NV1238_not_optical_calibrated 0.9868 0.2590 0.8230 0.0000 0.0000 0.0000
+CIV1548_not_optical_calibrated 0.7691 0.2409 0.7014 0.0000 0.0000 0.0000
+HeII1640_not_optical_calibrated 0.2548 0.2385 0.7449 0.0000 0.0000 0.0000

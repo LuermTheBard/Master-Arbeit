@@ -7,7 +7,7 @@ from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
 from import_data import load_centroid_data_as_dict
 from plot_utils import format_label, ensure_output_dir
-from settings import BASE_MJD, DEFAULT_OUTPUT_DIR, IONIZATION_POTENTIAL
+from settings import BASE_MJD, DEFAULT_OUTPUT_DIR, IONIZATION_POTENTIAL, FWHM_RMS
 
 matplotlib.use('Qt5Agg')
 
@@ -249,15 +249,19 @@ def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_labe
 
 
 
-
 def plot_ion_pot_FWHM_against_lag(output_dir=DEFAULT_OUTPUT_DIR):
-
     output_file_dir = output_dir / "plot_against_lag"
     ensure_output_dir(output_file_dir)
 
     time_lag_data = load_centroid_data_as_dict()
     ionization = IONIZATION_POTENTIAL
+    fwhm_rms = FWHM_RMS
 
+    # Sammle Daten für Fit
+    x_ip_list, y_ip_list = [], []
+    x_fwhm_list, y_fwhm_list = [], []
+
+    # ---------- 1. Plot: Ionisationspotenzial gegen Zeitverzögerung ----------
     for line, ionisation_potential in ionization.items():
         try:
 
@@ -269,17 +273,91 @@ def plot_ion_pot_FWHM_against_lag(output_dir=DEFAULT_OUTPUT_DIR):
             yerr_high = time_lag_data[line]["tau_cent_err_high"]
             yerr = np.vstack((yerr_low, yerr_high))
 
-            # Achtung: x und y müssen iterable sein (z. B. [value])
-            plt.errorbar([ionisation_potential], [y], yerr=yerr,
-                         label=format_label(labels),
+            x = ionisation_potential + np.random.uniform(-0.2, 0.2)  # Jitter
+            x_ip_list.append(ionisation_potential)
+            y_ip_list.append(y)
+
+            plt.errorbar(x, y, yerr=yerr,
+                         label=labels,
                          fmt='.:', capsize=3, markersize=4)
         except KeyError:
             print(f"No values found for {line}")
 
+    # Fit
+    x_ip_array = np.array(x_ip_list)
+    y_ip_array = np.array(y_ip_list)
+    coeffs_ip = np.polyfit(x_ip_array, y_ip_array, 1)
+    x_fit = np.linspace(min(x_ip_array), max(x_ip_array), 100)
+    y_fit = np.polyval(coeffs_ip, x_fit)
+    plt.plot(x_fit, y_fit, 'k--')
+
     plt.xlabel("Ionisation Potential [eV]")
     plt.ylabel("Time Lag τ [days]")
     plt.legend(loc='upper right')
-    plt.savefig(output_file_dir / "Ionisation_potential.pdf")
+    plt.savefig(output_file_dir / "Ionisation_potential_with_fit.pdf")
+    plt.show()
+    plt.close()
+
+    # ---------- 2. Plot: FWHM gegen Zeitverzögerung ----------
+
+    for line in time_lag_data:
+        try:
+
+            labels = format_label(line, as_latex=False).split(" ")[0]
+            if "$" in labels:
+                labels = labels + "$"
+            y = time_lag_data[line]["tau_cent"]
+            yerr_low = time_lag_data[line]["tau_cent_err_low"]
+            yerr_high = time_lag_data[line]["tau_cent_err_high"]
+            yerr = np.vstack((yerr_low, yerr_high))
+            x = fwhm_rms[line]
+
+            x_fwhm_list.append(x)
+            y_fwhm_list.append(y)
+
+            plt.errorbar(x, y, yerr=yerr,
+                         fmt='o', label=labels,
+                         capsize=3, markersize=5)
+        except KeyError:
+            print(f"Missing data for line: {line}")
+
+    # Fit
+    x_fwhm_array = np.array(x_fwhm_list)
+    y_fwhm_array = np.array(y_fwhm_list)
+    coeffs_fwhm = np.polyfit(x_fwhm_array, y_fwhm_array, 1)
+    x_fit = np.linspace(min(x_fwhm_array), max(x_fwhm_array), 100)
+    y_fit = np.polyval(coeffs_fwhm, x_fit)
+    plt.plot(x_fit, y_fit, 'k--')
+
+    plt.xlabel("FWHM RMS [km/s]")
+    plt.ylabel("Time Lag τ [days]")
+
+    plt.legend(loc='upper right')
+    plt.savefig(output_file_dir / "Time_lag_vs_FWHM_with_fit.pdf")
+    plt.show()
+    plt.close()
+    # ---------- 3. Vergleichsplot: normierte Fits ----------
+
+    # Normiere IP-Fit
+    x_ip_norm = (x_ip_array - x_ip_array.min()) / (x_ip_array.max() - x_ip_array.min())
+    coeffs_ip_norm = np.polyfit(x_ip_norm, y_ip_array, 1)
+    x_fit_ip = np.linspace(0, 1, 100)
+    y_fit_ip = np.polyval(coeffs_ip_norm, x_fit_ip)
+    plt.plot(x_fit_ip, y_fit_ip, label=f"Ionisation Fit (m={coeffs_ip_norm[0]:.2f})", linestyle='--')
+
+    # Normiere FWHM-Fit
+    x_fwhm_norm = (x_fwhm_array - x_fwhm_array.min()) / (x_fwhm_array.max() - x_fwhm_array.min())
+    coeffs_fwhm_norm = np.polyfit(x_fwhm_norm, y_fwhm_array, 1)
+    x_fit_fwhm = np.linspace(0, 1, 100)
+    y_fit_fwhm = np.polyval(coeffs_fwhm_norm, x_fit_fwhm)
+    plt.plot(x_fit_fwhm, y_fit_fwhm, label=f"FWHM Fit (m={coeffs_fwhm_norm[0]:.2f})", linestyle='-.')
+
+    plt.xlabel("Normierter x-Wert")
+    plt.ylabel("Time Lag τ")
+    plt.title("Vergleich der normierten Steigungen")
+
+    plt.legend(loc='upper right')
+    plt.savefig(output_file_dir / "Fit_comparison_normalized.pdf")
     plt.show()
 
 

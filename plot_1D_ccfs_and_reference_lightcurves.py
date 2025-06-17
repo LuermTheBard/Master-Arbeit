@@ -314,7 +314,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
     None
     """
     if figsize is None:
-        figsize = (6, 16)
+        figsize = (5, 12)
 
 
     x_values_ccfs = final_sorted_data_dict['time shift (tau)']
@@ -341,7 +341,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
             fig.text(0.07, 0.5, "Normalized Lightcurves", va='center', ha='left', rotation='vertical', fontsize=12)
 
             # Rechte Seite unten (y-Achse): ylabel_ccfs
-            fig.text(0.99, 0.5, ylabel_ccfs, va='center', ha='right', rotation='vertical', fontsize=12)
+            fig.text(1.0, 0.5, ylabel_ccfs, va='center', ha='right', rotation='vertical', fontsize=12)
 
         for i, (line_name, line_data) in enumerate(current_data):
 
@@ -432,7 +432,7 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
                         label=format_label(line_name, as_latex=False), color=color[1], fmt='.:', capsize=3,  markersize=4, )
 
         configure_axes_for_lightcurves(ax, row, only_one_label)
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=7, loc="upper right")
     else:
         ax.plot(x_values_ccfs, line_data["ccfs"], color=color)
         if centroid_data:
@@ -444,7 +444,7 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         if "$" in ccfs_labels:
             ccfs_labels = ccfs_labels + "$"
 
-        ax.text(9, 0.90, ccfs_labels, ha='right', va='top', fontsize=8)
+        ax.text(9, 0.90, ccfs_labels, ha='right', va='top', fontsize=7)
         configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label)
 
 
@@ -524,7 +524,7 @@ def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False):
     """
 
     ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
-    ax.set_xlim(-5, 10)
+    ax.set_xlim(-5.1, 10)
     ax.set_ylim(0, 0.999)
     ax.yaxis.set_major_locator(MultipleLocator(0.5))
     ax.yaxis.set_minor_locator(MultipleLocator(0.1))
