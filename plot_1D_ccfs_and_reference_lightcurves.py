@@ -741,7 +741,7 @@ save_1d_corr_and_lightcurves_general(
     campaign_label="NGC4593_Combined"
 )
 
-"""
+
 
 uvw2_keyorders = {
     "NGC4593_optical_calibrated": {"UVW2":
@@ -791,5 +791,3 @@ save_1d_corr_and_lightcurves_general(
     rows=9
 )
 
-
-"""
