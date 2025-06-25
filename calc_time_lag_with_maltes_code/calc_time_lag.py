@@ -68,14 +68,12 @@ def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True,
         }
     elif index_map == 'UV':
         index_map = {
-            "HBeta_not_optical_calibrated": 1,
-            "LyAlpha_not_optical_calibrated":2,
-            "OI8446_not_optical_calibrated":3,
-            "SiIV1393_not_optical_calibrated":4,
-            "NV1238_not_optical_calibrated":5,
-            "CIV1548_not_optical_calibrated": 6,
-            "HeII1640_not_optical_calibrated": 7,
-            "OIII]1660_not_optical_calibrated":8
+            "LyAlpha_not_optical_calibrated":1,
+            "SiIV1393_not_optical_calibrated":2,
+            "NV1238_not_optical_calibrated":3,
+            "CIV1548_not_optical_calibrated": 4,
+            "HeII1640_not_optical_calibrated": 5,
+            "OIII]1660_not_optical_calibrated":6
         }
     else:
         print(f"⚠️ Warnung: please define index_map. Options:'optical' or 'UV'.")
@@ -179,10 +177,10 @@ def get_fluoreszenz_table():
 #calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1150_not_optical_calibrated", lines=['HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685'], include_mass=True)
 #calc_centroid_malte_code("NGC4593_optical_calibrated", "HBeta", lines=["OI8446", "OI8446_not_optical_calibrated"], include_mass=True)
 #calc_centroid_malte_code("NGC4593_optical_calibrated", "HBeta_not_optical_calibrated", lines=["OI8446", "OI8446_not_optical_calibrated"], include_mass=True)
-calc_centroid_malte_code("NGC4593_optical_calibrated", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'LyAlpha','HeI5875', 'HeII4685', 'OI8446'], include_mass=True, create_tex_file=True)
+#calc_centroid_malte_code("NGC4593_optical_calibrated", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'LyAlpha','HeI5875', 'HeII4685', 'OI8446'], include_mass=True, create_tex_file=True)
 calc_centroid_malte_code("NGC4593_not_optical_calibrated", "UVW2",
                          lines=["LyAlpha_not_optical_calibrated", "SiIV1393_not_optical_calibrated", "NV1238_not_optical_calibrated",
                                 "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated"], index_map="UV", include_mass=False, create_tex_file=True)
 
 
-get_fluoreszenz_table()
+#get_fluoreszenz_table()
