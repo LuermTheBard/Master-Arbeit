@@ -5,7 +5,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
-from import_data import import_1d_correlation_data, import_1d_lightcurve_data, load_centroid_data_as_dict
+from import_data import import_1d_correlation_data, import_1d_lightcurve_data, load_centroid_data_by_reference
 from plot_utils import format_label, calculate_standard_error_for_lightcurves, ensure_output_dir
 
 
@@ -38,7 +38,7 @@ def save_1d_corr_and_lightcurves_general(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     one_dim_correlation_data = import_1d_correlation_data()
-    centroid_data = load_centroid_data_as_dict()
+    centroid_data = load_centroid_data_by_reference()
     lightcurves_data = import_1d_lightcurve_data()
 
     if combine_data:
@@ -446,7 +446,7 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         ax.plot(x_values_ccfs, line_data["ccfs"], color=color)
         if centroid_data:
             try:
-                ax.axvline(centroid_data[line_name]["tau_cent"], color="red", linestyle="--")
+                ax.axvline(centroid_data[reference_name][line_name]["tau_cent"], color="red", linestyle="--")
             except KeyError:
                 print(f"No centroid data found for line {line_name}")
         ccfs_labels = format_label(line_name, as_latex=False).split(" ")[0]

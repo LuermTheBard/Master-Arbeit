@@ -371,33 +371,44 @@ def process_line_profile_data(line_profiles_list, line_profile_path):
     return result_dict
 
 
-def load_centroid_data_as_dict():
+def load_centroid_data_by_reference():
     """
-    Lädt alle .txt-Dateien mit Zeitverzögerungs- und Massenwerten aus einem Ordner
-    in ein gemeinsames Dictionary mit den Liniennamen als Keys. Doppelte Namen werden ignoriert.
+    Lädt alle .txt-Dateien mit Zeitverzögerungs- und Massenwerten aus einem Ordner,
+    schreibt pro Referenz eine separate Datei mit den zugehörigen Daten
+    und gibt ein verschachteltes Dictionary zurück:
+    { Referenz: { Linienname: {Daten} } }
+
+    Falls mehrere Dateien dieselbe Referenz haben, werden die Daten zusammengeführt.
 
     Returns:
     --------
     dict
-        Dictionary mit dem Namen der Emissionslinie als Key.
-        Jeder Value ist ein Dictionary mit den zugehörigen Werten.
+        Dictionary mit Referenznamen als Keys und einem Unter-Dictionary pro Linie.
     """
 
     data_path = Path(find_prime_data_folder()) / "centroids"
-    data_dict = {}
+    full_data_dict = {}
 
     for file in data_path.glob("*.txt"):
         with open(file, "r") as f:
             header = f.readline().strip().split()
             data = np.loadtxt(file, skiprows=1, dtype=str)
 
+            if data.ndim == 1:
+                data = np.expand_dims(data, axis=0)
+
+        reference = str(file).split("calibrated_")[-1].split(".txt")[0]
+        reference_dict = {}
+
         for row in data:
             name = row[0]
-            if name in data_dict:
-                continue  # bereits vorhanden, überspringen
-
             values = row[1:].astype(float)
             entry = dict(zip(header[1:], values))
-            data_dict[str(name)] = entry
+            reference_dict[str(name)] = entry
 
-    return data_dict
+        if reference in full_data_dict:
+            full_data_dict[reference].update(reference_dict)
+        else:
+            full_data_dict[reference] = reference_dict
+
+    return full_data_dict
