@@ -31,7 +31,8 @@ def save_1d_corr_and_lightcurves_general(
     rows=8,
     cols=2,
     combine_data=False,
-    campaign_label=None
+    campaign_label=None,
+    show_reference_label=False
 ):
     ensure_output_dir(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -70,7 +71,8 @@ def save_1d_corr_and_lightcurves_general(
             rows=rows,
             cols=cols,
             centroid_data=centroid_data,
-            only_one_label=True
+            only_one_label=True,
+            show_reference_label=show_reference_label
         )
 
     else:
@@ -90,7 +92,8 @@ def save_1d_corr_and_lightcurves_general(
                 rows=rows,
                 cols=cols,
                 centroid_data=centroid_data,
-                only_one_label=True
+                only_one_label=True,
+                show_reference_label = show_reference_label
             )
 
 
@@ -99,7 +102,7 @@ def save_1d_corr_and_lightcurves_general(
 # =======================
 
 
-def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, figsize=None, only_one_label=False, centroid_data=None):
+def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, figsize=None, only_one_label=False, centroid_data=None, show_reference_label=False):
     """
     Organizes and plots CFFs and their corresponding lightcurves
     in subplot groups, based on specified key orders.
@@ -210,7 +213,7 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
 
 
     plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs, xlabel_lightcurves, centroid_data=centroid_data,
-                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name + " " + campaign, rows=rows, cols=cols, figsize=figsize, only_one_label=only_one_label)
+                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name + " " + campaign, rows=rows, cols=cols, figsize=figsize, only_one_label=only_one_label, show_reference_label=show_reference_label)
 
 
 def prepare_ccfs_references_data(data, rows, cols):
@@ -276,7 +279,7 @@ def normalize_lightcurve(y, yerr_vals):
 
 def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs,
                                                   xlabel_lightcurves, save_only, output_dir, shared_y,
-                                                  file_name, centroid_data=None, rows=4, cols=2, figsize=None, only_one_label=False):
+                                                  file_name, centroid_data=None, rows=4, cols=2, figsize=None, only_one_label=False, show_reference_label=False):
     """
     Plots CCFs and their associated normalized lightcurves
     in a side-by-side subplot layout.
@@ -361,7 +364,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
                 line_data = np.array([])
                 color = "black"
 
-            configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name_and_ref_name=line_name, centroid_data=centroid_data, only_one_label=only_one_label)
+            configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name_and_ref_name=line_name, centroid_data=centroid_data, only_one_label=only_one_label, show_reference_label=show_reference_label)
 
         check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs))
 
@@ -370,7 +373,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
 
 
 def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr,
-                                      line_name_and_ref_name, centroid_data=None, only_one_label=False):
+                                      line_name_and_ref_name, centroid_data=None, only_one_label=False, show_reference_label=False):
     """
     Configures a single subplot axis to display either a normalized lightcurve pair
     or a CCF, depending on the data provided.
@@ -408,6 +411,7 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         line_name, reference_name = line_name_and_ref_name.split("_ref_")
     else:
         line_name = None
+        reference_name = None
 
     if len(line_data) == 0:
         return
@@ -426,7 +430,12 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
             ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
                         label=format_label(line_name, as_latex=False), color=color[0], fmt='.:', capsize=3,
                         markersize=4, )
-            ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, color=color[1], fmt='.:', capsize=3, markersize=4,)
+            if show_reference_label:
+                ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, label=format_label(reference_name, as_latex=False), color=color[1], fmt='.:', capsize=3, markersize=4,)
+            else:
+               ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, color=color[1], fmt='.:', capsize=3,
+                           markersize=4, )
+
         else:
             ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
                         label=format_label(line_name, as_latex=False), color=color[1], fmt='.:', capsize=3,  markersize=4, )
@@ -788,6 +797,7 @@ save_1d_corr_and_lightcurves_general(
     keyorders_dict=bowen_keyorders,
     file_name="bowen_fluorescence_ccfs_and_reference_lightcurves",
     final_key_order=["time shift (tau)", "OI8446", "LyAlpha_not_optical_calibrated", "HBeta", "HAlpha"],
-    rows=9
+    rows=9,
+    show_reference_label=True
 )
 
