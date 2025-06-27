@@ -5,7 +5,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
-from import_data import load_centroid_data_as_dict
+from import_data import load_centroid_data_by_reference
 from plot_utils import format_label, ensure_output_dir
 from settings import BASE_MJD, DEFAULT_OUTPUT_DIR, IONIZATION_POTENTIAL, FWHM_RMS
 
@@ -253,7 +253,7 @@ def plot_ion_pot_FWHM_against_lag(output_dir=DEFAULT_OUTPUT_DIR):
     output_file_dir = output_dir / "plot_against_lag"
     ensure_output_dir(output_file_dir)
 
-    time_lag_data = load_centroid_data_as_dict()
+    time_lag_data = load_centroid_data_by_reference()
     ionization = IONIZATION_POTENTIAL
     fwhm_rms = FWHM_RMS
 
@@ -268,9 +268,9 @@ def plot_ion_pot_FWHM_against_lag(output_dir=DEFAULT_OUTPUT_DIR):
             labels = format_label(line, as_latex=False).split(" ")[0]
             if "$" in labels:
                 labels = labels + "$"
-            y = time_lag_data[line]["tau_cent"]
-            yerr_low = time_lag_data[line]["tau_cent_err_low"]
-            yerr_high = time_lag_data[line]["tau_cent_err_high"]
+            y = time_lag_data["UVW2"][line]["tau_cent"]
+            yerr_low = time_lag_data["UVW2"][line]["tau_cent_err_low"]
+            yerr_high = time_lag_data["UVW2"][line]["tau_cent_err_high"]
             yerr = np.vstack((yerr_low, yerr_high))
 
             x = ionisation_potential + np.random.uniform(-0.2, 0.2)  # Jitter
@@ -363,4 +363,4 @@ def plot_ion_pot_FWHM_against_lag(output_dir=DEFAULT_OUTPUT_DIR):
 
 
 
-plot_ion_pot_FWHM_against_lag()
+# plot_ion_pot_FWHM_against_lag()

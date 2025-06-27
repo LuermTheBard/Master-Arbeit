@@ -30,6 +30,7 @@ def save_1d_corr_and_lightcurves_general(
     final_key_order=None,
     rows=8,
     cols=2,
+    figsize=None,
     combine_data=False,
     campaign_label=None,
     show_reference_label=False
@@ -70,6 +71,7 @@ def save_1d_corr_and_lightcurves_general(
             final_key_order=final_key_order or list(keyorders_dict["UVW2"]),
             rows=rows,
             cols=cols,
+            figsize=figsize,
             centroid_data=centroid_data,
             only_one_label=True,
             show_reference_label=show_reference_label
@@ -91,9 +93,11 @@ def save_1d_corr_and_lightcurves_general(
                 final_key_order=final_key_order or keyorders_dict[campaign],
                 rows=rows,
                 cols=cols,
+                figsize=figsize,
                 centroid_data=centroid_data,
                 only_one_label=True,
                 show_reference_label = show_reference_label
+
             )
 
 
@@ -752,31 +756,40 @@ save_1d_corr_and_lightcurves_general(
 
 
 
-uvw2_keyorders = {
-    "NGC4593_optical_calibrated": {"UVW2":
-                                       ["time shift (tau)",
-                                        "HAlpha",
-                                        "HBeta",
-                                        "HGamma",
-                                        "HDelta",
-                                        "LyAlpha_not_optical_calibrated",
-                                        "HeI5875",
-                                        "HeII4685",
-                                        "OI8446"]},
-    "NGC4593_not_optical_calibrated": {"UVW2":
-                                           ["time shift (tau)",
-                                            "SiIV1393_not_optical_calibrated",
-                                            "NV1238_not_optical_calibrated",
-                                            "CIV1548_not_optical_calibrated",
-                                            "HeII1640_not_optical_calibrated",
-                                            "OIII]1660_not_optical_calibrated"]}
-}
+uvw2_keyorders_optical = {"UVW2":
+                              ["time shift (tau)",
+                               "HAlpha",
+                               "HBeta",
+                               "HGamma",
+                               "HDelta",
+                               "LyAlpha_not_optical_calibrated",
+                               "HeI5875",
+                               "HeII4685",
+                               "OI8446"]}
+
+uvw2_keyorders_not_optical = { "UVW2": ["time shift (tau)",
+                                        "SiIV1393_not_optical_calibrated",
+                                        "NV1238_not_optical_calibrated",
+                                        "CIV1548_not_optical_calibrated",
+                                        "HeII1640_not_optical_calibrated"]}
+
 
 save_1d_corr_and_lightcurves_general(
-    campaign_keys=["NGC4593_optical_calibrated", "NGC4593_not_optical_calibrated"],
-    keyorders_dict=uvw2_keyorders,
-    file_name="UVW2_ccfs_and_reference_lightcurves",
-    rows=8
+    campaign_keys=[],
+    keyorders_dict=uvw2_keyorders_optical,
+    file_name="UVW2_ccfs_and_reference_lightcurves_optical",
+    combine_data=True,
+    rows=8,
+    figsize=(5, 8)
+)
+
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[],
+    keyorders_dict=uvw2_keyorders_not_optical,
+    file_name="UVW2_ccfs_and_reference_lightcurves_not_optical",
+    combine_data=True,
+    rows=4,
+    figsize=(5, 4)
 )
 
 
@@ -798,6 +811,7 @@ save_1d_corr_and_lightcurves_general(
     file_name="bowen_fluorescence_ccfs_and_reference_lightcurves",
     final_key_order=["time shift (tau)", "OI8446", "LyAlpha_not_optical_calibrated", "HBeta", "HAlpha"],
     rows=9,
+    figsize=(6, 11),
     show_reference_label=True
 )
 

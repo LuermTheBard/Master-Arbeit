@@ -230,7 +230,7 @@ def plot_1d_corr_in_groups(cont_name, campaign_name,  output_dir=DEFAULT_OUTPUT_
                                             key_order=key_order)
 
 
-def save_1d_corr_in_groups(cont_name, campaign_name, output_dir=DEFAULT_OUTPUT_DIR):
+def save_1d_corr_in_groups(cont_name, campaign_name, key_order, output_dir=DEFAULT_OUTPUT_DIR):
 
 
     # Prüfen, ob cont_name definiert ist
@@ -239,7 +239,7 @@ def save_1d_corr_in_groups(cont_name, campaign_name, output_dir=DEFAULT_OUTPUT_D
 
     ensure_output_dir(output_dir)
 
-    key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
+
     # key_order = ["time shift (tau)", 'HeI5015', 'HeI5875', 'HeI4471', 'HeI7065', 'HeII4685','HAlpha', 'HBeta', 'HGamma', 'HDelta',  'OI8446']
     one_dim_correlation_data = import_1d_correlation_data()
 
@@ -274,6 +274,6 @@ def save_1d_corr_in_groups_bowen_fluorescence_for_cont(output_dir=DEFAULT_OUTPUT
 
 
 
-# save_1d_corr_in_groups("UVW2", "NGC4593_optical_calibrated")
-# save_1d_corr_in_groups("UVW2", "NGC4593_not_optical_calibrated")
-# save_1d_corr_in_groups_bowen_fluorescence_for_cont()
+save_1d_corr_in_groups("UVW2", "NGC4593_optical_calibrated", key_order = ["time shift (tau)", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446'])
+save_1d_corr_in_groups("UVW2", "NGC4593_not_optical_calibrated", key_order = ["time shift (tau)",  "LyAlpha_not_optical_calibrated", "NV", "SiIV", "CIV", "HEII"])
+save_1d_corr_in_groups_bowen_fluorescence_for_cont()

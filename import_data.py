@@ -91,6 +91,10 @@ def import_1d_correlation_data():
                     header_line = file.readline().strip().split(" ")
                     line_correlation_data = np.loadtxt(line_correlation_file_path).T
 
+                if not list(line_correlation_data):
+                    print(f"SKIPPED: lineCorrelations is empty for continuum: {continuum}")
+                    continue
+
 
                 if lightcurve_correlation_file_path.exists():
 
