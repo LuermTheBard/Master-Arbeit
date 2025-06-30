@@ -4,14 +4,19 @@ Where to put the gecho data:
 
 Put the Data in Master-Arbeit/data/campaigns/{campaign-name}/{1DCorrelation or 1DLightCurves}/...
 
+run plot_1D_ccfs_and_reference_lightcurves to plot the figures with lightcurves and ccfs
 
-How to run tasks: 
 
-Running on the command line: 
+run plot_1D_ccfs_in_groups.py to plot only ccfs
 
-To get the available tasks, run 'python .\run_tasks.py list_task' in the Master-Arbeit folder.
+run plot_1D_lightcurves_in_groups.py to plot only lightcurves
 
-Example to run a task: python.exe .\run_tasks.py plot_1d_corr_in_groups UVW2 NGC4593_optical_calibrated
+run plot_avg_rms.py to plot avg_rms spectra
+
+run plot_line_profiles_in_groups.py to plot the line profiles
+
+
+
 
 
     
