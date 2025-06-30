@@ -40,7 +40,7 @@ def calculate_standard_error_for_lightcurves(flux, flux_noise_err):
 
 # -------------------------------------------------------------------------------------------------------------------
 
-def save_centroid_as_txt(line_objects, output_file="centroids.txt", include_mass=True):
+def save_centroid_as_txt(line_objects, output_file="lags.txt", include_mass=True):
     """
     Saves centroid lags and optionally black hole masses in a machine-readable .txt file.
 
@@ -60,7 +60,7 @@ def save_centroid_as_txt(line_objects, output_file="centroids.txt", include_mass
     --------
     None
     """
-    output_folder = find_prime_data_folder() / "centroids"
+    output_folder = find_prime_data_folder() / "lags"
     ensure_output_dir(output_folder)
 
 

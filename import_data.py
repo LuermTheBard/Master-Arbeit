@@ -390,7 +390,7 @@ def load_centroid_data_by_reference():
         Dictionary mit Referenznamen als Keys und einem Unter-Dictionary pro Linie.
     """
 
-    data_path = Path(find_prime_data_folder()) / "centroids"
+    data_path = Path(find_prime_data_folder()) / "lags"
     full_data_dict = {}
 
     for file in data_path.glob("*.txt"):
