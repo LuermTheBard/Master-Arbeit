@@ -23,6 +23,15 @@ matplotlib.use('Qt5Agg')
 #   DATENIMPORT & VORBEREITUNG
 # =======================
 
+def deep_merge(dict1, dict2):
+    result = dict1.copy()
+    for key, value in dict2.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
 def save_1d_corr_and_lightcurves_general(
     campaign_keys,
     keyorders_dict,
@@ -46,20 +55,17 @@ def save_1d_corr_and_lightcurves_general(
     if combine_data:
         lightcurves_ccfs_dict = {
             "lightcurves": {
-                "lines": {
-                    **lightcurves_data["NGC4593_optical_calibrated"]["lines"],
-                    **lightcurves_data["NGC4593_not_optical_calibrated"]["lines"]
-                },
-                "continua": {
-                    **lightcurves_data["NGC4593_optical_calibrated"]["continua"],
-                    **lightcurves_data["NGC4593_not_optical_calibrated"]["continua"]
-                }
-            },
-            "ccfs": {
-                    **one_dim_correlation_data["NGC4593_optical_calibrated"],
-                    **one_dim_correlation_data["NGC4593_not_optical_calibrated"]
+                "lines":
+                    deep_merge(lightcurves_data["NGC4593_optical_calibrated"]["lines"],
+                               lightcurves_data["NGC4593_not_optical_calibrated"]["lines"])
+                ,
+                "continua":
+                    deep_merge(lightcurves_data["NGC4593_optical_calibrated"]["continua"],
+                               lightcurves_data["NGC4593_not_optical_calibrated"]["continua"])
 
-            }
+            },
+            "ccfs": deep_merge(one_dim_correlation_data["NGC4593_optical_calibrated"],
+                               one_dim_correlation_data["NGC4593_not_optical_calibrated"])
         }
 
 
@@ -748,7 +754,7 @@ def mjd_to_date(mjd):
 #   METHODENAUFRUFE
 # =======================
 
-"""
+
 uv_to_halpha_keyorder = ["time shift (tau)",
                          "UVW2",
                          "LyAlpha_not_optical_calibrated",
@@ -815,7 +821,7 @@ save_1d_corr_and_lightcurves_general(
     rows=4,
     figsize=(5, 4)
 )
-"""
+
 OI_keyorder = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
                 "HAlpha": ["time shift (tau)", "OI8446"]}
 
@@ -830,7 +836,7 @@ save_1d_corr_and_lightcurves_general(
     show_reference_label=True
 )
 
-"""
+
 bowen_keyorders = {
     "NGC4593_optical_calibrated": {
         "Cont1150_not_optical_calibrated": ["time shift (tau)", "HAlpha", "HBeta", "LyAlpha_not_optical_calibrated", "OI8446"],
@@ -852,4 +858,3 @@ save_1d_corr_and_lightcurves_general(
     show_reference_label=True
 )
 
-"""
