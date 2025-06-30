@@ -8,15 +8,12 @@ from import_data import find_prime_data_folder
 from settings import FWHM_RMS, FWHM_ERR
 
 
-def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True, create_tex_file=True):
 
+def import_centroid_and_mc_data(campaign, continuum, lines):
     data_folder = find_prime_data_folder()
     base_path = Path(
         rf'{data_folder}\campaigns\{campaign}\calc_time_lag_ccfs\{continuum}'
     )
-    if lines is None:
-        # Definiere die Liniennamen
-        lines = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685', 'OI8446']
 
     # Lade die lineCorrelations-Daten
     line_correlations_path = base_path / "lineCorrelations_ICCF.txt"
@@ -56,14 +53,14 @@ def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True,
         print(f"ℹ️ Datei {lightcurve_correlations_path} nicht gefunden. Verwende nur lineCorrelations.")
 
     # Lade alle Zentroid- und Peak-Daten in ein Dictionary
-    data = {}
+    mc_data = {}
     for line in lines:
         try:
             cents_path = base_path / f"calculatedCentroids{continuum}_{line}_ICCF.txt"
             peaks_path = base_path / f"peakDistribution_{continuum}_{line}_ICCF.txt"
 
             # Falls eine Datei fehlt, wird sie übersprungen
-            data[line] = {
+            mc_data[line] = {
                 "centroids": np.loadtxt(cents_path) if cents_path.exists() else None,
                 "peaks": np.loadtxt(peaks_path) if peaks_path.exists() else None
             }
@@ -71,17 +68,25 @@ def calc_centroid_malte_code(campaign, continuum, lines=None, include_mass=True,
             print(f"⚠️ Warnung: Fehler beim Laden der Dateien für {line}: {e}")
             continue  # Statt `return`, damit andere Linien geladen werden
 
+    return correlation_data_dict, mc_data
+
+
+def calc_centroid_malte_code(campaign, continuum, lines, include_mass=True, create_tex_file=True):
+
+
+    correlation_data_dict, mc_data = import_centroid_and_mc_data(campaign, continuum, lines=lines)
+
     # Erstelle die Line-Objekte
     line_objects = []
     for line in lines:
-        if line in correlation_data_dict.keys() and data[line]["centroids"] is not None and data[line]["peaks"] is not None:
+        if line in correlation_data_dict.keys() and mc_data[line]["centroids"] is not None and mc_data[line]["peaks"] is not None:
             line_obj = Line(
                 line,  # Name der Linie
                 FWHM_RMS.get(line, 0.0),  # FWHM (rms)
                 FWHM_ERR.get(line, 0.0),  # Sigma (rms)
                 np.vstack((correlation_data_dict['time shift (tau)'], correlation_data_dict[line])).T,
-                data[line]["centroids"],
-                data[line]["peaks"]
+                mc_data[line]["centroids"],
+                mc_data[line]["peaks"]
             )
             line_objects.append(line_obj)
 
