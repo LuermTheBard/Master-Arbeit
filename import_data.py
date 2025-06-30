@@ -25,14 +25,14 @@ def find_prime_data_folder():
     for i in range(3):
         potential_data_folder = current_working_directory / "data"
         if potential_data_folder.exists() and potential_data_folder.is_dir():
-            print(f"'data' folder found at: {potential_data_folder}")
+            #print(f"'data' folder found at: {potential_data_folder}")
             return potential_data_folder
         current_working_directory = current_working_directory.parent
 
     # Falls 'data' nicht in den ersten drei Ebenen gefunden wurde, rekursive Suche im Baum
     for folder in Path.cwd().rglob("data"):
         if folder.is_dir():
-            print(f"'data' folder found at: {folder}")
+            #print(f"'data' folder found at: {folder}")
             return folder
 
     print("No 'data' folder found.")
@@ -416,3 +416,65 @@ def load_centroid_data_by_reference():
             full_data_dict[reference] = reference_dict
 
     return full_data_dict
+
+
+def import_centroid_and_mc_data(campaign, continuum, lines):
+    data_folder = find_prime_data_folder()
+    base_path = Path(
+        rf'{data_folder}\campaigns\{campaign}\calc_time_lag_ccfs\{continuum}'
+    )
+
+    # Lade die lineCorrelations-Daten
+    line_correlations_path = base_path / "lineCorrelations_ICCF.txt"
+    lightcurve_correlations_path = base_path / "lightcurveCorrelations_ICCF.txt"
+    try:
+
+        with open(str(line_correlations_path), "r") as file:
+            header_line = file.readline().strip().split(" ")
+            line_correlation_data = np.loadtxt(line_correlations_path).T
+
+        correlation_header = ["time shift (tau)"] + header_line[5:]
+
+        correlation_data_dict = dict()
+
+        for i, name in enumerate(correlation_header):
+            correlation_data_dict[name] = line_correlation_data[i]
+
+    except Exception as e:
+        print(f"❌ Fehler beim Laden der Datei {line_correlations_path}: {e}")
+        return None
+
+    if lightcurve_correlations_path.exists():
+        try:
+            with open(str(lightcurve_correlations_path), "r") as file:
+                header_line = file.readline().strip().split(" ")
+                line_correlation_data = np.loadtxt(lightcurve_correlations_path).T
+
+            correlation_header = ["time shift (tau)"] + header_line[5:]
+
+            for i, name in enumerate(correlation_header):
+                if name not in correlation_data_dict.keys():
+                    correlation_data_dict[name] = line_correlation_data[i]
+        except Exception as e:
+            print(f"⚠️ Datei {lightcurve_correlations_path} konnte nicht verarbeitet werden: {e}")
+            print("➡️ Verwende nur lineCorrelations.")
+    else:
+        print(f"ℹ️ Datei {lightcurve_correlations_path} nicht gefunden. Verwende nur lineCorrelations.")
+
+    # Lade alle Zentroid- und Peak-Daten in ein Dictionary
+    mc_data = {}
+    for line in lines:
+        try:
+            cents_path = base_path / f"calculatedCentroids{continuum}_{line}_ICCF.txt"
+            peaks_path = base_path / f"peakDistribution_{continuum}_{line}_ICCF.txt"
+
+            # Falls eine Datei fehlt, wird sie übersprungen
+            mc_data[line] = {
+                "centroids": np.loadtxt(cents_path) if cents_path.exists() else None,
+                "peaks": np.loadtxt(peaks_path) if peaks_path.exists() else None
+            }
+        except Exception as e:
+            print(f"⚠️ Warnung: Fehler beim Laden der Dateien für {line}: {e}")
+            continue  # Statt `return`, damit andere Linien geladen werden
+
+    return correlation_data_dict, mc_data

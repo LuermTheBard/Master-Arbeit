@@ -5,7 +5,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
-from import_data import import_1d_correlation_data, import_1d_lightcurve_data, load_centroid_data_by_reference
+from import_data import import_1d_correlation_data, import_1d_lightcurve_data, load_centroid_data_by_reference, \
+    import_centroid_and_mc_data
 from plot_utils import format_label, calculate_standard_error_for_lightcurves, ensure_output_dir
 
 
@@ -61,6 +62,8 @@ def save_1d_corr_and_lightcurves_general(
                 }
             }
         }
+
+
 
         plot_1d_corr_and_lightcurves_in_groups(
             lightcurves_ccfs_dict,
@@ -448,11 +451,33 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         ax.legend(fontsize=7, loc="upper right")
     else:
         ax.plot(x_values_ccfs, line_data["ccfs"], color=color)
+
+        try:
+            _, mc_correlation_data_optical_calibrated = import_centroid_and_mc_data("NGC4593_optical_calibrated", reference_name, [line_name])
+        except Exception as e:
+            print(f"{e}")
+            mc_correlation_data_optical_calibrated = {}
+
+        try:
+            _, mc_correlation_data_not_optical_calibrated = import_centroid_and_mc_data("NGC4593_not_optical_calibrated",
+                                                                                    reference_name, [line_name])
+        except Exception as e:
+            print(f"{e}")
+            mc_correlation_data_not_optical_calibrated = {}
+
+        merged_mc_correlation_data = {**mc_correlation_data_optical_calibrated, **mc_correlation_data_not_optical_calibrated}
+
         if centroid_data:
             try:
-                ax.axvline(centroid_data[reference_name][line_name]["tau_cent"], color="red", linestyle="--")
+                ax.axvline(centroid_data[reference_name][line_name]["tau_cent"], color="red", linestyle="--", linewidth=1)
+                ax.hist(merged_mc_correlation_data[line_name]["centroids"], bins=50, density=True, alpha=0.7, color="orange")
             except KeyError:
                 print(f"No centroid data found for line {line_name}")
+
+
+
+
+
         ccfs_labels = format_label(line_name, as_latex=False).split(" ")[0]
         if "$" in ccfs_labels:
             ccfs_labels = ccfs_labels + "$"
