@@ -56,10 +56,9 @@ def save_1d_corr_and_lightcurves_general(
                 }
             },
             "ccfs": {
-                "UVW2": {
-                    **one_dim_correlation_data["NGC4593_optical_calibrated"]["UVW2"],
-                    **one_dim_correlation_data["NGC4593_not_optical_calibrated"]["UVW2"]
-                }
+                    **one_dim_correlation_data["NGC4593_optical_calibrated"],
+                    **one_dim_correlation_data["NGC4593_not_optical_calibrated"]
+
             }
         }
 
@@ -749,7 +748,7 @@ def mjd_to_date(mjd):
 #   METHODENAUFRUFE
 # =======================
 
-
+"""
 uv_to_halpha_keyorder = ["time shift (tau)",
                          "UVW2",
                          "LyAlpha_not_optical_calibrated",
@@ -816,9 +815,22 @@ save_1d_corr_and_lightcurves_general(
     rows=4,
     figsize=(5, 4)
 )
+"""
+OI_keyorder = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
+                "HAlpha": ["time shift (tau)", "OI8446"]}
 
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[],
+    keyorders_dict=OI_keyorder,
+    file_name="OI_ccfs_and_reference_lightcurves",
+    final_key_order=["time shift (tau)", "LyAlpha_not_optical_calibrated", "HAlpha"],
+    combine_data=True,
+    rows=2,
+    figsize=(6, 3),
+    show_reference_label=True
+)
 
-
+"""
 bowen_keyorders = {
     "NGC4593_optical_calibrated": {
         "Cont1150_not_optical_calibrated": ["time shift (tau)", "HAlpha", "HBeta", "LyAlpha_not_optical_calibrated", "OI8446"],
@@ -840,3 +852,4 @@ save_1d_corr_and_lightcurves_general(
     show_reference_label=True
 )
 
+"""
