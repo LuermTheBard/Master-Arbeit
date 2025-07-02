@@ -823,16 +823,17 @@ save_1d_corr_and_lightcurves_general(
 )
 
 OI_keyorder = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
-                "HAlpha": ["time shift (tau)", "OI8446"]}
+                "HAlpha": ["time shift (tau)", "OI8446"],
+                "UVW2": ["time shift (tau)", "HAlpha", "OI8446"],}
 
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=OI_keyorder,
     file_name="OI_ccfs_and_reference_lightcurves",
-    final_key_order=["time shift (tau)", "LyAlpha_not_optical_calibrated", "HAlpha"],
+    final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
     combine_data=True,
-    rows=2,
-    figsize=(6, 3),
+    rows=4,
+    figsize=(6, 4),
     show_reference_label=True
 )
 
