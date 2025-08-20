@@ -1,11 +1,12 @@
 import datetime
+from pathlib import Path
 
 import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
-from import_data import load_centroid_data_by_reference
+from import_data import load_centroid_data_by_reference, find_prime_data_folder
 from plot_utils import format_label, ensure_output_dir
 from settings import BASE_MJD, DEFAULT_OUTPUT_DIR, IONIZATION_POTENTIAL, FWHM_RMS
 
@@ -361,6 +362,41 @@ def plot_ion_pot_FWHM_against_lag(output_dir=DEFAULT_OUTPUT_DIR):
     plt.show()
 
 
+def plot_ccfs_lags_against_angstron(output_dir=DEFAULT_OUTPUT_DIR):
+    output_file_dir = output_dir / "plot_against_angstron"
+    ensure_output_dir(output_file_dir)
+    data_path = Path(find_prime_data_folder()) / "divers"
+
+    data_file = str(data_path / "ccf_and_lag_to_angstrom.txt")
+    with open(data_file, "r") as f:
+        header = f.readline().strip().split()
+        data = np.loadtxt(data_file, skiprows=1, dtype=str).T
+        if data.ndim == 1:
+            data = np.expand_dims(data, axis=0)
+
+    # Konvertiere direkt zu float
+    data_dict = {key: np.array(values, dtype=float) for key, values in zip(header, data)}
+
+
+    plt.errorbar(data_dict["Angstron"], data_dict["ccf"], yerr=0.01, fmt='.:', label="CCF")
+    plt.vlines(8460, 0,1.5, linestyle="-.", color="black", label="Center OI")
+    plt.xlabel(r"Wavelength [$\AA$]")
+    plt.ylabel("CCF")
+    plt.ylim(0.5, 0.9)
+    plt.legend()
+    plt.savefig(output_file_dir / "CCF_against_Anstron.pdf")
+
+    plt.show()
+
+    plt.errorbar(data_dict["Angstron"], data_dict["tau"], yerr=0.1, fmt='.:', label=r"$\tau$")
+    plt.vlines(8460, -1, 1, linestyle="-.", color="black", label="Center OI")
+    plt.xlabel(r"Wavelength [$\AA$]")
+    plt.ylabel(r"Time Lag [$\tau$]")
+    plt.ylim(-0.6, 0.6)
+    plt.legend()
+    plt.savefig(output_file_dir / "lags_against_Anstron.pdf")
+    plt.show()
 
 
 # plot_ion_pot_FWHM_against_lag()
+plot_ccfs_lags_against_angstron()

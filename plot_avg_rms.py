@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -150,37 +152,7 @@ def plot_avg_rms_spectra(
         Tuple of (ymin, ymax) for limiting y-axis.
     """
 
-
-    if xlim:
-        x = np.array(x) if isinstance(x, list) else x
-        y1 = np.array(y1) if isinstance(y1, list) else y1
-        y2 = np.array(y2) if isinstance(y2, list) else y2
-
-        mask = (x >= xlim[0]) & (x <= xlim[1])
-        x_filtered = x[mask]
-        y1_filtered = y1[mask]
-        y2_filtered = y2[mask]
-    else:
-        x = np.array(x) if isinstance(x, list) else x
-        y1 = np.array(y1) if isinstance(y1, list) else y1
-        y2 = np.array(y2) if isinstance(y2, list) else y2
-        x_filtered = x
-        y1_filtered = y1
-        y2_filtered = y2
-
-    # Berechnung des Exponenten
-    exponent_value = int(f"{min(y1_filtered):.1e}".split("e")[1])
-    exponent = 10 ** exponent_value
-    latex_exponent = f"10^{{{exponent_value}}}"
-
-    line_length = 0.75
-
-    # Aktualisierung des y-Labels
-    ylabel_parts = ylabel.split("[")
-    new_ylabel = ylabel_parts[0] + f"[{latex_exponent} " + ylabel_parts[1]
-
-    y1_filtered = y1_filtered / exponent
-    y2_filtered = y2_filtered / exponent
+    new_ylabel, x_filtered, y1_filtered, y2_filtered = prepare_fit_data(x, xlim, y1, y2, ylabel)
 
     shift_factor_1 = 2  # 50
     shift_factor_2 = -0.8 # 0
@@ -193,13 +165,13 @@ def plot_avg_rms_spectra(
 
 
     # Create the plot
-    fig, ax = plt.subplots(figsize=(20, 12))
+    fig, ax = plt.subplots(figsize=(9, 6))
 
     ax.plot(x_filtered, y1_filtered, label=f"{title1} (shifted by {shift_factor_1:.1f})", linestyle="-", color="blue")
     ax.plot(x_filtered, y2_scaled, label=f"{title2} (scaled by {scale_factor:.1f}, shifted by {shift_factor_2:.1f})", linestyle="-", color="orange")
 
-    ax.set_xlabel(xlabel, fontsize=16)
-    ax.set_ylabel(f"{new_ylabel} + const.", fontsize=16)
+    ax.set_xlabel(xlabel, fontsize=14)
+    ax.set_ylabel(f"{new_ylabel} + const.", fontsize=14)
 
     if log_scale:
         ax.set_yscale("log")
@@ -211,9 +183,11 @@ def plot_avg_rms_spectra(
         ax.set_ylim(ylim)
 
     # ax.grid(visible=True, which="both", linestyle="--", linewidth=0.5)
-    ax.legend(fontsize=16)
+    ax.legend(fontsize=10)
 
-    ax.tick_params(axis='both', labelsize=16)
+    ax.tick_params(axis='both', labelsize=14)
+
+    line_length = 0.75
 
     # Add lines with labels
     for label, props in lines.items():
@@ -238,7 +212,7 @@ def plot_avg_rms_spectra(
             ax.plot([pos, pos], [y_pos1, y_pos1 + line_length], color="black", linewidth=1.5)
         if not show_no_tick_rms:
             ax.plot([pos, pos], [y_pos2, y_pos2 + line_length], color="black", linewidth=1.5)
-        ax.text(pos + text_shift, y_pos1 + line_length + text_vertical_shift, label, fontsize=14, color="black", rotation=rotation_angle,
+        ax.text(pos + text_shift, y_pos1 + line_length + text_vertical_shift, label, fontsize=9, color="black", rotation=rotation_angle,
                 ha="left" if slanted else "center",
                 va="bottom")
 
@@ -246,7 +220,7 @@ def plot_avg_rms_spectra(
         plot_line_group(ax, data["position"], x_filtered, y1_filtered, y2_scaled, group, line_length=line_length,
                         tick_vertical_shift_avg=data.get("tick_vertical_shift_avg",0.2), tick_vertical_shift_rms=data.get("tick_vertical_shift_rms", 0.2), show_in_rms=data.get("show_in_rms", False), all_lines=data.get("all_lines", False))
 
-    plt.title(super_title, fontsize=20)
+    # plt.title(super_title, fontsize=20)
 
     if save_path:
         fig.savefig(save_path, dpi=300)
@@ -256,6 +230,40 @@ def plot_avg_rms_spectra(
         fig.savefig(savepath_png, dpi=300)
 
     plt.show()
+
+
+def prepare_fit_data(x, xlim, y1, y2, ylabel, exponent_value=-15):
+    y2_filtered = None
+    if xlim:
+        x = np.array(x) if isinstance(x, list) else x
+        y1 = np.array(y1) if isinstance(y1, list) else y1
+        if y2 is not None:
+            y2 = np.array(y2) if isinstance(y2, list) else y2
+
+        mask = (x >= xlim[0]) & (x <= xlim[1])
+        x_filtered = x[mask]
+        y1_filtered = y1[mask]
+        if y2 is not None:
+            y2_filtered = y2[mask]
+    else:
+        x = np.array(x) if isinstance(x, list) else x
+        y1 = np.array(y1) if isinstance(y1, list) else y1
+        if y2 is not None:
+            y2 = np.array(y2) if isinstance(y2, list) else y2
+        x_filtered = x
+        y1_filtered = y1
+        if y2 is not None:
+            y2_filtered = y2
+    # Berechnung des Exponenten
+    exponent = 10 ** exponent_value
+    latex_exponent = f"10^{{{exponent_value}}}"
+    # Aktualisierung des y-Labels
+    ylabel_parts = ylabel.split("[")
+    new_ylabel = ylabel_parts[0] + f"[{latex_exponent} " + ylabel_parts[1]
+    y1_filtered = y1_filtered / exponent
+    if y2 is not None:
+        y2_filtered = y2_filtered / exponent
+    return new_ylabel, x_filtered, y1_filtered, y2_filtered
 
 
 def plot_line_group(
@@ -331,7 +339,7 @@ def plot_line_group(
                 y=line_ymax_avg + 0.1,
                 s=group,
                 ha='center',
-                fontsize=14,
+                fontsize=9,
                 rotation=90,
                 va="bottom")
     # Horizontale Verbindungslinie
@@ -350,4 +358,71 @@ def plot_avg_rms_spec(output_dir=DEFAULT_OUTPUT_DIR):
     plot_avg_rms(fits_data, save_path=avg_rms_spec_file)
 
 
-# plot_avg_rms_spec()
+def plot_spectra(fits_data, spec_file, xlim, ylim = None):
+
+
+    fig, ax = plt.subplots(figsize=(9, 6))
+
+    ylabel = (r"$F_\lambda \, [\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, "
+             r"\mathrm{\AA}^{-1}]$")
+
+    xlabel = r"Rest Wavelength $[\mathrm{\AA}]$"
+
+
+    for key, item in fits_data.items():
+
+
+        new_ylabel, x_filtered, y1_filtered, y2_filtered = prepare_fit_data(item["x_axis"], xlim, item["data"], None, ylabel)
+
+        ax.plot(x_filtered, y1_filtered, label=f"{key}", linestyle="-")
+
+        ax.set_xlabel(xlabel, fontsize=14)
+        ax.set_ylabel(f"{new_ylabel} + const.", fontsize=14)
+
+
+        if xlim:
+            ax.set_xlim(xlim)
+
+        if ylim:
+            ax.set_ylim(ylim)
+
+        # ax.grid(visible=True, which="both", linestyle="--", linewidth=0.5)
+        # ax.legend(fontsize=10)
+
+        ax.tick_params(axis='both', labelsize=14)
+
+    if spec_file:
+        fig.savefig(spec_file, dpi=300)
+        print(f"Plot saved to {spec_file}")
+
+        savepath_png = f"{spec_file}.png"
+        fig.savefig(savepath_png, dpi=300)
+
+    plt.show()
+
+
+def plot_calibrated_and_uncalibrated_spectra(output_dir=DEFAULT_OUTPUT_DIR):
+    calibrated_spec_dir = output_dir / "calibrated_spectra"
+    uncalibrated_spec_dir = output_dir / "uncalibrated_spectra"
+
+    calibrated_spec_dir.mkdir(parents=True, exist_ok=True)
+    uncalibrated_spec_dir.mkdir(parents=True, exist_ok=True)
+
+    calibrated_spec_file = calibrated_spec_dir / "calibrated_spec.pdf"
+    uncalibrated_spec_file = uncalibrated_spec_dir / "uncalibrated_spec.pdf"
+
+    uncalibrated_fits_data = import_fits_data(Path("fits") / "uncalibrated_fits")
+    calibrated_fits_data = import_fits_data(Path("fits") / "intercalibrated_fits")
+    
+    validate_fits_data(uncalibrated_fits_data)
+    validate_fits_data(calibrated_fits_data)
+
+    xlim = (3800, 8900)
+    ylim = (0, 14)
+
+    plot_spectra(uncalibrated_fits_data, uncalibrated_spec_file, xlim = xlim, ylim = ylim)
+    plot_spectra(calibrated_fits_data, calibrated_spec_file, xlim = xlim, ylim = ylim)
+
+#plot_avg_rms_spec()
+
+plot_calibrated_and_uncalibrated_spectra()
