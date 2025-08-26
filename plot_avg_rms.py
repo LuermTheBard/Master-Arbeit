@@ -3,7 +3,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from import_data import import_fits_data
+from import_data import import_fits_data, find_prime_data_folder
 from settings import All_LINES, All_LINE_GROUPS, DEFAULT_OUTPUT_DIR
 
 
@@ -36,7 +36,7 @@ def validate_fits_data(fits_data):
             raise ValueError(f"'data' in key '{key}' must be a list or numpy array.")
 
 
-def plot_avg_rms(fits_data, save_path=None, file_name=None, log_scale=False, no_description=False, ax=None, show_ylabel=True):
+def plot_avg_rms(fits_data, save_path=None, file_name=None, log_scale=False, xlim=None, ylim=None, no_description=False, ax=None, show_ylabel=True):
     """
     Extracts and plots AVG and RMS spectra from FITS-like data.
     Also saves the flux data and plot if a save path is provided.
@@ -110,8 +110,8 @@ def plot_avg_rms(fits_data, save_path=None, file_name=None, log_scale=False, no_
         groups=groups,
         save_path=save_path / file_name if save_path else None,
         log_scale=log_scale,
-        xlim=(3800, 8900), #xlim=(3800, 10100),
-        ylim=(0, 13.999), #ylim=(0, 100)
+        xlim=(3800, 8900) if xlim is None else xlim,
+        ylim=(0, 13.999) if ylim is None else ylim, #ylim=(0, 100)
         ax=ax,
         show_ylable=show_ylabel
     )
@@ -180,16 +180,16 @@ def plot_avg_rms_spectra(
 
     # Falls kein ax übergeben wurde → neue Figure erzeugen
     if ax is None:
-        fig, ax = plt.subplots(figsize=(9, 6))
+        fig, ax = plt.subplots(figsize=(8, 5))
     else:
         fig = ax.figure  # Hole Figure aus dem vorhandenen ax
 
     ax.plot(x_filtered, y1_filtered, label=f"{title1} (shifted by {shift_factor_1:.1f})", linestyle="-", color="blue")
     ax.plot(x_filtered, y2_scaled, label=f"{title2} (scaled by {scale_factor:.1f}, shifted by {shift_factor_2:.1f})", linestyle="-", color="orange")
 
-    ax.set_xlabel(xlabel, fontsize=14)
+    ax.set_xlabel(xlabel, fontsize=11)
     if show_ylable:
-        ax.set_ylabel(f"{new_ylabel} + const.", fontsize=14)
+        ax.set_ylabel(f"{new_ylabel} + const.", fontsize=11)
 
     if log_scale:
         ax.set_yscale("log")
@@ -201,9 +201,9 @@ def plot_avg_rms_spectra(
         ax.set_ylim(ylim)
 
     # ax.grid(visible=True, which="both", linestyle="--", linewidth=0.5)
-    ax.legend(fontsize=10)
+    ax.legend(fontsize=8)
 
-    ax.tick_params(axis='both', labelsize=14)
+    ax.tick_params(axis='both', labelsize=11)
 
     line_length = 0.75
 
@@ -227,10 +227,10 @@ def plot_avg_rms_spectra(
 
         # Zeichne die Linie und füge das Label hinzu
         if not show_no_tick_avg:
-            ax.plot([pos, pos], [y_pos1, y_pos1 + line_length], color="black", linewidth=1.5)
+            ax.plot([pos, pos], [y_pos1, y_pos1 + line_length], color="black", linewidth=0.5)
         if not show_no_tick_rms:
-            ax.plot([pos, pos], [y_pos2, y_pos2 + line_length], color="black", linewidth=1.5)
-        ax.text(pos + text_shift, y_pos1 + line_length + text_vertical_shift, label, fontsize=9, color="black", rotation=rotation_angle,
+            ax.plot([pos, pos], [y_pos2, y_pos2 + line_length], color="black", linewidth=0.5)
+        ax.text(pos + text_shift, y_pos1 + line_length + text_vertical_shift, label, fontsize=8, color="black", rotation=rotation_angle,
                 ha="left" if slanted else "center",
                 va="bottom")
 
@@ -341,31 +341,31 @@ def plot_line_group(
 
         for pos in positions:
             # Vertikale Linien zeichnen
-            ax_obj.vlines(x=pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=1.5)
+            ax_obj.vlines(x=pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=0.5)
 
     else:
-        ax_obj.vlines(x=min_pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=1.5)
-        ax_obj.vlines(x=max_pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=1.5)
+        ax_obj.vlines(x=min_pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=0.5)
+        ax_obj.vlines(x=max_pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=0.5)
 
     if show_in_rms:
         for pos in positions:
-            ax_obj.vlines(x=pos, ymin=line_ymin_rms, ymax=line_ymax_rms, color='black', linewidth=1.5)
+            ax_obj.vlines(x=pos, ymin=line_ymin_rms, ymax=line_ymax_rms, color='black', linewidth=0.5)
 
     ax_obj.text(x=((max_pos - min_pos) / 2) + min_pos,
                 y=line_ymax_avg + 0.1,
                 s=group,
                 ha='center',
-                fontsize=9,
+                fontsize=8,
                 rotation=90,
                 va="bottom")
     # Horizontale Verbindungslinie
-    ax_obj.hlines(y=line_ymax_avg, xmin=min_pos, xmax=max_pos, color='black', linewidth=1.2)
+    ax_obj.hlines(y=line_ymax_avg, xmin=min_pos, xmax=max_pos, color='black', linewidth=0.5)
 
 # methods to run
 
 def plot_avg_rms_spec(input_dir=None, file_name=None,
                       output_dir=DEFAULT_OUTPUT_DIR,
-                      no_description=False, ax=None, show_ylabel=True):
+                      no_description=False, xlim=None, ylim=None, ax=None, show_ylabel=True):
     avg_rms_spec_dir = output_dir / "avg_rms_spec"
     avg_rms_spec_dir.mkdir(parents=True, exist_ok=True)
 
@@ -374,94 +374,115 @@ def plot_avg_rms_spec(input_dir=None, file_name=None,
                         file_name=file_name,
                         no_description=no_description,
                         ax=ax,
+                        xlim=xlim,
+                        ylim=ylim,
                         show_ylabel=show_ylabel)  # NEU
 
 
-def plot_spectra(fits_data, spec_file, xlim, ylim = None):
 
-
-    fig, ax = plt.subplots(figsize=(9, 6))
+def plot_spectra(fits_data, spec_file=None, xlim=None, ylim=None, ax=None, show_ylabel=True):
+    created_fig = None
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(9, 6))
+        created_fig = fig
+    else:
+        fig = ax.figure
 
     ylabel = (r"$F_\lambda \, [\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, "
-             r"\mathrm{\AA}^{-1}]$")
-
+              r"\mathrm{\AA}^{-1}]$")
     xlabel = r"Rest Wavelength $[\mathrm{\AA}]$"
 
-
     for key, item in fits_data.items():
-
-
-        new_ylabel, x_filtered, y1_filtered, y2_filtered = prepare_fit_data(item["x_axis"], xlim, item["data"], None, ylabel)
-
+        new_ylabel, x_filtered, y1_filtered, _ = prepare_fit_data(
+            item["x_axis"], xlim, item["data"], None, ylabel
+        )
         ax.plot(x_filtered, y1_filtered, label=f"{key}", linestyle="-", color="black", linewidth=0.3)
 
-        ax.set_xlabel(xlabel, fontsize=14)
+    ax.set_xlabel(xlabel, fontsize=14)
+    if show_ylabel:
         ax.set_ylabel(f"{new_ylabel} + const.", fontsize=14)
 
+    if xlim: ax.set_xlim(xlim)
+    if ylim: ax.set_ylim(ylim)
 
-        if xlim:
-            ax.set_xlim(xlim)
-
-        if ylim:
-            ax.set_ylim(ylim)
-
-        # ax.grid(visible=True, which="both", linestyle="--", linewidth=0.5)
-        # ax.legend(fontsize=10)
-
-        ax.tick_params(axis='both', labelsize=14)
+    ax.tick_params(axis='both', labelsize=14)
 
     if spec_file:
         fig.savefig(spec_file, dpi=300)
+        fig.savefig(f"{spec_file}.png", dpi=300)
         print(f"Plot saved to {spec_file}")
 
-        savepath_png = f"{spec_file}.png"
-        fig.savefig(savepath_png, dpi=300)
+    if created_fig is not None:
+        plt.show()
 
-    plt.show()
-
-    return fig, ax
+    return fig, ax, new_ylabel
 
 
-def plot_calibrated_and_uncalibrated_spectra(output_dir=DEFAULT_OUTPUT_DIR):
-    calibrated_spec_dir = output_dir / "calibrated_spectra"
-    uncalibrated_spec_dir = output_dir / "uncalibrated_spectra"
 
-    calibrated_spec_dir.mkdir(parents=True, exist_ok=True)
-    uncalibrated_spec_dir.mkdir(parents=True, exist_ok=True)
-
-    calibrated_spec_file = calibrated_spec_dir / "calibrated_spec.pdf"
-    uncalibrated_spec_file = uncalibrated_spec_dir / "uncalibrated_spec.pdf"
-
+def plot_calibrated_and_uncalibrated_spectra_together(output_dir=DEFAULT_OUTPUT_DIR):
     uncalibrated_fits_data = import_fits_data(Path("fits") / "uncalibrated_fits")
-    calibrated_fits_data = import_fits_data(Path("fits") / "intercalibrated_fits")
-    
+    calibrated_fits_data   = import_fits_data(Path("fits") / "intercalibrated_fits")
+
     validate_fits_data(uncalibrated_fits_data)
     validate_fits_data(calibrated_fits_data)
 
     xlim = (3800, 8900)
-    ylim = (0, 14)
+    ylim = (0, 13.999)
 
-    plot_spectra(uncalibrated_fits_data, uncalibrated_spec_file, xlim = xlim, ylim = ylim)
-    plot_spectra(calibrated_fits_data, calibrated_spec_file, xlim = xlim, ylim = ylim)
+    fig, (ax1, ax2) = plt.subplots(
+        2, 1, sharex=True, figsize=(9, 8),
+        gridspec_kw={"hspace": 0}
+    )
+
+    # Oberer Plot: uncalibrated
+    _, _, ylabel = plot_spectra(uncalibrated_fits_data, xlim=xlim, ylim=ylim,
+                                ax=ax1, show_ylabel=False)
+    ax1.text(0.02, 0.95, "Original", transform=ax1.transAxes,
+             ha="left", va="top", fontsize=14)
+
+    # Unterer Plot: calibrated
+    plot_spectra(calibrated_fits_data, xlim=xlim, ylim=ylim,
+                 ax=ax2, show_ylabel=False)
+    ax2.text(0.02, 0.95, "Intercalibrated", transform=ax2.transAxes,
+             ha="left", va="top", fontsize=14)
+
+    # X-Achse nur unten beschriften
+    ax2.set_xlabel(r"Rest Wavelength $[\mathrm{\AA}]$", fontsize=14)
+    for ax in (ax1, ax2):
+        ax.label_outer()
+
+    # gemeinsames Y-Label
+    fig.text(0.02, 0.5, f"{ylabel}",
+             va="center", rotation="vertical", fontsize=14)
+
+    plt.tight_layout(rect=[0.05, 0, 1, 1])
+    fig.savefig(output_dir / "comparison_spectra.pdf", dpi=300)
+    plt.show()
+    return fig, (ax1, ax2)
 
 
-def plot_avg_rms_together():
+def plot_avg_rms_together(output_dir=DEFAULT_OUTPUT_DIR):
     fig, (ax1, ax2) = plt.subplots(
         2, 1, sharex=True, figsize=(9, 8),
         gridspec_kw={"hspace": 0}  # Subplots dicht übereinander
     )
 
+    xlim=(3800, 8900)
+    ylim = (0, 7.999)
+
+    data_path = find_prime_data_folder()
+
+    uncalibrate_avg_rms_data_path = data_path / "fits"/ "uncalibrated_AVG_RMS"
+    calibrate_avg_rms_data_path = data_path / "fits"
+
     # Oberer Plot
-    _,_,ylabel = plot_avg_rms_spec(file_name="no_lines_avg_rms.pdf",
-                      no_description=True, ax=ax1, show_ylabel=False)
-    ax1.text(0.02, 0.95, "Calibrated",
+    _,_,ylabel = plot_avg_rms_spec(input_dir=uncalibrate_avg_rms_data_path, xlim=xlim, ylim=ylim, no_description=True, ax=ax1, show_ylabel=False)
+    ax1.text(0.3, 0.95, "Original",
              transform=ax1.transAxes, ha="left", va="top", fontsize=14)
 
     # Unterer Plot
-    plot_avg_rms_spec(Path("fits") / "uncalibrated_AVG_RMS",
-                      file_name="uncalibrated_no_lines_avg_rms.pdf",
-                      no_description=True, ax=ax2, show_ylabel=False)
-    ax2.text(0.02, 0.95, "Uncalibrated",
+    plot_avg_rms_spec(input_dir=calibrate_avg_rms_data_path, xlim=xlim, ylim=ylim, no_description=True, ax=ax2, show_ylabel=False)
+    ax2.text(0.3, 0.95, "Intercalibrated",
              transform=ax2.transAxes, ha="left", va="top", fontsize=14)
 
     # Gemeinsame X-Achse nur unten beschriften
@@ -475,7 +496,7 @@ def plot_avg_rms_together():
              va="center", rotation="vertical", fontsize=14)
 
     plt.tight_layout(rect=[0.05, 0, 1, 1])  # Platz für Y-Label lassen
-    fig.savefig("comparison_avg_rms.pdf", dpi=300)
+    fig.savefig(output_dir / "avg_rms_spec" / "comparison_avg_rms.pdf", dpi=300)
     plt.show()
     return fig, (ax1, ax2)
 
@@ -484,5 +505,6 @@ def plot_avg_rms_together():
 
 
 #plot_avg_rms_spec()
-plot_avg_rms_together()
-#plot_calibrated_and_uncalibrated_spectra()
+plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1800), ylim=(3, 70))
+#plot_avg_rms_together()
+#plot_calibrated_and_uncalibrated_spectra_together()

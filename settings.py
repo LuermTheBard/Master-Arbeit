@@ -57,6 +57,18 @@ def normalize_color_values(colorcode_dict):
 
 COLORCODE_CONTINUA_NORMALIZED = normalize_color_values(COLORCODE_CONTINUA)
 All_LINES = {
+    #UV
+    "Lyα": {"position": 1215.67, "text_vertical_shift": -10, "slanted": False, "text_shift": 0, "show_no_tick_avg": True, "tick_shift_rms": 1},
+    "N V 1238": {"position": 1238.82, "text_vertical_shift": -10, "slanted": False, "text_shift": 0, "show_no_tick_avg": True, "tick_shift_rms": 1},
+    "Si IV 1393": {"position": 1393.75, "text_vertical_shift": -10, "slanted": False, "text_shift": 0, "show_no_tick_avg": True, "tick_shift_rms": 1},
+    "C IV 1548": {"position": 1548.19, "text_vertical_shift": -10, "slanted": False, "text_shift": 0, "show_no_tick_avg": True, "tick_shift_rms": 1},
+    "He II 1640": {"position": 1640.42, "text_vertical_shift": -10, "slanted": False, "text_shift": 0, "show_no_tick_avg": True, "tick_shift_rms": 1},
+    "O III] 1660": {"position": 1660.80, "text_vertical_shift": -10, "slanted": False, "text_shift": 0, "show_no_tick_avg": True, "tick_shift_rms": 1},
+
+
+
+
+
     "Hα": {"position": 6562.82, "text_vertical_shift": -10, "slanted": False, "text_shift": -60, "show_no_tick_avg": True, "tick_shift_rms": 1},
     "Hβ": {"position": 4861.33, "text_vertical_shift": -0.7, "slanted": False, "show_no_tick_avg": True, "tick_shift_rms": 0.6},
     "Hγ": {"position": 4340.47, "text_vertical_shift": 0.1, "tick_shift_avg": 0.31, "text_shift": -20, "slanted": False, "tick_shift_rms": 0.57},
