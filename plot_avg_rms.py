@@ -36,7 +36,7 @@ def validate_fits_data(fits_data):
             raise ValueError(f"'data' in key '{key}' must be a list or numpy array.")
 
 
-def plot_avg_rms(fits_data, save_path=None, file_name=None, log_scale=False, xlim=None, ylim=None, no_description=False, ax=None, show_ylabel=True):
+def plot_avg_rms(fits_data, save_path=None, file_name=None, log_scale=False, xlim=None, ylim=None, no_description=False, ax=None, show_ylabel=True, scale_factor=None, shift_factor=None, line_length=0.75):
     """
     Extracts and plots AVG and RMS spectra from FITS-like data.
     Also saves the flux data and plot if a save path is provided.
@@ -113,7 +113,10 @@ def plot_avg_rms(fits_data, save_path=None, file_name=None, log_scale=False, xli
         xlim=(3800, 8900) if xlim is None else xlim,
         ylim=(0, 13.999) if ylim is None else ylim, #ylim=(0, 100)
         ax=ax,
-        show_ylable=show_ylabel
+        show_ylable=show_ylabel,
+        scale_factor=scale_factor,
+        shift_factor=shift_factor,
+        line_length=line_length,
     )
 
     if save_path:
@@ -132,7 +135,7 @@ def plot_avg_rms(fits_data, save_path=None, file_name=None, log_scale=False, xli
 def plot_avg_rms_spectra(
     x, y1, y2, xlabel, ylabel, title1, title2, super_title,
     lines, groups, save_path=None, log_scale=False, xlim=None, ylim=None,
-    ax=None, show_ylable=True
+    ax=None, show_ylable=True, scale_factor=None, shift_factor=None, line_length = 0.75
 ):
     """
     Plots the AVG and RMS spectra in one figure with custom scaling and line annotations.
@@ -171,9 +174,18 @@ def plot_avg_rms_spectra(
 
     new_ylabel, x_filtered, y1_filtered, y2_filtered = prepare_fit_data(x, xlim, y1, y2, ylabel)
 
-    shift_factor_1 = 2
-    shift_factor_2 = -0.8
-    scale_factor = 8
+    if scale_factor is None:
+        scale_factor = 8
+    else:
+        scale_factor = scale_factor
+
+    if shift_factor is None:
+
+        shift_factor_1 = 2
+        shift_factor_2 = -0.8
+    else:
+        shift_factor_1, shift_factor_2 = shift_factor
+
 
     y2_scaled = y2_filtered * scale_factor + shift_factor_2
     y1_filtered = y1_filtered + shift_factor_1
@@ -205,7 +217,7 @@ def plot_avg_rms_spectra(
 
     ax.tick_params(axis='both', labelsize=11)
 
-    line_length = 0.75
+
 
     # Add lines with labels
     for label, props in lines.items():
@@ -365,7 +377,7 @@ def plot_line_group(
 
 def plot_avg_rms_spec(input_dir=None, file_name=None,
                       output_dir=DEFAULT_OUTPUT_DIR,
-                      no_description=False, xlim=None, ylim=None, ax=None, show_ylabel=True):
+                      no_description=False, xlim=None, ylim=None, ax=None, show_ylabel=True, scale_factor=None, shift_factor=None, line_length=0.75):
     avg_rms_spec_dir = output_dir / "avg_rms_spec"
     avg_rms_spec_dir.mkdir(parents=True, exist_ok=True)
 
@@ -376,7 +388,12 @@ def plot_avg_rms_spec(input_dir=None, file_name=None,
                         ax=ax,
                         xlim=xlim,
                         ylim=ylim,
-                        show_ylabel=show_ylabel)  # NEU
+                        show_ylabel=show_ylabel,
+                        scale_factor=scale_factor,
+                        shift_factor=shift_factor,
+                        line_length=line_length
+
+                        )  # NEU
 
 
 
@@ -501,10 +518,167 @@ def plot_avg_rms_together(output_dir=DEFAULT_OUTPUT_DIR):
     return fig, (ax1, ax2)
 
 
+import numpy as np
+
+def measure_line_flux(
+    fits_data: dict,
+    line_window: tuple,
+    cont_windows: tuple,
+    degree: int = 1,
+    flux_key: str = "data",
+    lam_key: str = "x_axis",
+    sigma_key: str = "sigma",
+):
+    """
+    Integrierter Linienfluss F_line aus einem AVG-Spektrum.
+
+    Parameters
+    ----------
+    fits_data : dict
+        Muss Arrays unter lam_key (Å), flux_key (z.B. erg s^-1 cm^-2 Å^-1) enthalten.
+        Optional: sigma_key (gleiche Einheiten wie flux, pro Pixel).
+    line_window : (lam_min, lam_max)
+        Integrationsfenster der Linie in Angström (observed oder rest, aber konsistent).
+    cont_windows : ((c1_min, c1_max), (c2_min, c2_max))
+        Zwei linienfreie Fenster links/rechts für den Kontinuumfit.
+    degree : int, default 1
+        Grad des Polynoms fürs Kontinuum (1 = linear; 0 = konstant).
+    flux_key, lam_key, sigma_key : str
+        Dict-Schlüssel.
+
+    Returns
+    -------
+    F_line : float
+        Integrierter Linienfluss (Einheiten: flux * Å).
+    F_err : float or np.nan
+        1σ-Unsicherheit (inkl. grober Kontinuumskomponente), np.nan wenn keine Fehler.
+    EW : float or np.nan
+        Äquivalentbreite in Å (Emission > 0), np.nan wenn Kontinuum ≈ 0.
+    meta : dict
+        Zusatzinfos: Kontinuumkoeffs, Kontinuumfunktion (callable), Masken, usw.
+    """
+    lam = np.asarray(fits_data[lam_key], dtype=float)
+    flux = np.asarray(fits_data[flux_key], dtype=float)
+    sigma = None
+    if sigma_key in fits_data and fits_data[sigma_key] is not None:
+        sigma = np.asarray(fits_data[sigma_key], dtype=float)
+
+    # sortieren & gültige Werte
+    m_good = np.isfinite(lam) & np.isfinite(flux)
+    if sigma is not None:
+        m_good &= np.isfinite(sigma)
+    lam, flux = lam[m_good], flux[m_good]
+    sigma = (sigma[m_good] if sigma is not None else None)
+
+    idx = np.argsort(lam)
+    lam, flux = lam[idx], flux[idx]
+    if sigma is not None:
+        sigma = sigma[idx]
+
+    # Fenster-Masken
+    (lmin, lmax) = line_window
+    (c1min, c1max), (c2min, c2max) = cont_windows
+
+    m_cont = ((lam >= c1min) & (lam <= c1max)) | ((lam >= c2min) & (lam <= c2max))
+    m_line = (lam >= lmin) & (lam <= lmax)
+
+    lam_cont, flux_cont = lam[m_cont], flux[m_cont]
+    lam_line, flux_line = lam[m_line], flux[m_line]
+    if lam_line.size < 3 or lam_cont.size < (degree + 2):
+        raise ValueError("Zu wenige Punkte im Linien- oder Kontinuumsfenster.")
+
+    # Gewichte für Polyfit (np.polyfit erwartet 'w' ~ 1/σ)
+    w = None
+    if sigma is not None:
+        w = 1.0 / np.clip(sigma[m_cont], 1e-300, np.inf)
+
+    # Kontinuumfit (Polynom in λ)
+    coeffs = np.polyfit(lam_cont, flux_cont, deg=degree, w=w)
+    cont_poly = np.poly1d(coeffs)
+
+    # Residuum im Linienfenster
+    cont_line = cont_poly(lam_line)
+    resid = flux_line - cont_line
+
+    # Trapezintegration mit expliziten Gewichten (für Fehlerfortpflanzung)
+    dlam = np.diff(lam_line)
+    w_trap = np.empty_like(lam_line)
+    w_trap[0] = dlam[0] / 2.0
+    w_trap[1:-1] = (dlam[:-1] + dlam[1:]) / 2.0
+    w_trap[-1] = dlam[-1] / 2.0
+
+    F_line = float(np.sum(resid * w_trap))
+
+    # Fehler der Integration
+    if sigma is not None:
+        sigma_line = sigma[m_line]
+
+        # Varianz aus Pixelrauschen (ungekoppelt angenommen)
+        var_pix = np.sum((sigma_line * w_trap) ** 2)
+
+        # Grobe Kontinuum-Komponente: Streuung der Kontinuumresiduen × Linienbreite
+        cont_resid = flux_cont - cont_poly(lam_cont)
+        # robust: IQR/1.349 ~ std
+        q25, q75 = np.percentile(cont_resid, [25, 75])
+        cont_std = (q75 - q25) / 1.349 if np.isfinite(q25 + q75) else np.std(cont_resid, ddof=1)
+        delta_lambda = lam_line[-1] - lam_line[0]
+        var_cont = (cont_std * delta_lambda) ** 2
+
+        F_err = float(np.sqrt(var_pix + var_cont))
+    else:
+        F_err = np.nan
+
+    # Äquivalentbreite (Kontinuum am Linienzentrum)
+    lam0 = 0.5 * (lmin + lmax)
+    fcont0 = float(cont_poly(lam0))
+    EW = (F_line / fcont0) if np.isfinite(fcont0) and fcont0 != 0 else np.nan
+
+    meta = dict(
+        coeffs=coeffs,
+        continuum_fn=cont_poly,
+        masks=dict(line=m_line, cont=m_cont),
+        line_window=line_window,
+        cont_windows=cont_windows,
+        degree=degree,
+        lam0=lam0,
+        fcont0=fcont0,
+    )
+    return F_line, F_err, EW, meta
 
 
+# -----------------------------
+# Minimales Anwendungsbeispiel:
+# -----------------------------
+# fits_data = {
+#     "lambda": lam_Angstrom,                 # 1D ndarray
+#     "flux": flux_flam,                      # erg s^-1 cm^-2 Å^-1
+#     "sigma": flux_err_flam (optional),      # gleiche Einheiten wie flux
+# }
+#
+# F, Ferr, EW, meta = measure_line_flux(
+#     fits_data,
+#     line_window=(4845.0, 5010.0),                   # z.B. Hβ (inkl. Flügel, ohne [O III])
+#     cont_windows=((4815.0, 4840.0), (5100.0, 5130.0)),
+#     degree=1,
+# )
+# print(f"F_line = {F:.3e} ± {Ferr:.3e}  (EW = {EW:.2f} Å)")
+
+def get_line_flux(line_window: tuple,cont_windows: tuple):
+    data_path = find_prime_data_folder()
+    avg_fits_data = import_fits_data(data_path / "fits")['NGC4593_avg.fits']
+
+    line_window = (4995.66, 5021.75)
+    cont_windows = ((4762, 4774),(5085, 5112))
+
+    F_line, F_err, EW, meta= measure_line_flux(avg_fits_data, line_window, cont_windows)
+
+    print(f"F_line = {F_line:.3e} ± {F_err:.3e}  (EW = {EW:.2f} Å)")
+
+
+
+get_line_flux(None, None)
 
 #plot_avg_rms_spec()
-plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1800), ylim=(3, 70))
+# plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1800), ylim=(3, 70), scale_factor=5, shift_factor=(10, 0), line_length=3)
 #plot_avg_rms_together()
 #plot_calibrated_and_uncalibrated_spectra_together()
