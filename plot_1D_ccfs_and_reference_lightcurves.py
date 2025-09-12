@@ -8,8 +8,7 @@ from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 from import_data import import_1d_correlation_data, import_1d_lightcurve_data, load_centroid_data_by_reference, \
     import_centroid_and_mc_data
 from plot_utils import format_label, calculate_standard_error_for_lightcurves, ensure_output_dir
-
-
+from settings import SYMBOLES_AND_COLORS_FOR_LIGHTCURVES, NUMBER_MAPPING
 
 # =======================
 #   KONSTANTEN & EINSTELLUNGEN
@@ -33,18 +32,18 @@ def deep_merge(dict1, dict2):
     return result
 
 def save_1d_corr_and_lightcurves_general(
-    campaign_keys,
-    keyorders_dict,
-    output_dir=DEFAULT_OUTPUT_DIR,
-    file_name="ccfs_and_reference_lightcurves",
-    final_key_order=None,
-    rows=8,
-    cols=2,
-    figsize=None,
-    combine_data=False,
-    campaign_label=None,
-    show_reference_label=False
-):
+        campaign_keys,
+        keyorders_dict,
+        output_dir=DEFAULT_OUTPUT_DIR,
+        file_name="ccfs_and_reference_lightcurves",
+        final_key_order=None,
+        rows=8,
+        cols=2,
+        figsize=None,
+        combine_data=False,
+        campaign_label=None,
+        show_reference_label=False,
+        for_paper=False):
     ensure_output_dir(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -82,7 +81,8 @@ def save_1d_corr_and_lightcurves_general(
             figsize=figsize,
             centroid_data=centroid_data,
             only_one_label=True,
-            show_reference_label=show_reference_label
+            show_reference_label=show_reference_label,
+            for_paper=for_paper
         )
 
     else:
@@ -114,7 +114,8 @@ def save_1d_corr_and_lightcurves_general(
 # =======================
 
 
-def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, figsize=None, only_one_label=False, centroid_data=None, show_reference_label=False):
+def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, figsize=None, only_one_label=False, centroid_data=None, show_reference_label=False,
+                                           for_paper=False):
     """
     Organizes and plots CFFs and their corresponding lightcurves
     in subplot groups, based on specified key orders.
@@ -225,7 +226,7 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
 
 
     plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs, xlabel_lightcurves, centroid_data=centroid_data,
-                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name + " " + campaign, rows=rows, cols=cols, figsize=figsize, only_one_label=only_one_label, show_reference_label=show_reference_label)
+                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name + " " + campaign, rows=rows, cols=cols, figsize=figsize, only_one_label=only_one_label, show_reference_label=show_reference_label, for_paper=for_paper)
 
 
 def prepare_ccfs_references_data(data, rows, cols):
@@ -291,7 +292,8 @@ def normalize_lightcurve(y, yerr_vals):
 
 def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs,
                                                   xlabel_lightcurves, save_only, output_dir, shared_y,
-                                                  file_name, centroid_data=None, rows=4, cols=2, figsize=None, only_one_label=False, show_reference_label=False):
+                                                  file_name, centroid_data=None, rows=4, cols=2, figsize=None, only_one_label=False, show_reference_label=False,
+                                                  for_paper=False):
     """
     Plots CCFs and their associated normalized lightcurves
     in a side-by-side subplot layout.
@@ -335,7 +337,6 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
     x_values_ccfs = final_sorted_data_dict['time shift (tau)']
     final_sorted_data_dict.pop('time shift (tau)')
 
-
     for current_data, group_index in prepare_ccfs_references_data(final_sorted_data_dict, rows, cols):
         fig, axes = plt.subplots(rows, cols, figsize=figsize, sharex=False, sharey=shared_y,
                                  gridspec_kw={'width_ratios': [4, 1]})
@@ -355,8 +356,9 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
             # Linke Seite oben (y-Achse): "Normalized Lightcurves"
             fig.text(0.07, 0.5, "Normalized Lightcurves", va='center', ha='left', rotation='vertical', fontsize=12)
 
-            # Rechte Seite unten (y-Achse): ylabel_ccfs
-            fig.text(1.0, 0.5, ylabel_ccfs, va='center', ha='right', rotation='vertical', fontsize=12)
+            if not for_paper:
+                # Rechte Seite unten (y-Achse): ylabel_ccfs
+                fig.text(1.0, 0.5, ylabel_ccfs, va='center', ha='right', rotation='vertical', fontsize=12)
 
         for i, (line_name, line_data) in enumerate(current_data):
 
@@ -376,7 +378,8 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
                 line_data = np.array([])
                 color = "black"
 
-            configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name_and_ref_name=line_name, centroid_data=centroid_data, only_one_label=only_one_label, show_reference_label=show_reference_label)
+
+            configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name_and_ref_name=line_name, centroid_data=centroid_data, only_one_label=only_one_label, show_reference_label=show_reference_label, for_paper=for_paper)
 
         check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs))
 
@@ -385,7 +388,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
 
 
 def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr,
-                                      line_name_and_ref_name, centroid_data=None, only_one_label=False, show_reference_label=False):
+                                      line_name_and_ref_name, centroid_data=None, only_one_label=False, show_reference_label=False, for_paper=False):
     """
     Configures a single subplot axis to display either a normalized lightcurve pair
     or a CCF, depending on the data provided.
@@ -437,22 +440,43 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         y_ref_norm, yerr_ref_norm = normalize_lightcurve(line_data["lightcurves_ref"][y_key],
                                                           line_data["lightcurves_ref"][yerr_key])
 
+        ax.text(
+            57582, 2.5,  # Position relativ zur Achse (x, y)
+            f"{NUMBER_MAPPING[row + 1]})",  # Dein Label
+            ha='right', va='top',
+            fontsize=7
+        )
 
         if line_name != "UVW2":
-            ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
-                        label=format_label(line_name, as_latex=False), color=color[0], fmt='.:', capsize=3,
-                        markersize=4, )
-            if show_reference_label:
-                ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, label=format_label(reference_name, as_latex=False), color=color[1], fmt='.:', capsize=3, markersize=4,)
+            if line_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
+                line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"]
+                fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["symbole"]}:"
             else:
-               ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, color=color[1], fmt='.:', capsize=3,
-                           markersize=4, )
+                line_color = color[0]
+                fmt = ".:"
+
+            if reference_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
+                ref_line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["color"]
+                ref_fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["symbole"]}:"
+            else:
+                ref_line_color = color[0]
+                ref_fmt = ".:"
+
+            ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
+                        label=format_label(line_name, as_latex=False), color=line_color, fmt=fmt, capsize=2,
+                        markersize=3, linewidth=0.5, elinewidth=0.5)
+            if show_reference_label:
+
+                ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, label=format_label(reference_name, as_latex=False), color=ref_line_color, fmt=ref_fmt, capsize=2, markersize=3, linewidth=0.5, elinewidth=0.5)
+            else:
+               ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, color=ref_line_color, fmt=ref_fmt, capsize=2,
+                           markersize=3, linewidth=0.5, elinewidth=0.5)
 
         else:
             ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
-                        label=format_label(line_name, as_latex=False), color=color[1], fmt='.:', capsize=3,  markersize=4, )
+                        label=format_label(line_name, as_latex=False), color=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"], fmt=f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["symbole"]}:", capsize=2,  markersize=3, linewidth=0.5, elinewidth=0.5)
 
-        configure_axes_for_lightcurves(ax, row, only_one_label)
+        configure_axes_for_lightcurves(ax, row, only_one_label, for_paper=for_paper)
         ax.legend(fontsize=7, loc="upper right")
     else:
         ax.plot(x_values_ccfs, line_data["ccfs"], color=color)
@@ -474,8 +498,9 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
 
         if centroid_data:
             try:
-                ax.axvline(centroid_data[reference_name][line_name]["tau_cent"], color="red", linestyle="--", linewidth=1)
-                ax.hist(merged_mc_correlation_data[line_name]["centroids"], bins=50, density=True, alpha=0.7, color="orange")
+                ax.axvline(centroid_data[reference_name][line_name]["tau_cent"], color="grey", linestyle="--", linewidth=1)
+                if not for_paper:
+                    ax.hist(merged_mc_correlation_data[line_name]["centroids"], bins=50, density=True, alpha=0.7, color="orange")
             except KeyError:
                 print(f"No centroid data found for line {line_name}")
 
@@ -486,12 +511,12 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         ccfs_labels = format_label(line_name, as_latex=False).split(" ")[0]
         if "$" in ccfs_labels:
             ccfs_labels = ccfs_labels + "$"
+        if not for_paper:
+            ax.text(9, 0.90, ccfs_labels, ha='right', va='top', fontsize=7)
+        configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label, for_paper=for_paper)
 
-        ax.text(9, 0.90, ccfs_labels, ha='right', va='top', fontsize=7)
-        configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label)
 
-
-def configure_axes_for_lightcurves(ax, row, only_one_label=False):
+def configure_axes_for_lightcurves(ax, row, only_one_label=False, for_paper=False):
     """
     Configures axis formatting and ticks for a normalized lightcurve subplot.
 
@@ -538,13 +563,13 @@ def configure_axes_for_lightcurves(ax, row, only_one_label=False):
 
     ax_top.set_xticklabels([])
 
-    if row == 0:
+    if row == 0 and not for_paper:
         ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
         plt.setp(ax_top.get_xticklabels(), rotation=45, ha='right')
 
 
 
-def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False):
+def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False, for_paper=False):
     """
     Configures axis formatting and ticks for a cross-correlation function (CCF) subplot.
 
@@ -576,6 +601,9 @@ def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False):
     ax.set_yticklabels([])
     ax_right = ax.secondary_yaxis('right')
     ax_right.tick_params(axis='y', which='both', direction='in')
+    if for_paper:
+        ax_right.set_yticklabels([])
+
 
     ax.yaxis.tick_right()
     if only_one_label is False:
@@ -596,7 +624,7 @@ def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False):
     ax_top.tick_params(axis='x', which='minor', direction='in', length=2)
     ax_top.set_xticklabels([])
 
-    if row == 0:
+    if row == 0 and not for_paper:
         ax_top.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
 
 
@@ -753,7 +781,7 @@ def mjd_to_date(mjd):
 # =======================
 #   METHODENAUFRUFE
 # =======================
-
+"""
 
 uv_to_halpha_keyorder = ["time shift (tau)",
                          "UVW2",
@@ -836,8 +864,44 @@ save_1d_corr_and_lightcurves_general(
     figsize=(6, 4),
     show_reference_label=True
 )
+"""
+OI_paper_keyorder = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446","HAlpha"],
+                      "UVW2": ["time shift (tau)", "HAlpha", "OI8446"],
+                      #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
+                      }
+
+OI_paper_HST_UV_keyorder = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446","HAlpha"],
+                      "Cont1150_not_optical_calibrated": ["time shift (tau)", "HAlpha", "OI8446"],
+                      #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
+                      }
+
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[],
+    keyorders_dict=OI_paper_keyorder,
+    file_name="OI_ccfs_and_reference_lightcurves_paper",
+    final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
+    combine_data=True,
+    rows=4,
+    figsize=(6, 6),
+    show_reference_label=True,
+    for_paper=True
+)
 
 
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[],
+    keyorders_dict=OI_paper_HST_UV_keyorder,
+    file_name="OI_ccfs_and_reference_lightcurves_HST_UV_paper",
+    final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
+    combine_data=True,
+    rows=4,
+    figsize=(6, 6),
+    show_reference_label=True,
+    for_paper=True
+)
+
+
+"""
 bowen_keyorders = {
     "NGC4593_optical_calibrated": {
         "Cont1150_not_optical_calibrated": ["time shift (tau)", "HAlpha", "HBeta", "LyAlpha_not_optical_calibrated", "OI8446"],
@@ -859,3 +923,4 @@ save_1d_corr_and_lightcurves_general(
     show_reference_label=True
 )
 
+"""

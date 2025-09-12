@@ -283,3 +283,20 @@ DISPERSION_SIGMA_RMS = {
     'HeI5875': 1218, 'HeI7065': np.nan, 'HeI4471': 155, 'HeI5015': np.nan,
     'HeII4685': 1998, 'OI8446': 846, 'LyAlpha': 1752
 }
+
+
+
+SYMBOLES_AND_COLORS_FOR_LIGHTCURVES = {"UVW2": {"symbole": ".", "color": "black"},
+                                       "Cont1150_not_optical_calibrated": {"symbole": ".", "color": "blue"},
+                                       "HAlpha": {"symbole": '^', "color": "orange"},
+                                       "HBeta": {"symbole": "x", "color": "red"},
+                                       "OI8446": {"symbole": "d", "color": "green"},
+                                       'LyAlpha_not_optical_calibrated': {'symbole': 'X', 'color': 'dodgerblue'},
+                                       }
+
+NUMBER_MAPPING = {
+ 1: 'a', 2: 'b', 3: 'c', 4: 'd',
+ 5: 'e', 6: 'f', 7: 'g', 8: 'h',
+ 9: 'i', 10: 'j', 11: 'k', 12: 'l',
+ 13: 'm', 14: 'n', 15: 'o', 16: 'p'
+}
