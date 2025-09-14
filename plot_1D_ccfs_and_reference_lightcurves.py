@@ -43,7 +43,7 @@ def save_1d_corr_and_lightcurves_general(
         combine_data=False,
         campaign_label=None,
         show_reference_label=False,
-        for_paper=False):
+        for_paper=False, extra_data_name=None):
     ensure_output_dir(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -82,7 +82,8 @@ def save_1d_corr_and_lightcurves_general(
             centroid_data=centroid_data,
             only_one_label=True,
             show_reference_label=show_reference_label,
-            for_paper=for_paper
+            for_paper=for_paper,
+            extra_data_name=extra_data_name
         )
 
     else:
@@ -115,7 +116,7 @@ def save_1d_corr_and_lightcurves_general(
 
 
 def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, figsize=None, only_one_label=False, centroid_data=None, show_reference_label=False,
-                                           for_paper=False):
+                                           for_paper=False, extra_data_name=None):
     """
     Organizes and plots CFFs and their corresponding lightcurves
     in subplot groups, based on specified key orders.
@@ -224,9 +225,26 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
         sorted(final_sorted_data_dict.items(),
                key=lambda item: final_sort_keys(item[0])))
 
+    if for_paper and extra_data_name:
+
+        line, reference = extra_data_name.split("_ref_")
+
+        if "Cont" in reference:
+            lightcurve_reference_data = lightcurves_ccf_data_dict["lightcurves"]["continua"][reference]
+        else:
+            lightcurve_reference_data = lightcurves_ccf_data_dict["lightcurves"]["lines"][reference]
+
+        if "Cont" in line:
+            lightcurve_data = lightcurves_ccf_data_dict["lightcurves"]["continua"][line]
+        else:
+            lightcurve_data = lightcurves_ccf_data_dict["lightcurves"]["lines"][line]
+
+        extra_data = {extra_data_name:{"ccfs":lightcurves_ccf_data_dict["ccfs"][reference][line],"lightcurves":lightcurve_data,"lightcurves_ref":lightcurve_reference_data}}
+        final_sorted_data_dict.update(extra_data)
+
 
     plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs, xlabel_lightcurves, centroid_data=centroid_data,
-                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name + " " + campaign, rows=rows, cols=cols, figsize=figsize, only_one_label=only_one_label, show_reference_label=show_reference_label, for_paper=for_paper)
+                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name + " " + campaign, rows=rows, cols=cols, figsize=figsize, only_one_label=only_one_label, show_reference_label=show_reference_label, for_paper=for_paper, extra_data=extra_data)
 
 
 def prepare_ccfs_references_data(data, rows, cols):
@@ -293,7 +311,7 @@ def normalize_lightcurve(y, yerr_vals):
 def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs,
                                                   xlabel_lightcurves, save_only, output_dir, shared_y,
                                                   file_name, centroid_data=None, rows=4, cols=2, figsize=None, only_one_label=False, show_reference_label=False,
-                                                  for_paper=False):
+                                                  for_paper=False, extra_data=None):
     """
     Plots CCFs and their associated normalized lightcurves
     in a side-by-side subplot layout.
@@ -381,7 +399,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
 
             configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name_and_ref_name=line_name, centroid_data=centroid_data, only_one_label=only_one_label, show_reference_label=show_reference_label, for_paper=for_paper)
 
-        check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs))
+        check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs), for_paper=for_paper)
 
         finalize_figure_ccfs_and_reference(fig, file_name, save_only=save_only, output_dir=output_dir)
 
@@ -629,53 +647,89 @@ def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False, for_pape
 
 
 
-def check_for_empty_rows_ccfs_and_reference(axes, fig, x_label):
-    """
-    Removes completely empty subplot rows from a figure and sets x-axis labels
-    and tick formatting for the lowest visible row.
-
-    Parameters:
-    -----------
-    axes : numpy.ndarray
-        2D array of Matplotlib Axes objects.
-    fig : matplotlib.figure.Figure
-        The figure containing the subplots.
-    x_label : str or tuple of str
-        X-axis label(s). If a tuple is provided, each column gets a different label.
-    """
+def check_for_empty_rows_ccfs_and_reference(
+    axes, fig, x_label,
+    for_paper=False,
+    paper_gap_inch=0.25,   # Spalt in Zoll zwischen vorletzter und letzter Reihe
+    xlabel_pad=5
+):
+    def _is_valid_axis(ax):
+        return (ax in fig.axes)
 
     n_rows = axes.shape[0]
-    for row in range(n_rows):
-        if all(not is_valid_axis(axes[row, col], fig) for col in range(2)):
-            for col in range(2):
-                fig.delaxes(axes[row, col])
 
-    # Ermittlung der untersten verbleibenden Reihe
-    remaining_rows = [row for row in range(n_rows) if any(is_valid_axis(axes[row, col], fig) for col in range(2))]
-    if remaining_rows:
-        lowest_row = max(remaining_rows)
+    # 1) Leere Reihen entfernen
+    for r in range(n_rows):
+        if all(not _is_valid_axis(axes[r, c]) for c in range(2)):
+            for c in range(2):
+                if axes[r, c] in fig.axes:
+                    fig.delaxes(axes[r, c])
 
-        for row in remaining_rows:
-            for col in range(2):
-                if is_valid_axis(axes[row, col], fig):
+    # 2) Verbleibende Reihen finden
+    remaining = [r for r in range(n_rows) if any(axes[r, c] in fig.axes for c in range(2))]
+    if not remaining:
+        return
+    lowest_row = max(remaining)
+    penultimate_row = max([r for r in remaining if r < lowest_row], default=None)
 
-                    axes[row, col].xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
-                    axes[row, col].xaxis.set_major_locator(MultipleLocator(5))
+    # 3) Formatter/Lokatoren für alle sichtbaren Achsen
+    for r in remaining:
+        for c in range(2):
+            ax = axes[r, c]
+            if ax not in fig.axes:
+                continue
+            ax.xaxis.set_major_locator(MultipleLocator(5))
+            ax.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
 
-                    if row == lowest_row:
-                        axes[row, col].tick_params(axis='x', which='both', direction='in', labelbottom=True)
-                    else:
-                        axes[row, col].tick_params(axis='x', which='both', direction='in', labelbottom=False)
-                        axes[row, col].set_xticklabels([])
+    # 4) Ticklabel-Sichtbarkeit + x-Label platzieren
+    if for_paper and penultimate_row is not None:
+        # Nur vorletzte Reihe zeigt Ticklabels
+        for r in remaining:
+            for c in range(2):
+                ax = axes[r, c]
+                if ax not in fig.axes:
+                    continue
+                ax.tick_params(axis='x', which='both', direction='in',
+                               labelbottom=(r == penultimate_row))
 
-                if row == lowest_row:
+        # x-Label auf vorletzte Reihe
+        for c in range(2):
+            axp = axes[penultimate_row, c]
+            if axp in fig.axes:
+                lbl = x_label[c] if isinstance(x_label, tuple) else x_label
+                axp.set_xlabel(lbl, labelpad=xlabel_pad)
 
-                    if col == 0:
-                        axes[row, col].set_xlabel(x_label[0])
-                    else:
-                        axes[row, col].set_xlabel(x_label[1])
+        # Letzte Reihe nach unten absetzen (ohne Ticklabels)
+        fig_w, fig_h = fig.get_size_inches()
+        dy_rel = paper_gap_inch / fig_h  # Zoll -> Figure-Fraction
+        for c in range(2):
+            ax_last = axes[lowest_row, c]
+            if ax_last not in fig.axes:
+                continue
+            bbox = ax_last.get_position()  # figure coords
+            x0, y0, x1, y1 = bbox.x0, bbox.y0, bbox.x1, bbox.y1
+            w, h = (x1 - x0), (y1 - y0)
+            new_y0 = max(0.0, y0 - dy_rel)
+            new_h  = max(0.0, h - dy_rel)
+            if new_h > 0 and new_y0 + new_h <= 1.0:
+                ax_last.set_position([x0, new_y0, w, new_h])
+            # Sicherstellen: keine Ticklabels unten
+            ax_last.tick_params(axis='x', which='both', labelbottom=False)
 
-
+    else:
+        # Standard: nur unterste Reihe zeigt Ticklabels + x-Label
+        for r in remaining:
+            for c in range(2):
+                ax = axes[r, c]
+                if ax not in fig.axes:
+                    continue
+                ax.tick_params(axis='x', which='both', direction='in',
+                               labelbottom=(r == lowest_row))
+        for c in range(2):
+            axl = axes[lowest_row, c]
+            if axl in fig.axes:
+                lbl = x_label[c] if isinstance(x_label, tuple) else x_label
+                axl.set_xlabel(lbl, labelpad=xlabel_pad)
 
 
 def finalize_figure_ccfs_and_reference(fig, filename, save_only, output_dir):
@@ -881,10 +935,11 @@ save_1d_corr_and_lightcurves_general(
     file_name="OI_ccfs_and_reference_lightcurves_paper",
     final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
     combine_data=True,
-    rows=4,
+    rows=5,
     figsize=(6, 6),
     show_reference_label=True,
-    for_paper=True
+    for_paper=True,
+    extra_data_name="HAlpha_ref_OI8446"
 )
 
 
@@ -894,10 +949,11 @@ save_1d_corr_and_lightcurves_general(
     file_name="OI_ccfs_and_reference_lightcurves_HST_UV_paper",
     final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
     combine_data=True,
-    rows=4,
+    rows=5,
     figsize=(6, 6),
     show_reference_label=True,
-    for_paper=True
+    for_paper=True,
+    extra_data_name="HAlpha_ref_OI8446"
 )
 
 
