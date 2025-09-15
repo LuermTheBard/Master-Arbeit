@@ -244,7 +244,7 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
 
 
     plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs, xlabel_lightcurves, centroid_data=centroid_data,
-                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name + " " + campaign, rows=rows, cols=cols, figsize=figsize, only_one_label=only_one_label, show_reference_label=show_reference_label, for_paper=for_paper, extra_data=extra_data)
+                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name + " " + campaign, rows=rows, cols=cols, figsize=figsize, only_one_label=only_one_label, show_reference_label=show_reference_label, for_paper=for_paper)
 
 
 def prepare_ccfs_references_data(data, rows, cols):
@@ -311,7 +311,7 @@ def normalize_lightcurve(y, yerr_vals, err_correction=None):
 def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs,
                                                   xlabel_lightcurves, save_only, output_dir, shared_y,
                                                   file_name, centroid_data=None, rows=4, cols=2, figsize=None, only_one_label=False, show_reference_label=False,
-                                                  for_paper=False, extra_data=None):
+                                                  for_paper=False):
     """
     Plots CCFs and their associated normalized lightcurves
     in a side-by-side subplot layout.
@@ -867,7 +867,7 @@ def mjd_to_date(mjd):
 # =======================
 #   METHODENAUFRUFE
 # =======================
-"""
+
 
 uv_to_halpha_keyorder = ["time shift (tau)",
                          "UVW2",
@@ -898,7 +898,7 @@ save_1d_corr_and_lightcurves_general(
     campaign_label="NGC4593_Combined"
 )
 
-
+"""
 
 uvw2_keyorders_optical = {"UVW2":
                               ["time shift (tau)",
@@ -974,7 +974,7 @@ save_1d_corr_and_lightcurves_general(
     extra_data_name="OI8446_ref_HAlpha"
 )
 
-
+"""
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=OI_paper_HST_UV_keyorder,
@@ -989,7 +989,7 @@ save_1d_corr_and_lightcurves_general(
 )
 
 
-"""
+
 bowen_keyorders = {
     "NGC4593_optical_calibrated": {
         "Cont1150_not_optical_calibrated": ["time shift (tau)", "HAlpha", "HBeta", "LyAlpha_not_optical_calibrated", "OI8446"],
