@@ -1,4 +1,5 @@
 import datetime
+import math
 from pathlib import Path
 import matplotlib
 import numpy as np
@@ -372,7 +373,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
         #fig.tight_layout()
         if only_one_label is True:
             # Linke Seite oben (y-Achse): "Normalized Lightcurves"
-            fig.text(0.06, 0.5, "Normalized Lightcurves", va='center', ha='left', rotation='vertical', fontsize=12)
+            fig.text(0.06, 0.5, "Normalized Flux", va='center', ha='left', rotation='vertical', fontsize=12)
 
             if not for_paper:
                 # Rechte Seite unten (y-Achse): ylabel_ccfs
@@ -479,38 +480,42 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
                 line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"]
                 fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["symbole"]}-"
                 markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["markersize"]
+                alpha = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name].get("alpha", 1.0)
             else:
                 line_color = color[0]
                 fmt = ".-"
                 markersize = 3
+                alpha = 1.0
 
             if reference_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
                 ref_line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["color"]
                 ref_fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["symbole"]}-"
                 ref_markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["markersize"]
+                ref_alpha = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name].get("alpha", 1.0)
             else:
                 ref_line_color = color[0]
                 ref_fmt = ".-"
                 ref_markersize = 3
+                ref_alpha = 1.0
 
 
 
             ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
                         label=format_label(line_name, as_latex=False, for_paper=for_paper), color=line_color, fmt=fmt, capsize=2,
-                        markersize=markersize, linewidth=0.5, elinewidth=0.5)
+                        markersize=markersize, alpha=alpha, linewidth=0.5, elinewidth=0.5)
             if show_reference_label:
 
-                ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, label=format_label(reference_name, as_latex=False, for_paper=for_paper), color=ref_line_color, fmt=ref_fmt, capsize=2, markersize=ref_markersize, linewidth=0.5, elinewidth=0.5)
+                ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, label=format_label(reference_name, as_latex=False, for_paper=for_paper), color=ref_line_color, fmt=ref_fmt, capsize=2, markersize=ref_markersize, alpha=ref_alpha, linewidth=0.5, elinewidth=0.5)
             else:
                ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, color=ref_line_color, fmt=ref_fmt, capsize=2,
-                           markersize=ref_markersize, linewidth=0.5, elinewidth=0.5)
+                           markersize=ref_markersize, alpha=ref_alpha, linewidth=0.5, elinewidth=0.5)
 
         else:
             ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
-                        label=format_label(line_name, as_latex=False, for_paper=for_paper), color=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"], fmt=f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["symbole"]}-", capsize=2,  markersize=3, linewidth=0.5, elinewidth=0.5)
+                        label=format_label(line_name, as_latex=False, for_paper=for_paper), color=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"], fmt=f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["symbole"]}-", alpha=0.8, capsize=2,  markersize=3, linewidth=0.5, elinewidth=0.5)
 
         configure_axes_for_lightcurves(ax, row, only_one_label, for_paper=for_paper)
-        ax.legend(fontsize=7, loc="upper right")
+        ax.legend(fontsize=7, loc="upper right", frameon=False, markerfirst=False)
     else:
         ax.plot(x_values_ccfs, line_data["ccfs"], color=color)
 
@@ -530,8 +535,23 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         merged_mc_correlation_data = {**mc_correlation_data_optical_calibrated, **mc_correlation_data_not_optical_calibrated}
 
         if centroid_data:
+            def ceil_to_0_1(x):
+                return math.ceil(x * 10) / 10
+
+            tau = abs(ceil_to_0_1(centroid_data[reference_name][line_name]["tau_cent"]))
+            err_h = abs(centroid_data[reference_name][line_name]["tau_cent_err_high"])
+            err_l = abs(centroid_data[reference_name][line_name]["tau_cent_err_low"])
+
+            ax.text(
+                9, 0.95,
+                fr"$\tau_\mathrm{{cent}} = {tau:.1f}^{{+{err_h:.1f}}}_{{-{err_l:.1f}}}$",
+                ha='right',
+                va='top',
+                fontsize=5.5
+            )
             try:
-                ax.axvline(centroid_data[reference_name][line_name]["tau_cent"], color="grey", linestyle="--", linewidth=1)
+
+                ax.axvline(tau, color="grey", linestyle="--", linewidth=1)
                 if not for_paper:
                     ax.hist(merged_mc_correlation_data[line_name]["centroids"], bins=50, density=True, alpha=0.7, color="orange")
             except KeyError:
@@ -570,7 +590,7 @@ def configure_axes_for_lightcurves(ax, row, only_one_label=False, for_paper=Fals
     """
 
     if only_one_label is False:
-        ax.set_ylabel("Normalized Lightcurves", fontsize=12)
+        ax.set_ylabel("Normalized Flux", fontsize=12)
     ax.yaxis.set_label_coords(0, 0.5)
 
     ax.xaxis.set_major_locator(MultipleLocator(5))
@@ -582,13 +602,6 @@ def configure_axes_for_lightcurves(ax, row, only_one_label=False, for_paper=Fals
     if not for_paper:
         ax.set_yticklabels([])
 
-    # rechte y-Achse mit Ticks, aber ohne Labels
-    ax_right = ax.secondary_yaxis('right')
-    ax_right.yaxis.set_major_locator(MaxNLocator(nbins=3))
-    ax_right.yaxis.set_minor_locator(MultipleLocator(1))
-    ax_right.tick_params(axis='y', which='major', direction='in', length=4)
-    ax_right.tick_params(axis='y', which='minor', direction='in', length=2)
-    ax_right.set_yticklabels([])  # entfernt die Labels
 
     ax.xaxis.set_major_locator(MultipleLocator(5))
     ax.tick_params(axis='x', which='major', direction='inout', length=4)
@@ -641,24 +654,17 @@ def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False, for_pape
     ax.tick_params(axis='y', which='major', direction='in', length=4)
     ax.tick_params(axis='y', which='minor', direction='in', length=2)
     ax.set_yticklabels([])
-    ax_right = ax.secondary_yaxis('right')
-    ax_right.tick_params(axis='y', which='both', direction='in')
-    if for_paper:
-        ax_right.set_yticklabels([])
-
-    # zusätzliche linke y-Achse mit Ticks, aber ohne Labels
-    ax_left = ax.secondary_yaxis('left')
-    ax_left.yaxis.set_major_locator(MultipleLocator(0.5))
-    ax_left.yaxis.set_minor_locator(MultipleLocator(0.1))
-    ax_left.tick_params(axis='y', which='major', direction='in', length=4)
-    ax_left.tick_params(axis='y', which='minor', direction='in', length=2)
-    ax_left.set_yticklabels([])  # keine Labels anzeigen
-
 
     ax.yaxis.tick_right()
+    ax.yaxis.set_label_position("right")
+
     if only_one_label is False:
         ax.set_ylabel(ylabel_ccfs, fontsize=12)
-        ax.yaxis.set_label_position("right")
+
+
+    if only_one_label is False:
+        ax.set_ylabel(ylabel_ccfs, fontsize=12)
+        ax.ax_right.set_label_position("right")
 
 
     ax.xaxis.set_major_locator(MultipleLocator(2))
@@ -682,7 +688,7 @@ def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False, for_pape
 def check_for_empty_rows_ccfs_and_reference(
     axes, fig, x_label,
     for_paper=False,
-    paper_gap_inch=0.20,   # Spalt in Zoll zwischen vorletzter und letzter Reihe
+    paper_gap_inch=-0.2,   # Reduzierter Abstand zur vorletzten Reihe (in Zoll)
     xlabel_pad=2
 ):
     def _is_valid_axis(ax):
@@ -713,55 +719,33 @@ def check_for_empty_rows_ccfs_and_reference(
             ax.xaxis.set_major_locator(MultipleLocator(5))
             ax.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
 
-    # 4) Ticklabel-Sichtbarkeit + x-Label platzieren
-    if for_paper and penultimate_row is not None:
-        # Nur vorletzte Reihe zeigt Ticklabels
-        for r in remaining:
-            for c in range(2):
-                ax = axes[r, c]
-                if ax not in fig.axes:
-                    continue
-                ax.tick_params(axis='x', which='both', direction='in',
-                               labelbottom=(r == penultimate_row))
-
-        # x-Label auf vorletzte Reihe
+    # 4) Ticklabel-Sichtbarkeit + x-Label unten an letzte Reihe
+    for r in remaining:
         for c in range(2):
-            axp = axes[penultimate_row, c]
-            if axp in fig.axes:
-                lbl = x_label[c] if isinstance(x_label, tuple) else x_label
-                axp.set_xlabel(lbl, labelpad=xlabel_pad)
+            ax = axes[r, c]
+            if ax not in fig.axes:
+                continue
+            ax.tick_params(axis='x', which='both', direction='in',
+                           labelbottom=(r == lowest_row))
+    for c in range(2):
+        axl = axes[lowest_row, c]
+        if axl in fig.axes:
+            lbl = x_label[c] if isinstance(x_label, tuple) else x_label
+            axl.set_xlabel(lbl, labelpad=xlabel_pad)
 
-        # Letzte Reihe nach unten absetzen (ohne Ticklabels)
+    # 5) Im Paper-Modus: letzte Reihe nach oben schieben (kleinerer Abstand zur vorletzten)
+    if for_paper and penultimate_row is not None:
         fig_w, fig_h = fig.get_size_inches()
         dy_rel = paper_gap_inch / fig_h  # Zoll -> Figure-Fraction
         for c in range(2):
             ax_last = axes[lowest_row, c]
             if ax_last not in fig.axes:
                 continue
-            bbox = ax_last.get_position()  # figure coords
+            bbox = ax_last.get_position()
             x0, y0, x1, y1 = bbox.x0, bbox.y0, bbox.x1, bbox.y1
             w, h = (x1 - x0), (y1 - y0)
-            new_y0 = max(0.0, y0 - dy_rel)
-            new_h  = max(0.0, h - dy_rel)
-            if new_h > 0 and new_y0 + new_h <= 1.0:
-                ax_last.set_position([x0, new_y0-dy_rel, w, new_h+dy_rel])
-            # Sicherstellen: keine Ticklabels unten
-            ax_last.tick_params(axis='x', which='both', labelbottom=False)
-
-    else:
-        # Standard: nur unterste Reihe zeigt Ticklabels + x-Label
-        for r in remaining:
-            for c in range(2):
-                ax = axes[r, c]
-                if ax not in fig.axes:
-                    continue
-                ax.tick_params(axis='x', which='both', direction='in',
-                               labelbottom=(r == lowest_row))
-        for c in range(2):
-            axl = axes[lowest_row, c]
-            if axl in fig.axes:
-                lbl = x_label[c] if isinstance(x_label, tuple) else x_label
-                axl.set_xlabel(lbl, labelpad=xlabel_pad)
+            # verschiebe leicht nach oben (verkleinert Abstand nach oben)
+            ax_last.set_position([x0, y0 + dy_rel, w, h])
 
 
 def finalize_figure_ccfs_and_reference(fig, filename, save_only, output_dir):
@@ -868,7 +852,7 @@ def mjd_to_date(mjd):
 #   METHODENAUFRUFE
 # =======================
 
-
+"""
 uv_to_halpha_keyorder = ["time shift (tau)",
                          "UVW2",
                          "LyAlpha_not_optical_calibrated",
@@ -898,7 +882,7 @@ save_1d_corr_and_lightcurves_general(
     campaign_label="NGC4593_Combined"
 )
 
-"""
+
 
 uvw2_keyorders_optical = {"UVW2":
                               ["time shift (tau)",
@@ -968,13 +952,13 @@ save_1d_corr_and_lightcurves_general(
     final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
     combine_data=True,
     rows=5,
-    figsize=(6, 6),
+    figsize=(6, 8),
     show_reference_label=True,
     for_paper=True,
     extra_data_name="OI8446_ref_HAlpha"
 )
 
-"""
+
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=OI_paper_HST_UV_keyorder,
@@ -982,13 +966,13 @@ save_1d_corr_and_lightcurves_general(
     final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
     combine_data=True,
     rows=5,
-    figsize=(6, 6),
+    figsize=(6, 8),
     show_reference_label=True,
     for_paper=True,
     extra_data_name="OI8446_ref_HAlpha"
 )
 
-
+"""
 
 bowen_keyorders = {
     "NGC4593_optical_calibrated": {

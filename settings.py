@@ -287,10 +287,10 @@ DISPERSION_SIGMA_RMS = {
 
 
 SYMBOLES_AND_COLORS_FOR_LIGHTCURVES = {
-    "UVW2": {"symbole": ".", "color": "#1f77b4", "markersize": 3},
-    "Cont1150_not_optical_calibrated": {"symbole": ".", "color": "darkblue", "markersize": 3},
+    "UVW2": {"symbole": ".", "color": "darkblue", "markersize": 3, "alpha": 0.6},
+    "Cont1150_not_optical_calibrated": {"symbole": ".", "color": "#1f77b4", "markersize": 3},
 
-    "HAlpha": {"symbole": "^", "color": "#ff7f0e", "markersize": 4},
+    "HAlpha": {"symbole": "^", "color": "#d62728", "markersize": 4},
     "HBeta": {"symbole": "x", "color": "red", "markersize": 3},
     "HGamma": {"symbole": "v", "color": "#cc6600", "markersize": 4},
     "HDelta": {"symbole": "<", "color": "#996633", "markersize": 4},
@@ -307,7 +307,7 @@ SYMBOLES_AND_COLORS_FOR_LIGHTCURVES = {
     "OIII5007": {"symbole": "*", "color": "#8c564b", "markersize": 4},
     "OIII]1660_not_optical_calibrated": {"symbole": "*", "color": "#b08a7b", "markersize": 3},
 
-    "LyAlpha_not_optical_calibrated": {"symbole": "s", "color": "#d62728", "markersize": 3},
+    "LyAlpha_not_optical_calibrated": {"symbole": "s", "color": "#ff7f0e", "markersize": 3},
 
     "SiIV1393_not_optical_calibrated": {"symbole": ">", "color": "#17becf", "markersize": 3},
     "NV1238_not_optical_calibrated": {"symbole": "^", "color": "#bcbd22", "markersize": 3},
