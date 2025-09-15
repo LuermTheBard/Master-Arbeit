@@ -8,7 +8,7 @@ from import_data import find_prime_data_folder
 from settings import F_MEAN, F_SIGMA, CENTRAL_WAVELENGTH
 
 
-def calculate_standard_error_for_lightcurves(flux, flux_noise_err):
+def calculate_standard_error_for_lightcurves(flux, flux_noise_err, err_correction=None):
     """
     Calculates the total uncertainty of a lightcurve data point based on:
 
@@ -35,6 +35,10 @@ def calculate_standard_error_for_lightcurves(flux, flux_noise_err):
         raise ValueError("Der Mittelwert des Flusses (F_MEAN) darf nicht 0 sein.")
 
     total_error = np.sqrt((F_SIGMA / F_MEAN * flux) ** 2 + flux_noise_err ** 2)
+
+    if err_correction:
+        total_error += total_error * err_correction / 100
+
     return total_error
 
 
@@ -249,7 +253,7 @@ def print_table_for_multiple_reference(filename, reference_light_curve_lines_dic
         outfile.write(r'\end{document}' + '\n')
 
 
-def format_label(name, as_latex=True):
+def format_label(name, as_latex=True, for_paper=False):
     """
     Formats a spectral line or continuum identifier for use in plots or LaTeX documents.
 
@@ -283,6 +287,9 @@ def format_label(name, as_latex=True):
         # Not needed anymore:
         # if is_not_calibrated:
         #     label += " (not opt. calib.)"
+        if for_paper and num_part =="1150":
+            label = "UV 1150"
+
         return label
 
     # Linie?
@@ -326,7 +333,30 @@ def format_label(name, as_latex=True):
         "HeII1640": r"$\text{He}\thinspace\text{II} \ 1640$",
     }
 
+    replacements_plot_paper = {
+        "UVW2": "UVW2",
+        "HAlpha": r"Hα",
+        "HBeta": r"Hβ",
+        "HGamma": r"Hγ",
+        "HDelta": r"Hδ",
+        "HeI5875": r"$\text{He}\thinspace\text{I}$",
+        "HeI7065": r"$\text{He}\thinspace\text{I}$",
+        "HeI4471": r"$\text{He}\thinspace\text{I$",
+        "HeI5015": r"$\text{He}\thinspace\text{I}$",
+        "HeII4685": r"$\text{He}\thinspace\text{II}",
+        "OI8446": r"$\text{O}\thinspace\text{I}$",
+        "LyAlpha": r"Lyα",
+        "SiIV1393": r"$\text{Si}\thinspace\text{IV}$",
+        "NV1238": r"$\text{N}\thinspace\text{V}$",
+        "CIV1548": r"$\text{C}\thinspace\text{IV}$ ",
+        "HeII1640": r"$\text{He}\thinspace\text{II}$",
+    }
+
+
     replacements = replacements_latex if as_latex else replacements_plot
+
+    if for_paper:
+        replacements = replacements_plot_paper
 
     formatted = replacements.get(base_name, base_name)
     # not needed anymore

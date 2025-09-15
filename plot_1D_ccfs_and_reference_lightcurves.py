@@ -8,7 +8,7 @@ from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 from import_data import import_1d_correlation_data, import_1d_lightcurve_data, load_centroid_data_by_reference, \
     import_centroid_and_mc_data
 from plot_utils import format_label, calculate_standard_error_for_lightcurves, ensure_output_dir
-from settings import SYMBOLES_AND_COLORS_FOR_LIGHTCURVES, NUMBER_MAPPING
+from settings import SYMBOLES_AND_COLORS_FOR_LIGHTCURVES, NUMBER_MAPPING, ERR_CORRECTION
 
 # =======================
 #   KONSTANTEN & EINSTELLUNGEN
@@ -296,8 +296,8 @@ def prepare_ccfs_references_data(data, rows, cols):
 
 
 
-def normalize_lightcurve(y, yerr_vals):
-    yerr_vals = calculate_standard_error_for_lightcurves(y, yerr_vals)
+def normalize_lightcurve(y, yerr_vals, err_correction=None):
+    yerr_vals = calculate_standard_error_for_lightcurves(y, yerr_vals, err_correction=err_correction)
     y_mean = y.mean()
     y_std = y.std()
     y_norm = (y - y_mean) / y_std
@@ -372,7 +372,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
         #fig.tight_layout()
         if only_one_label is True:
             # Linke Seite oben (y-Achse): "Normalized Lightcurves"
-            fig.text(0.07, 0.5, "Normalized Lightcurves", va='center', ha='left', rotation='vertical', fontsize=12)
+            fig.text(0.06, 0.5, "Normalized Lightcurves", va='center', ha='left', rotation='vertical', fontsize=12)
 
             if not for_paper:
                 # Rechte Seite unten (y-Achse): ylabel_ccfs
@@ -442,9 +442,15 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
     if "_ref_" in line_name_and_ref_name:
 
         line_name, reference_name = line_name_and_ref_name.split("_ref_")
+
+        err_corr = ERR_CORRECTION.get(line_name, None)
+        ref_err_corr = ERR_CORRECTION.get(reference_name, None)
+
     else:
         line_name = None
         reference_name = None
+        err_corr = None
+        ref_err_corr = None
 
     if len(line_data) == 0:
         return
@@ -454,45 +460,54 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         y_key = 'fluxes [ergs/s/cm2/A]'
         yerr_key = 'fluxerrs [ergs/s/cm2/A]'
 
-        y_norm, yerr_norm = normalize_lightcurve(line_data["lightcurves"][y_key], line_data["lightcurves"][yerr_key])
+        y_norm, yerr_norm = normalize_lightcurve(line_data["lightcurves"][y_key],
+                                                 line_data["lightcurves"][yerr_key],
+                                                 err_correction=err_corr)
         y_ref_norm, yerr_ref_norm = normalize_lightcurve(line_data["lightcurves_ref"][y_key],
-                                                          line_data["lightcurves_ref"][yerr_key])
+                                                          line_data["lightcurves_ref"][yerr_key],
+                                                         err_correction=ref_err_corr)
 
         ax.text(
             57582, 2.5,  # Position relativ zur Achse (x, y)
             f"{NUMBER_MAPPING[row + 1]})",  # Dein Label
             ha='right', va='top',
-            fontsize=7
+            fontsize=9,
+            fontweight='bold'  # macht den Text fett
         )
-
         if line_name != "UVW2":
             if line_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
                 line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"]
-                fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["symbole"]}:"
+                fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["symbole"]}-"
+                markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["markersize"]
             else:
                 line_color = color[0]
-                fmt = ".:"
+                fmt = ".-"
+                markersize = 3
 
             if reference_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
                 ref_line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["color"]
-                ref_fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["symbole"]}:"
+                ref_fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["symbole"]}-"
+                ref_markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["markersize"]
             else:
                 ref_line_color = color[0]
-                ref_fmt = ".:"
+                ref_fmt = ".-"
+                ref_markersize = 3
+
+
 
             ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
-                        label=format_label(line_name, as_latex=False), color=line_color, fmt=fmt, capsize=2,
-                        markersize=3, linewidth=0.5, elinewidth=0.5)
+                        label=format_label(line_name, as_latex=False, for_paper=for_paper), color=line_color, fmt=fmt, capsize=2,
+                        markersize=markersize, linewidth=0.5, elinewidth=0.5)
             if show_reference_label:
 
-                ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, label=format_label(reference_name, as_latex=False), color=ref_line_color, fmt=ref_fmt, capsize=2, markersize=3, linewidth=0.5, elinewidth=0.5)
+                ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, label=format_label(reference_name, as_latex=False, for_paper=for_paper), color=ref_line_color, fmt=ref_fmt, capsize=2, markersize=ref_markersize, linewidth=0.5, elinewidth=0.5)
             else:
                ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, color=ref_line_color, fmt=ref_fmt, capsize=2,
-                           markersize=3, linewidth=0.5, elinewidth=0.5)
+                           markersize=ref_markersize, linewidth=0.5, elinewidth=0.5)
 
         else:
             ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
-                        label=format_label(line_name, as_latex=False), color=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"], fmt=f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["symbole"]}:", capsize=2,  markersize=3, linewidth=0.5, elinewidth=0.5)
+                        label=format_label(line_name, as_latex=False, for_paper=for_paper), color=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"], fmt=f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["symbole"]}:", capsize=2,  markersize=3, linewidth=0.5, elinewidth=0.5)
 
         configure_axes_for_lightcurves(ax, row, only_one_label, for_paper=for_paper)
         ax.legend(fontsize=7, loc="upper right")
@@ -556,15 +571,24 @@ def configure_axes_for_lightcurves(ax, row, only_one_label=False, for_paper=Fals
 
     if only_one_label is False:
         ax.set_ylabel("Normalized Lightcurves", fontsize=12)
-    ax.yaxis.set_label_coords(-0.15, 0.5)
+    ax.yaxis.set_label_coords(0, 0.5)
 
     ax.xaxis.set_major_locator(MultipleLocator(5))
-    ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-    ax.yaxis.set_minor_locator(MultipleLocator(0.5))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=3))
+    ax.yaxis.set_minor_locator(MultipleLocator(1))
     ax.tick_params(axis='y', which='major', direction='in', length=4)
     ax.tick_params(axis='y', which='minor', direction='in', length=2)
     ax.set_ylim(-3, 3)
-    ax.set_yticklabels([])
+    if not for_paper:
+        ax.set_yticklabels([])
+
+    # rechte y-Achse mit Ticks, aber ohne Labels
+    ax_right = ax.secondary_yaxis('right')
+    ax_right.yaxis.set_major_locator(MaxNLocator(nbins=3))
+    ax_right.yaxis.set_minor_locator(MultipleLocator(1))
+    ax_right.tick_params(axis='y', which='major', direction='in', length=4)
+    ax_right.tick_params(axis='y', which='minor', direction='in', length=2)
+    ax_right.set_yticklabels([])  # entfernt die Labels
 
     ax.xaxis.set_major_locator(MultipleLocator(5))
     ax.tick_params(axis='x', which='major', direction='inout', length=4)
@@ -610,8 +634,8 @@ def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False, for_pape
     """
 
     ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
-    ax.set_xlim(-5.1, 10)
-    ax.set_ylim(0, 0.999)
+    ax.set_xlim(-5, 10)
+    ax.set_ylim(0, 1)
     ax.yaxis.set_major_locator(MultipleLocator(0.5))
     ax.yaxis.set_minor_locator(MultipleLocator(0.1))
     ax.tick_params(axis='y', which='major', direction='in', length=4)
@@ -621,6 +645,14 @@ def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False, for_pape
     ax_right.tick_params(axis='y', which='both', direction='in')
     if for_paper:
         ax_right.set_yticklabels([])
+
+    # zusätzliche linke y-Achse mit Ticks, aber ohne Labels
+    ax_left = ax.secondary_yaxis('left')
+    ax_left.yaxis.set_major_locator(MultipleLocator(0.5))
+    ax_left.yaxis.set_minor_locator(MultipleLocator(0.1))
+    ax_left.tick_params(axis='y', which='major', direction='in', length=4)
+    ax_left.tick_params(axis='y', which='minor', direction='in', length=2)
+    ax_left.set_yticklabels([])  # keine Labels anzeigen
 
 
     ax.yaxis.tick_right()
@@ -650,8 +682,8 @@ def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False, for_pape
 def check_for_empty_rows_ccfs_and_reference(
     axes, fig, x_label,
     for_paper=False,
-    paper_gap_inch=0.25,   # Spalt in Zoll zwischen vorletzter und letzter Reihe
-    xlabel_pad=5
+    paper_gap_inch=0.20,   # Spalt in Zoll zwischen vorletzter und letzter Reihe
+    xlabel_pad=2
 ):
     def _is_valid_axis(ax):
         return (ax in fig.axes)
@@ -712,7 +744,7 @@ def check_for_empty_rows_ccfs_and_reference(
             new_y0 = max(0.0, y0 - dy_rel)
             new_h  = max(0.0, h - dy_rel)
             if new_h > 0 and new_y0 + new_h <= 1.0:
-                ax_last.set_position([x0, new_y0, w, new_h])
+                ax_last.set_position([x0, new_y0-dy_rel, w, new_h+dy_rel])
             # Sicherstellen: keine Ticklabels unten
             ax_last.tick_params(axis='x', which='both', labelbottom=False)
 
@@ -939,7 +971,7 @@ save_1d_corr_and_lightcurves_general(
     figsize=(6, 6),
     show_reference_label=True,
     for_paper=True,
-    extra_data_name="HAlpha_ref_OI8446"
+    extra_data_name="OI8446_ref_HAlpha"
 )
 
 
@@ -953,7 +985,7 @@ save_1d_corr_and_lightcurves_general(
     figsize=(6, 6),
     show_reference_label=True,
     for_paper=True,
-    extra_data_name="HAlpha_ref_OI8446"
+    extra_data_name="OI8446_ref_HAlpha"
 )
 
 

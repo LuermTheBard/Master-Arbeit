@@ -286,13 +286,15 @@ DISPERSION_SIGMA_RMS = {
 
 
 
-SYMBOLES_AND_COLORS_FOR_LIGHTCURVES = {"UVW2": {"symbole": ".", "color": "black"},
-                                       "Cont1150_not_optical_calibrated": {"symbole": ".", "color": "blue"},
-                                       "HAlpha": {"symbole": '^', "color": "orange"},
-                                       "HBeta": {"symbole": "x", "color": "red"},
-                                       "OI8446": {"symbole": "d", "color": "green"},
-                                       'LyAlpha_not_optical_calibrated': {'symbole': 'X', 'color': 'dodgerblue'},
+SYMBOLES_AND_COLORS_FOR_LIGHTCURVES = {"UVW2": {"symbole": ".", "color": "#1f77b4", "markersize": 3},
+                                       "Cont1150_not_optical_calibrated": {"symbole": ".", "color": "darkblue", "markersize": 3},
+                                       "HAlpha": {"symbole": '^', "color": "#ff7f0e", "markersize": 4},
+                                       "HBeta": {"symbole": "x", "color": "red", "markersize": 3},
+                                       "OI8446": {"symbole": "d", "color": "#000000", "markersize": 4},
+                                       'LyAlpha_not_optical_calibrated': {'symbole': 's', 'color': '#d62728', "markersize": 2},
                                        }
+# in prozent
+ERR_CORRECTION = {"LyAlpha_not_optical_calibrated" : 50, "OI8446" : 20}
 
 NUMBER_MAPPING = {
  1: 'a', 2: 'b', 3: 'c', 4: 'd',
