@@ -507,7 +507,7 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
 
         else:
             ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
-                        label=format_label(line_name, as_latex=False, for_paper=for_paper), color=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"], fmt=f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["symbole"]}:", capsize=2,  markersize=3, linewidth=0.5, elinewidth=0.5)
+                        label=format_label(line_name, as_latex=False, for_paper=for_paper), color=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"], fmt=f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["symbole"]}-", capsize=2,  markersize=3, linewidth=0.5, elinewidth=0.5)
 
         configure_axes_for_lightcurves(ax, row, only_one_label, for_paper=for_paper)
         ax.legend(fontsize=7, loc="upper right")
