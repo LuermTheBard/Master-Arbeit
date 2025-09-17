@@ -678,6 +678,6 @@ def get_line_flux(line_window: tuple,cont_windows: tuple):
 # get_line_flux(None, None)
 
 plot_avg_rms_spec(file_name='avg_rms_spec.pdf')
-plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1800), ylim=(3, 70), scale_factor=5, shift_factor=(10, 0), line_length=3)
-plot_avg_rms_together()
-plot_calibrated_and_uncalibrated_spectra_together()
+#plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1800), ylim=(3, 70), scale_factor=5, shift_factor=(10, 0), line_length=3)
+#plot_avg_rms_together()
+#plot_calibrated_and_uncalibrated_spectra_together()
