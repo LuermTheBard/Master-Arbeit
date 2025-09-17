@@ -92,9 +92,6 @@ def plot_avg_rms(fits_data, save_path=None, file_name=None, log_scale=False, xli
         lines = All_LINES
         groups = All_LINE_GROUPS
 
-    if file_name is None:
-        file_name = f"avg_rms_spec.pdf"
-
 
 
     fig, ax, ylable = plot_avg_rms_spectra(
@@ -108,7 +105,7 @@ def plot_avg_rms(fits_data, save_path=None, file_name=None, log_scale=False, xli
         galaxy_name,
         lines=lines,
         groups=groups,
-        save_path=save_path / file_name if save_path else None,
+        save_path=save_path / file_name if save_path and file_name else None,
         log_scale=log_scale,
         xlim=(3800, 8900) if xlim is None else xlim,
         ylim=(0, 13.999) if ylim is None else ylim, #ylim=(0, 100)
@@ -213,7 +210,7 @@ def plot_avg_rms_spectra(
         ax.set_ylim(ylim)
 
     # ax.grid(visible=True, which="both", linestyle="--", linewidth=0.5)
-    ax.legend(fontsize=8)
+    ax.legend(fontsize=7, loc="upper right", frameon=False, markerfirst=False)
 
     ax.tick_params(axis='both', labelsize=11)
 
@@ -248,7 +245,7 @@ def plot_avg_rms_spectra(
 
     for group, data in groups.items():
         plot_line_group(ax, data["position"], x_filtered, y1_filtered, y2_scaled, group, line_length=line_length,
-                        tick_vertical_shift_avg=data.get("tick_vertical_shift_avg",0.2), tick_vertical_shift_rms=data.get("tick_vertical_shift_rms", 0.2), show_in_rms=data.get("show_in_rms", False), all_lines=data.get("all_lines", False))
+                        tick_vertical_shift_avg=data.get("tick_vertical_shift_avg",0.2), tick_vertical_shift_rms=data.get("tick_vertical_shift_rms", 0.2), show_in_avg=data.get("show_in_avg", True), show_in_rms=data.get("show_in_rms", False), all_lines=data.get("all_lines", False), text_vertical_shift=data.get("text_vertical_shift", 0.2), text_horizontal_shift=data.get("text_horizontal_shift", 0))
 
     # plt.title(super_title, fontsize=20)
 
@@ -297,8 +294,7 @@ def prepare_fit_data(x, xlim, y1, y2, ylabel, exponent_value=-15):
 def plot_line_group(
     ax_obj, positions, x, y1_filtered, y2_scaled, group,
     line_length=0.5, tick_vertical_shift_avg=0.5, tick_vertical_shift_rms=0.5,
-    all_lines=False, show_in_rms=False
-):
+    all_lines=False, show_in_avg=True, show_in_rms=False, text_vertical_shift=0.1, text_horizontal_shift=0):
     """
     Draws vertical line annotations for a group of emission lines on the plot.
 
@@ -348,30 +344,31 @@ def plot_line_group(
 
     line_ymin_rms = spectrum_rms + tick_vertical_shift_rms
     line_ymax_rms = line_ymin_rms + line_length
+    if show_in_avg is True:
+        if all_lines:
 
-    if all_lines:
+            for pos in positions:
+                # Vertikale Linien zeichnen
+                ax_obj.vlines(x=pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=0.5)
 
-        for pos in positions:
-            # Vertikale Linien zeichnen
-            ax_obj.vlines(x=pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=0.5)
-
-    else:
-        ax_obj.vlines(x=min_pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=0.5)
-        ax_obj.vlines(x=max_pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=0.5)
+        else:
+            ax_obj.vlines(x=min_pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=0.5)
+            ax_obj.vlines(x=max_pos, ymin=line_ymin_avg, ymax=line_ymax_avg, color='black', linewidth=0.5)
 
     if show_in_rms:
         for pos in positions:
             ax_obj.vlines(x=pos, ymin=line_ymin_rms, ymax=line_ymax_rms, color='black', linewidth=0.5)
 
-    ax_obj.text(x=((max_pos - min_pos) / 2) + min_pos,
-                y=line_ymax_avg + 0.1,
+    ax_obj.text(x=((max_pos - min_pos) / 2) + min_pos + text_horizontal_shift,
+                y=line_ymax_avg + text_vertical_shift,
                 s=group,
                 ha='center',
                 fontsize=8,
                 rotation=90,
                 va="bottom")
     # Horizontale Verbindungslinie
-    ax_obj.hlines(y=line_ymax_avg, xmin=min_pos, xmax=max_pos, color='black', linewidth=0.5)
+    if show_in_avg is True:
+        ax_obj.hlines(y=line_ymax_avg, xmin=min_pos, xmax=max_pos, color='black', linewidth=0.5)
 
 # methods to run
 
@@ -424,7 +421,7 @@ def plot_spectra(fits_data, spec_file=None, xlim=None, ylim=None, ax=None, show_
 
     ax.tick_params(axis='both', labelsize=14)
 
-    if spec_file:
+    if spec_file is not None:
         fig.savefig(spec_file, dpi=300)
         fig.savefig(f"{spec_file}.png", dpi=300)
         print(f"Plot saved to {spec_file}")
@@ -473,7 +470,8 @@ def plot_calibrated_and_uncalibrated_spectra_together(output_dir=DEFAULT_OUTPUT_
              va="center", rotation="vertical", fontsize=14)
 
     plt.tight_layout(rect=[0.05, 0, 1, 1])
-    fig.savefig(output_dir / "comparison_spectra.pdf", dpi=300)
+    fig.savefig(output_dir / "avg_rms_spec" / "comparison_spectra.pdf", dpi=300)
+    print(f"Plot saved to {output_dir / 'avg_rms_spec' / 'comparison_spectra.pdf'}")
     plt.show()
     return fig, (ax1, ax2)
 
@@ -514,6 +512,7 @@ def plot_avg_rms_together(output_dir=DEFAULT_OUTPUT_DIR):
 
     plt.tight_layout(rect=[0.05, 0, 1, 1])  # Platz für Y-Label lassen
     fig.savefig(output_dir / "avg_rms_spec" / "comparison_avg_rms.pdf", dpi=300)
+    print(f"Plot saved to {output_dir / 'avg_rms_spec' / 'comparison_avg_rms.pdf'}")
     plt.show()
     return fig, (ax1, ax2)
 
@@ -676,9 +675,9 @@ def get_line_flux(line_window: tuple,cont_windows: tuple):
 
 
 
-get_line_flux(None, None)
+# get_line_flux(None, None)
 
-#plot_avg_rms_spec()
-# plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1800), ylim=(3, 70), scale_factor=5, shift_factor=(10, 0), line_length=3)
-#plot_avg_rms_together()
-#plot_calibrated_and_uncalibrated_spectra_together()
+plot_avg_rms_spec(file_name='avg_rms_spec.pdf')
+plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1800), ylim=(3, 70), scale_factor=5, shift_factor=(10, 0), line_length=3)
+plot_avg_rms_together()
+plot_calibrated_and_uncalibrated_spectra_together()

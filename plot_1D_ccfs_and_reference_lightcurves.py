@@ -478,7 +478,7 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         if line_name != "UVW2":
             if line_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
                 line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"]
-                fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["symbole"]}-"
+                fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}-"
                 markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["markersize"]
                 alpha = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name].get("alpha", 1.0)
             else:
@@ -489,7 +489,7 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
 
             if reference_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
                 ref_line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["color"]
-                ref_fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["symbole"]}-"
+                ref_fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]['symbole']}-"
                 ref_markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["markersize"]
                 ref_alpha = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name].get("alpha", 1.0)
             else:
@@ -512,7 +512,7 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
 
         else:
             ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
-                        label=format_label(line_name, as_latex=False, for_paper=for_paper), color=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"], fmt=f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["symbole"]}-", alpha=0.8, capsize=2,  markersize=3, linewidth=0.5, elinewidth=0.5)
+                        label=format_label(line_name, as_latex=False, for_paper=for_paper), color=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"], fmt=f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}-", alpha=0.8, capsize=2,  markersize=3, linewidth=0.5, elinewidth=0.5)
 
         configure_axes_for_lightcurves(ax, row, only_one_label, for_paper=for_paper)
         ax.legend(fontsize=7, loc="upper right", frameon=False, markerfirst=False)

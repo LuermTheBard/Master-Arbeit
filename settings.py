@@ -58,13 +58,20 @@ def normalize_color_values(colorcode_dict):
 COLORCODE_CONTINUA_NORMALIZED = normalize_color_values(COLORCODE_CONTINUA)
 All_LINES = {
     #UV
-    "Lyα": {"position": 1215.67, "text_vertical_shift": -10, "slanted": False, "show_no_tick_avg": True, "text_shift": -15,  "tick_shift_rms": 1},
-    "N V 1238": {"position": 1238.82, "text_vertical_shift": 3, "slanted": False, "text_shift": 0, "tick_shift_rms": 1},
-    "Si IV 1393": {"position": 1393.75, "text_vertical_shift": 3, "slanted": False, "text_shift": 0,  "tick_shift_rms": 1},
-    "N IV] 1486": {"position": 1486.49, "text_vertical_shift": 3, "slanted": False,  "text_shift": 0,  "tick_shift_rms": 1},
-    "C IV 1548": {"position": 1548.19, "text_vertical_shift": -10, "slanted": False, "show_no_tick_avg": True, "text_shift": -15,  "tick_shift_rms": 1},
-    "He II 1640": {"position": 1640.42, "text_vertical_shift": 3, "slanted": False, "text_shift": 0,  "tick_shift_rms": 1},
-    "O III] 1660": {"position": 1660.80, "text_vertical_shift": 3, "slanted": False, "text_shift": 0,  "tick_shift_rms": 1},
+    "Lyα": {"position": 1215.67, "text_vertical_shift": -10, "slanted": False, "show_no_tick_avg": True, "text_shift": -15,  "tick_shift_rms": 3},
+    #"N V 1238": {"position": 1238.82, "text_vertical_shift": 3, "slanted": False, "text_shift": 0, "tick_shift_rms": 1},
+    #"N V  $\lambda\lambda$ 1238, 1242": {"position": 1242.8, "text_vertical_shift": 3, "slanted": False, "text_shift": 0, "tick_shift_rms": 1},
+    #"Si IV 1393": {"position": 1393.75, "text_vertical_shift": 3, "slanted": False, "text_shift": 0,  "tick_shift_rms": 1},
+    #"Si IV $\lambda\lambda$ 1393, 1402, O IV]": {"position": 1402.7, "text_vertical_shift": 3, "slanted": False, "text_shift": 0,
+                  # "tick_shift_rms": 1},
+    "N IV] 1486": {"position": 1486.49, "text_vertical_shift": 3, "slanted": False,  "tick_shift_avg": 1.5, "text_shift": 0,  "tick_shift_rms": 1},
+    #"C IV 1548": {"position": 1548.19, "text_vertical_shift": -10, "slanted": False, "show_no_tick_avg": True, "text_shift": -15,  "tick_shift_rms": 1},
+    #"C IV $\lambda\lambda$ 1550, 1548": {"position": 1550.77, "text_vertical_shift": -10, "slanted": False, "show_no_tick_avg": True,
+    #              "text_shift": -15, "tick_shift_rms": 1},
+    "He II 1640": {"position": 1640.42, "text_vertical_shift": 3, "slanted": False, "tick_shift_avg": 2.5, "text_shift": 0,  "tick_shift_rms": 3},
+    #"O III] 1660": {"position": 1660.80, "text_vertical_shift": 3, "slanted": False, "text_shift": 0,  "tick_shift_rms": 1},
+    #"O III] $\lambda\lambda$ 1660, 1666": {"position": 1666.15, "text_vertical_shift": 3, "slanted": False, "text_shift": 0,
+     #               "tick_shift_rms": 1},
 
 
 
@@ -117,6 +124,35 @@ All_LINES = {
     # "Ca II 8662": {"position": 8662.14, "text_vertical_shift": 0.1, "slanted": False},
 }
 All_LINE_GROUPS = {
+    "N V  $\lambda\lambda$ 1238, 1242": {"position": [1238.82,
+                                                      1242.8],
+                                         "tick_vertical_shift_avg": 2,
+                                         "tick_vertical_shift_rms": 7,
+                                         "show_in_rms": True,
+                                         "text_vertical_shift": 2},
+    "Si IV $\lambda\lambda$ 1393, 1402, O IV]": {"position": [1393.75,
+                                                              1402.7],
+                                         "tick_vertical_shift_avg": 2,
+                                         "tick_vertical_shift_rms": 2.5,
+                                         "show_in_rms": True,
+                                         "text_vertical_shift": 2},
+    "C IV $\lambda\lambda$ 1550, 1548": {"position": [1548.19,
+                                                      1550.77],
+                                         "tick_vertical_shift_avg": 2,
+                                         "tick_vertical_shift_rms": 10,
+                                         "show_in_rms": True,
+                                         "show_in_avg": False,
+                                         "text_vertical_shift": -15,
+                                         "text_horizontal_shift": -15},
+    "O III] $\lambda\lambda$ 1660, 1666": {"position": [1660.80,
+                                                        1666.15],
+                                         "tick_vertical_shift_avg": 1,
+                                         "tick_vertical_shift_rms": 1,
+                                         "show_in_rms": True,
+                                         "text_vertical_shift": 2},
+
+
+
     "Fe II": {"position": [4489,
                            4629.33],
               "tick_vertical_shift_avg": 0.8},
