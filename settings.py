@@ -328,7 +328,7 @@ SYMBOLES_AND_COLORS_FOR_LIGHTCURVES = {
     "Cont1150_not_optical_calibrated": {"symbole": ".", "color": "#1f77b4", "markersize": 3},
 
     "HAlpha": {"symbole": "^", "color": "#d62728", "markersize": 4},
-    "HBeta": {"symbole": "x", "color": "red", "markersize": 3},
+    "HBeta": {"symbole": ">", "color": "darkgoldenrod", "markersize": 3},
     "HGamma": {"symbole": "v", "color": "#cc6600", "markersize": 4},
     "HDelta": {"symbole": "<", "color": "#996633", "markersize": 4},
 

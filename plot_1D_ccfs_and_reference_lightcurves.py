@@ -535,10 +535,9 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         merged_mc_correlation_data = {**mc_correlation_data_optical_calibrated, **mc_correlation_data_not_optical_calibrated}
 
         if centroid_data:
-            def ceil_to_0_1(x):
-                return math.ceil(x * 10) / 10
 
-            tau = abs(ceil_to_0_1(centroid_data[reference_name][line_name]["tau_cent"]))
+
+            tau = abs(centroid_data[reference_name][line_name]["tau_cent"])
             err_h = abs(centroid_data[reference_name][line_name]["tau_cent_err_high"])
             err_l = abs(centroid_data[reference_name][line_name]["tau_cent_err_low"])
 
@@ -935,20 +934,30 @@ save_1d_corr_and_lightcurves_general(
     show_reference_label=True
 )
 """
-OI_paper_keyorder = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446","HAlpha"],
+OI_paper_keyorder_HAlpha = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446","HAlpha"],
                       "UVW2": ["time shift (tau)", "HAlpha", "OI8446"],
                       #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
                       }
 
-OI_paper_HST_UV_keyorder = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446","HAlpha"],
+OI_paper_HST_UV_keyorder_HAlpha = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446","HAlpha"],
                       "Cont1150_not_optical_calibrated": ["time shift (tau)", "HAlpha", "OI8446"],
+                      #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
+                      }
+
+OI_paper_keyorder_HBeta = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446","HBeta"],
+                      "UVW2": ["time shift (tau)", "HBeta", "OI8446"],
+                      #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
+                      }
+
+OI_paper_HST_UV_keyorder_HBeta = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446", "HBeta"],
+                      "Cont1150_not_optical_calibrated": ["time shift (tau)", "HBeta", "OI8446"],
                       #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
                       }
 
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
-    keyorders_dict=OI_paper_keyorder,
-    file_name="OI_ccfs_and_reference_lightcurves_paper",
+    keyorders_dict=OI_paper_keyorder_HAlpha,
+    file_name="OI_ccfs_and_reference_lightcurves_paper HAlpha",
     final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
     combine_data=True,
     rows=5,
@@ -961,8 +970,8 @@ save_1d_corr_and_lightcurves_general(
 
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
-    keyorders_dict=OI_paper_HST_UV_keyorder,
-    file_name="OI_ccfs_and_reference_lightcurves_HST_UV_paper",
+    keyorders_dict=OI_paper_HST_UV_keyorder_HAlpha,
+    file_name="OI_ccfs_and_reference_lightcurves_HST_UV_paper HAlpha",
     final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
     combine_data=True,
     rows=5,
@@ -971,6 +980,35 @@ save_1d_corr_and_lightcurves_general(
     for_paper=True,
     extra_data_name="OI8446_ref_HAlpha"
 )
+
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[],
+    keyorders_dict=OI_paper_keyorder_HBeta,
+    file_name="OI_ccfs_and_reference_lightcurves_paper HBeta",
+    final_key_order=["time shift (tau)", "OI8446", "HBeta"],
+    combine_data=True,
+    rows=5,
+    figsize=(6, 8),
+    show_reference_label=True,
+    for_paper=True,
+    extra_data_name="OI8446_ref_HBeta"
+)
+
+
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[],
+    keyorders_dict=OI_paper_HST_UV_keyorder_HBeta,
+    file_name="OI_ccfs_and_reference_lightcurves_HST_UV_paper HBeta",
+    final_key_order=["time shift (tau)", "OI8446", "HBeta"],
+    combine_data=True,
+    rows=5,
+    figsize=(6, 8),
+    show_reference_label=True,
+    for_paper=True,
+    extra_data_name="OI8446_ref_HBeta"
+)
+
+
 
 """
 
