@@ -90,7 +90,7 @@ All_LINES = {
     # "He I 3487": {"position": 3487.72, "text_vertical_shift": 0.1, "slanted": True},
     "He I $\lambda$ 4471": {"position": 4471.48, "text_vertical_shift": 0.1, "slanted": False, "text_shift": -20},
     "He I $\lambda$ 5875": {"position": 5875.6, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.3},
-    "He I $\lambda$ 5015": {"position": 5015.67, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_avg": 0.2,"text_shift": 60, "show_no_tick_rms": True},
+    "He I $\lambda$ 5015": {"position": 5015.67, "text_vertical_shift": -1, "slanted": False, "tick_shift_avg": 1,"text_shift": 70, "show_no_tick_rms": True},
     "He I $\lambda$ 7065": {"position": 7065.2, "text_vertical_shift": 0.1, "slanted": False, "text_shift": -20},
     "He II $\lambda$ 4685": {"position": 4685.7, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.4},
     # "He I 3187": {"position": 3187.74, "text_vertical_shift": 0.2, "slanted": True},
