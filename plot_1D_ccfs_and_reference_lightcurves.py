@@ -1,6 +1,6 @@
 import datetime
-import math
 from pathlib import Path
+
 import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
@@ -551,8 +551,8 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
             try:
 
                 ax.axvline(tau, color="grey", linestyle="--", linewidth=1)
-                if not for_paper:
-                    ax.hist(merged_mc_correlation_data[line_name]["centroids"], bins=50, density=True, alpha=0.7, color="orange")
+                #if not for_paper:
+                ax.hist(merged_mc_correlation_data[line_name]["centroids"], bins=50, density=True, alpha=0.7, color="grey")
             except KeyError:
                 print(f"No centroid data found for line {line_name}")
 
@@ -967,7 +967,7 @@ save_1d_corr_and_lightcurves_general(
     extra_data_name="OI8446_ref_HAlpha"
 )
 
-
+"""
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=OI_paper_HST_UV_keyorder_HAlpha,
@@ -980,7 +980,7 @@ save_1d_corr_and_lightcurves_general(
     for_paper=True,
     extra_data_name="OI8446_ref_HAlpha"
 )
-
+"""
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=OI_paper_keyorder_HBeta,
@@ -994,7 +994,7 @@ save_1d_corr_and_lightcurves_general(
     extra_data_name="OI8446_ref_HBeta"
 )
 
-
+"""
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=OI_paper_HST_UV_keyorder_HBeta,
@@ -1007,7 +1007,7 @@ save_1d_corr_and_lightcurves_general(
     for_paper=True,
     extra_data_name="OI8446_ref_HBeta"
 )
-
+"""
 
 
 """
