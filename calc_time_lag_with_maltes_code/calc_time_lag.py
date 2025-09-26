@@ -117,4 +117,4 @@ calc_centroid_malte_code("NGC4593_optical_calibrated", "UVW2", lines=['HAlpha', 
  #                               "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated"], index_map="UV", include_mass=False, create_tex_file=True)
 
 
-get_fluoreszenz_table(top_percent=0.7)
+#get_fluoreszenz_table(top_percent=0.8)

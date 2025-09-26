@@ -1,4 +1,5 @@
 import datetime
+import math
 from pathlib import Path
 
 import matplotlib
@@ -521,25 +522,25 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
 
         try:
             _, mc_correlation_data_optical_calibrated = import_centroid_and_mc_data("NGC4593_optical_calibrated", reference_name, [line_name])
+            merged_mc_correlation_data = mc_correlation_data_optical_calibrated
         except Exception as e:
             print(f"{e}")
-            mc_correlation_data_optical_calibrated = {}
 
-        try:
-            _, mc_correlation_data_not_optical_calibrated = import_centroid_and_mc_data("NGC4593_not_optical_calibrated",
-                                                                                    reference_name, [line_name])
-        except Exception as e:
-            print(f"{e}")
-            mc_correlation_data_not_optical_calibrated = {}
-    # todo: merging doesn'T work properly if same lines is in calibrated and not calibrated. Need fixing
-        merged_mc_correlation_data = {**mc_correlation_data_optical_calibrated, **mc_correlation_data_not_optical_calibrated}
+            try:
+                _, mc_correlation_data_not_optical_calibrated = import_centroid_and_mc_data("NGC4593_not_optical_calibrated",
+                                                                                        reference_name, [line_name])
+                merged_mc_correlation_data = mc_correlation_data_not_optical_calibrated
+            except Exception as e:
+                print(f"{e}")
+                merged_mc_correlation_data = {}
+
 
         if centroid_data:
 
 
-            tau = abs(centroid_data[reference_name][line_name]["tau_cent"])
-            err_h = abs(centroid_data[reference_name][line_name]["tau_cent_err_high"])
-            err_l = abs(centroid_data[reference_name][line_name]["tau_cent_err_low"])
+            tau = math.ceil(abs(centroid_data[reference_name][line_name]["tau_cent"])*10)/10
+            err_h = math.ceil(abs(centroid_data[reference_name][line_name]["tau_cent_err_high"])*10)/10
+            err_l = math.ceil(abs(centroid_data[reference_name][line_name]["tau_cent_err_low"])*10)/10
 
             ax.text(
                 9, 0.95,
@@ -980,7 +981,7 @@ save_1d_corr_and_lightcurves_general(
     for_paper=True,
     extra_data_name="OI8446_ref_HAlpha"
 )
-"""
+
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=OI_paper_keyorder_HBeta,
@@ -994,7 +995,7 @@ save_1d_corr_and_lightcurves_general(
     extra_data_name="OI8446_ref_HBeta"
 )
 
-"""
+
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=OI_paper_HST_UV_keyorder_HBeta,
