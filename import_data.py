@@ -421,7 +421,7 @@ def load_centroid_data_by_reference():
 def import_centroid_and_mc_data(campaign, continuum, lines):
     data_folder = find_prime_data_folder()
     base_path = Path(
-        rf'{data_folder}\campaigns\{campaign}\calc_time_lag_ccfs\{continuum}'
+        rf'{data_folder}\campaigns\{campaign}\1DCorrelations\{continuum}'
     )
 
     # Lade die lineCorrelations-Daten

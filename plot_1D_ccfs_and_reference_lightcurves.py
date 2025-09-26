@@ -531,7 +531,7 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
         except Exception as e:
             print(f"{e}")
             mc_correlation_data_not_optical_calibrated = {}
-
+    # todo: merging doesn'T work properly if same lines is in calibrated and not calibrated. Need fixing
         merged_mc_correlation_data = {**mc_correlation_data_optical_calibrated, **mc_correlation_data_not_optical_calibrated}
 
         if centroid_data:

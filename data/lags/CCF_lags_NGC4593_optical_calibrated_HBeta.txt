@@ -1,2 +1,2 @@
 name tau_cent tau_cent_err_low tau_cent_err_high M_Mo M_Mo_err_low M_Mo_err_high
-OI8446 0.9901 0.4590 1.1607 0.5024 0.2866 0.8308
+OI8446 0.9901 0.3669 1.1722 0.5024 0.2492 0.8379
