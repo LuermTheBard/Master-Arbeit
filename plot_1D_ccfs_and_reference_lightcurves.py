@@ -552,8 +552,8 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
             try:
 
                 ax.axvline(tau, color="grey", linestyle="--", linewidth=1)
-                #if not for_paper:
-                ax.hist(merged_mc_correlation_data[line_name]["centroids"], bins=50, density=True, alpha=0.7, color="grey")
+                if not for_paper:
+                    ax.hist(merged_mc_correlation_data[line_name]["centroids"], bins=50, density=True, alpha=0.7, color="grey")
             except KeyError:
                 print(f"No centroid data found for line {line_name}")
 
