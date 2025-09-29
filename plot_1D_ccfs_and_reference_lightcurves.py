@@ -399,7 +399,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
                 color = "black"
 
 
-            configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name_and_ref_name=line_name, centroid_data=centroid_data, only_one_label=only_one_label, show_reference_label=show_reference_label, for_paper=for_paper)
+            configure_ccfs_and_reference_axis(ax, row, rows, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name_and_ref_name=line_name, centroid_data=centroid_data, only_one_label=only_one_label, show_reference_label=show_reference_label, for_paper=for_paper)
 
         check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs), for_paper=for_paper)
 
@@ -407,7 +407,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
 
 
 
-def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr,
+def configure_ccfs_and_reference_axis(ax, row, rows, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr,
                                       line_name_and_ref_name, centroid_data=None, only_one_label=False, show_reference_label=False, for_paper=False):
     """
     Configures a single subplot axis to display either a normalized lightcurve pair
@@ -544,10 +544,10 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
 
             ax.text(
                 9, 0.95,
-                fr"$\tau_\mathrm{{cent}} = {tau:.1f}^{{+{err_h:.1f}}}_{{-{err_l:.1f}}}$",
+                fr"$\mathbf{{\tau_\mathrm{{cent}} = {tau:.1f}^{{+{err_h:.1f}}}_{{-{err_l:.1f}}}}}$",
                 ha='right',
                 va='top',
-                fontsize=5.5
+                fontsize=7
             )
             try:
 
@@ -566,7 +566,7 @@ def configure_ccfs_and_reference_axis(ax, row, col, ylabel_ccfs, color, x_values
             ccfs_labels = ccfs_labels + "$"
         if not for_paper:
             ax.text(9, 0.90, ccfs_labels, ha='right', va='top', fontsize=7)
-        configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label, for_paper=for_paper)
+        configure_axes_for_ccfs(ax, row, rows, ylabel_ccfs, only_one_label, for_paper=for_paper)
 
 
 def configure_axes_for_lightcurves(ax, row, only_one_label=False, for_paper=False):
@@ -624,54 +624,39 @@ def configure_axes_for_lightcurves(ax, row, only_one_label=False, for_paper=Fals
 
 
 
-def configure_axes_for_ccfs(ax, row, ylabel_ccfs, only_one_label=False, for_paper=False):
-    """
-    Configures axis formatting and ticks for a cross-correlation function (CCF) subplot.
-
-    Parameters:
-    -----------
-    ax : matplotlib.axes.Axes
-        The axis to configure.
-    row : int
-        Row index in the subplot grid.
-    col : int
-        Column index in the subplot grid.
-    ylabel_ccfs : str
-        Y-axis label for the CCFs (applied to right column).
-    only_one_label : bool, optional
-        If True, limits y-axis labeling to reduce clutter.
-
-    Returns:
-    -----------
-    None
-    """
-
+def configure_axes_for_ccfs(ax, row, nrows, ylabel_ccfs, only_one_label=False, for_paper=False):
     ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
     ax.set_xlim(-5, 10)
     ax.set_ylim(0, 1)
+
     ax.yaxis.set_major_locator(MultipleLocator(0.5))
     ax.yaxis.set_minor_locator(MultipleLocator(0.1))
     ax.tick_params(axis='y', which='major', direction='in', length=4)
     ax.tick_params(axis='y', which='minor', direction='in', length=2)
-    ax.set_yticklabels([])
 
     ax.yaxis.tick_right()
     ax.yaxis.set_label_position("right")
-
-    if only_one_label is False:
+    if not only_one_label:
         ax.set_ylabel(ylabel_ccfs, fontsize=12)
 
+    # --- Tick-Labels steuern: 1 überall, 0 nur unten & vorletzte ---
+    is_bottom = (row == nrows - 1)
+    is_penultimate = (row == nrows - 2)
 
-    if only_one_label is False:
-        ax.set_ylabel(ylabel_ccfs, fontsize=12)
-        ax.ax_right.set_label_position("right")
+    def _yfmt(y, pos):
+        if np.isclose(y, 0.0):
+            return "0" if (is_bottom or is_penultimate) else ""
+        if np.isclose(y, 1.0):
+            return "1"                     # <-- 1 überall
+        return f"{y:g}"
 
+    ax.yaxis.set_major_formatter(FuncFormatter(_yfmt))
+    # ---------------------------------------------------------------
 
     ax.xaxis.set_major_locator(MultipleLocator(2))
     ax.tick_params(axis='x', which='major', direction='inout', length=4)
     ax.xaxis.set_minor_locator(MultipleLocator(1))
     ax.tick_params(axis='x', which='minor', direction='in', length=2)
-
 
     ax_top = ax.secondary_xaxis('top')
     ax_top.xaxis.set_major_locator(MultipleLocator(5))
