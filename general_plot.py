@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
-from import_data import load_centroid_data_by_reference, find_prime_data_folder
+from import_data import load_centroid_data_by_reference, find_prime_data_folder, import_1d_lightcurve_data
 from plot_utils import format_label, ensure_output_dir
 from settings import BASE_MJD, DEFAULT_OUTPUT_DIR, IONIZATION_POTENTIAL, FWHM_RMS
 
@@ -397,6 +397,43 @@ def plot_ccfs_lags_against_angstron(output_dir=DEFAULT_OUTPUT_DIR):
     plt.savefig(output_file_dir / "lags_against_Anstron.pdf")
     plt.show()
 
+
+def get_f_var(line_name=None, cont_name=None, campaign="NGC4593_optical_calibrated", output_dir=DEFAULT_OUTPUT_DIR):
+    output_file_dir = output_dir / "f_var_data" / line_name
+    ensure_output_dir(output_file_dir)
+
+    lightcurver_data = import_1d_lightcurve_data()
+
+    if line_name and cont_name is None:
+        lightcurve_type = "lines"
+        lightcurve = line_name
+    elif cont_name and line_name is None:
+        lightcurve_type = "continua"
+        lightcurve = cont_name
+    elif (line_name and cont_name) or (line_name is None and cont_name is None):
+        print("Please specify either line_name or cont_name")
+        return
+
+    line_flux_data = np.array(lightcurver_data[campaign][lightcurve_type][lightcurve]['fluxes [ergs/s/cm2/A]'])
+
+    line_flux_data_err = np.array(lightcurver_data[campaign][lightcurve_type][lightcurve]['fluxerrs [ergs/s/cm2/A]'])
+
+    N = len(line_flux_data)
+
+    unweighted_mean_flux = (1/N) * np.sum(line_flux_data)
+
+    sigma2 = (1/(N - 1)) * np.sum((line_flux_data - unweighted_mean_flux)**2)
+
+    delta2 = (1/N) * np.sum(line_flux_data_err**2)
+
+    F_var = (np.sqrt(sigma2 - delta2))/unweighted_mean_flux
+
+    print(f"{line_name}: F_var = {F_var}")
+
+
+
+
+get_f_var("OI8446")
 
 # plot_ion_pot_FWHM_against_lag()
 # plot_ccfs_lags_against_angstron()
