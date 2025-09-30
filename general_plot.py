@@ -398,42 +398,82 @@ def plot_ccfs_lags_against_angstron(output_dir=DEFAULT_OUTPUT_DIR):
     plt.show()
 
 
-def get_f_var(line_name=None, cont_name=None, campaign="NGC4593_optical_calibrated", output_dir=DEFAULT_OUTPUT_DIR):
-    output_file_dir = output_dir / "f_var_data" / line_name
-    ensure_output_dir(output_file_dir)
-
-    lightcurver_data = import_1d_lightcurve_data()
-
-    if line_name and cont_name is None:
-        lightcurve_type = "lines"
-        lightcurve = line_name
-    elif cont_name and line_name is None:
-        lightcurve_type = "continua"
-        lightcurve = cont_name
-    elif (line_name and cont_name) or (line_name is None and cont_name is None):
-        print("Please specify either line_name or cont_name")
+def get_f_var(
+    line_names=None,
+    cont_names=None,
+    campaign="NGC4593_optical_calibrated",
+    output_dir=DEFAULT_OUTPUT_DIR
+):
+    # Sicherheitscheck: mindestens eine Liste muss angegeben sein
+    if not line_names and not cont_names:
+        print("Please specify at least one line_name or cont_name")
         return
 
-    line_flux_data = np.array(lightcurver_data[campaign][lightcurve_type][lightcurve]['fluxes [ergs/s/cm2/A]'])
+    # Falls ein einzelner Name übergeben wird, in Liste umwandeln
+    if isinstance(line_names, str):
+        line_names = [line_names]
+    if isinstance(cont_names, str):
+        cont_names = [cont_names]
 
-    line_flux_data_err = np.array(lightcurver_data[campaign][lightcurve_type][lightcurve]['fluxerrs [ergs/s/cm2/A]'])
+    # Importiere Daten einmal
+    lightcurver_data = import_1d_lightcurve_data()
 
-    N = len(line_flux_data)
+    # Ergebnisse speichern
+    results = []
 
-    unweighted_mean_flux = (1/N) * np.sum(line_flux_data)
+    # --- Hilfsfunktion für Berechnung ---
+    def compute_f_var(lightcurve_type, lightcurve_name):
+        data = lightcurver_data[campaign][lightcurve_type][lightcurve_name]
+        flux = np.array(data['fluxes [ergs/s/cm2/A]'])
+        flux_err = np.array(data['fluxerrs [ergs/s/cm2/A]'])
 
-    sigma2 = (1/(N - 1)) * np.sum((line_flux_data - unweighted_mean_flux)**2)
+        N = len(flux)
+        mean_flux = np.mean(flux)
+        sigma2 = np.var(flux, ddof=1)
+        delta2 = np.mean(flux_err**2)
+        excess_var = sigma2 - delta2
+        if excess_var < 0:
+            F_var = 0
+        else:
+            F_var = np.sqrt(excess_var) / mean_flux
 
-    delta2 = (1/N) * np.sum(line_flux_data_err**2)
+        results.append({
+            "type": lightcurve_type,
+            "name": lightcurve_name,
+            "F_var": F_var
+        })
 
-    F_var = (np.sqrt(sigma2 - delta2))/unweighted_mean_flux
+        print(f"{lightcurve_type[:-1]} '{lightcurve_name}': F_var = {F_var:.4f}")
 
-    print(f"{line_name}: F_var = {F_var}")
+    # --- Berechnung für Linien ---
+    if line_names:
+        for name in line_names:
+            compute_f_var("lines", name)
+
+    # --- Berechnung für Kontinua ---
+    if cont_names:
+        for name in cont_names:
+            compute_f_var("continua", name)
+
+    # Optional: Ergebnisse speichern
+    output_file_dir = output_dir / "f_var_data"
+    ensure_output_dir(output_file_dir)
+
+    # Ergebnisse als einfache Textdatei oder CSV speichern
+    output_file = output_file_dir / f"{campaign}_f_var.txt"
+    with open(output_file, "w") as f:
+        for r in results:
+            f.write(f"{r['type'][:-1]} {r['name']}: F_var = {r['F_var']:.6f}\n")
+
+    print(f"Saved F_var results to: {output_file}")
+
+    return results
 
 
 
 
-get_f_var("OI8446")
+
+get_f_var(line_names=["OI8446", "HBeta"])
 
 # plot_ion_pot_FWHM_against_lag()
 # plot_ccfs_lags_against_angstron()
