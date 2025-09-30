@@ -473,7 +473,7 @@ def get_f_var(
 
 
 
-get_f_var(line_names=["OI8446", "HBeta"])
+get_f_var(line_names=["HAlpha", "HBeta", "HGamma", "HDelta", "OI8446"])
 
 # plot_ion_pot_FWHM_against_lag()
 # plot_ccfs_lags_against_angstron()
