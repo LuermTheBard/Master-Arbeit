@@ -399,4 +399,4 @@ def plot_ccfs_lags_against_angstron(output_dir=DEFAULT_OUTPUT_DIR):
 
 
 # plot_ion_pot_FWHM_against_lag()
-plot_ccfs_lags_against_angstron()
+# plot_ccfs_lags_against_angstron()
