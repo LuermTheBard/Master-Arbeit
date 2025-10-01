@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
 from import_data import load_centroid_data_by_reference, find_prime_data_folder, import_1d_lightcurve_data
-from plot_utils import format_label, ensure_output_dir
+from plot_utils import format_label, ensure_output_dir, calculate_standard_error_for_lightcurves
 from settings import BASE_MJD, DEFAULT_OUTPUT_DIR, IONIZATION_POTENTIAL, FWHM_RMS
 
 matplotlib.use('Qt5Agg')
@@ -422,25 +422,60 @@ def get_f_var(
     results = []
 
     # --- Hilfsfunktion für Berechnung ---
-    def compute_f_var(lightcurve_type, lightcurve_name):
+    def compute_f_var(lightcurve_type: str, lightcurve_name: str):
         data = lightcurver_data[campaign][lightcurve_type][lightcurve_name]
-        flux = np.array(data['fluxes [ergs/s/cm2/A]'])
-        flux_err = np.array(data['fluxerrs [ergs/s/cm2/A]'])
+        flux = np.array(data['fluxes [ergs/s/cm2/A]'], dtype=float)
+
+        # Standardfehler je Punkt (so wie du es bisher machst)
+        flux_err = calculate_standard_error_for_lightcurves(
+            flux,
+            np.array(data['fluxerrs [ergs/s/cm2/A]'], dtype=float)
+        )
 
         N = len(flux)
+        if N < 2:
+            print(f"{lightcurve_type[:-1]} '{lightcurve_name}': not enough points (N < 2).")
+            results.append({
+                "type": lightcurve_type,
+                "name": lightcurve_name,
+                "F_var": 0.0,
+                "flux": flux.tolist(),
+                "flux_err": flux_err.tolist(),
+                "percent_errors": (np.full_like(flux, np.nan)).tolist()
+            })
+            return
+
+        # (1) Mittelwert:  \bar{f} = (1/N) * sum_i f_i
         mean_flux = np.mean(flux)
+
+        # (2) Stichprobenvarianz:  σ^2 = (1/(N-1)) * sum_i (f_i - \bar{f})^2
         sigma2 = np.var(flux, ddof=1)
-        delta2 = np.mean(flux_err**2)
+
+        # (3) Mittlere quadrierte Unsicherheit:  Δ^2 = (1/N) * sum_i σ_{f_i}^2
+        delta2 = np.mean(flux_err ** 2)
+
+        # (4) Überschussvarianz:  S^2_excess = σ^2 - Δ^2
         excess_var = sigma2 - delta2
-        if excess_var < 0:
-            F_var = 0
-        else:
+
+        # (5) Fractional Variability:
+        # F_var = sqrt(S^2_excess) / \bar{f}, falls S^2_excess >= 0 und \bar{f} > 0; sonst 0
+        if excess_var > 0 and mean_flux > 0:
             F_var = np.sqrt(excess_var) / mean_flux
+        else:
+            F_var = 0.0
+
+        # Verhältnis f_i_err / f_i; bei f_i = 0 -> NaN
+        percent_errors = np.divide(
+            flux_err, flux, out=np.full_like(flux_err, np.nan), where=flux != 0
+        )
 
         results.append({
             "type": lightcurve_type,
             "name": lightcurve_name,
-            "F_var": F_var
+            "F_var": float(F_var),
+            "flux": flux.tolist(),
+            "flux_err": flux_err.tolist(),
+            "percent_errors": percent_errors.tolist()
         })
 
         print(f"{lightcurve_type[:-1]} '{lightcurve_name}': F_var = {F_var:.4f}")
@@ -455,19 +490,37 @@ def get_f_var(
         for name in cont_names:
             compute_f_var("continua", name)
 
-    # Optional: Ergebnisse speichern
+    # Ergebnisse speichern
     output_file_dir = output_dir / "f_var_data"
     ensure_output_dir(output_file_dir)
-
-    # Ergebnisse als einfache Textdatei oder CSV speichern
     output_file = output_file_dir / f"{campaign}_f_var.txt"
+
     with open(output_file, "w") as f:
         for r in results:
-            f.write(f"{r['type'][:-1]} {r['name']}: F_var = {r['F_var']:.6f}\n")
+            header = f"{r['type'][:-1]} {r['name']}"
+            f.write(f"{header}\n")
+            f.write(f"F_var = {r['F_var']:.6f}\n")
+            f.write("i\tf_i [ergs/s/cm2/A]\tf_i_err [ergs/s/cm2/A]\tf_i_err/f_i\n")
 
-    print(f"Saved F_var results to: {output_file}")
+            flux_list = r["flux"]
+            flux_err_list = r["flux_err"]
+            perc_list = r["percent_errors"]
+
+            for i, (fi, ei, pe) in enumerate(zip(flux_list, flux_err_list, perc_list)):
+                # Wissenschaftliche Notation für Flüsse; Verhältnis als Dezimalzahl
+                fi_str = f"{fi:.6e}" if fi is not None else "nan"
+                ei_str = f"{ei:.6e}" if ei is not None else "nan"
+                # pe kann NaN sein (bei fi==0)
+                pe_str = "nan" if (pe is None or (isinstance(pe, float) and np.isnan(pe))) else f"{pe:.6f}"
+                f.write(f"{i}\t{fi_str}\t{ei_str}\t{pe_str}\n")
+
+            f.write("\n")  # Leerzeile zwischen Blöcken
+
+    print(f"Saved F_var results with per-point table to: {output_file}")
 
     return results
+
+
 
 
 
