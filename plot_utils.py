@@ -8,7 +8,7 @@ from import_data import find_prime_data_folder
 from settings import F_MEAN, F_SIGMA, CENTRAL_WAVELENGTH
 
 
-def calculate_standard_error_for_lightcurves(flux, flux_noise_err, err_correction=None):
+def calculate_standard_error_for_lightcurves(flux, flux_noise_err, err_correction=None, err_set=None):
     """
     Calculates the total uncertainty of a lightcurve data point based on:
 
@@ -38,6 +38,9 @@ def calculate_standard_error_for_lightcurves(flux, flux_noise_err, err_correctio
 
     if err_correction:
         total_error += total_error * err_correction / 100
+
+    if err_set:
+        total_error = flux * err_set / 100
 
     return total_error
 

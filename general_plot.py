@@ -8,7 +8,7 @@ from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 
 from import_data import load_centroid_data_by_reference, find_prime_data_folder, import_1d_lightcurve_data
 from plot_utils import format_label, ensure_output_dir, calculate_standard_error_for_lightcurves
-from settings import BASE_MJD, DEFAULT_OUTPUT_DIR, IONIZATION_POTENTIAL, FWHM_RMS
+from settings import BASE_MJD, DEFAULT_OUTPUT_DIR, IONIZATION_POTENTIAL, FWHM_RMS, ERR_CORRECTION, ERR_SET
 
 matplotlib.use('Qt5Agg')
 
@@ -426,10 +426,15 @@ def get_f_var(
         data = lightcurver_data[campaign][lightcurve_type][lightcurve_name]
         flux = np.array(data['fluxes [ergs/s/cm2/A]'], dtype=float)
 
+        err_corr=ERR_CORRECTION.get(lightcurve_name, None)
+        err_set=ERR_SET.get(lightcurve_name, None)
+
         # Standardfehler je Punkt (so wie du es bisher machst)
         flux_err = calculate_standard_error_for_lightcurves(
             flux,
-            np.array(data['fluxerrs [ergs/s/cm2/A]'], dtype=float)
+            np.array(data['fluxerrs [ergs/s/cm2/A]'], dtype=float),
+            err_correction=err_corr,
+            err_set=err_set
         )
 
         N = len(flux)
@@ -445,26 +450,13 @@ def get_f_var(
             })
             return
 
-        # (1) Mittelwert:  \bar{f} = (1/N) * sum_i f_i
-        mean_flux = np.mean(flux)
+        N = len(flux)
+        unweighted_mean_flux = (1/N) * np.sum(flux)
+        sigma2 = (1/(N-1)) * np.sum((flux-unweighted_mean_flux)**2)
+        delta2 = (1/N) * np.sum(flux_err**2)
 
-        # (2) Stichprobenvarianz:  σ^2 = (1/(N-1)) * sum_i (f_i - \bar{f})^2
-        sigma2 = np.var(flux, ddof=1)
+        F_var = (np.sqrt(sigma2 - delta2))/unweighted_mean_flux
 
-        # (3) Mittlere quadrierte Unsicherheit:  Δ^2 = (1/N) * sum_i σ_{f_i}^2
-        delta2 = np.mean(flux_err ** 2)
-
-        # (4) Überschussvarianz:  S^2_excess = σ^2 - Δ^2
-        excess_var = sigma2 - delta2
-
-        # (5) Fractional Variability:
-        # F_var = sqrt(S^2_excess) / \bar{f}, falls S^2_excess >= 0 und \bar{f} > 0; sonst 0
-        if excess_var > 0 and mean_flux > 0:
-            F_var = np.sqrt(excess_var) / mean_flux
-        else:
-            F_var = 0.0
-
-        # Verhältnis f_i_err / f_i; bei f_i = 0 -> NaN
         percent_errors = np.divide(
             flux_err, flux, out=np.full_like(flux_err, np.nan), where=flux != 0
         )
