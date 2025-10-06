@@ -54,7 +54,9 @@ def save_1d_corr_and_lightcurves_general(
         include_extra_data=False,
         extra_data_name=None,
         show_histogram=None,
-        show_subfigure_labels=True):
+        show_subfigure_labels=True,
+        row_spacing=None
+):
 
     ensure_output_dir(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -104,6 +106,7 @@ def save_1d_corr_and_lightcurves_general(
             extra_data_name=extra_data_name,
             show_histogram=show_histogram,
             show_subfigure_labels=show_subfigure_labels,
+            row_spacing=row_spacing
         )
 
     else:
@@ -135,6 +138,7 @@ def save_1d_corr_and_lightcurves_general(
                 include_extra_data=include_extra_data,
                 show_histogram=show_histogram,
                 show_subfigure_labels=show_subfigure_labels,
+                row_spacing=row_spacing
 
             )
 
@@ -166,7 +170,9 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
                                            include_extra_data=False,
                                            extra_data_name=None,
                                            show_histogram=None,
-                                           show_subfigure_labels=True):
+                                           show_subfigure_labels=True,
+                                           row_spacing=None
+                                           ):
     """
     Organizes and plots CFFs and their corresponding lightcurves
     in subplot groups, based on specified key orders.
@@ -314,7 +320,9 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
                                                   ccf_show_inline_label_text = ccf_show_inline_label_text,
                                                   adjust_last_row_gap_inch = adjust_last_row_gap_inch,
                                                   show_histogram=show_histogram,
-                                                  show_subfigure_labels=show_subfigure_labels,)
+                                                  show_subfigure_labels=show_subfigure_labels,
+                                                  row_spacing=row_spacing
+                                                  )
 
 
 def prepare_ccfs_references_data(data, rows, cols):
@@ -399,7 +407,9 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
                                                   ccf_show_inline_label_text=True,
                                                   adjust_last_row_gap_inch=0.0,
                                                   show_histogram=None,
-                                                  show_subfigure_labels=True):
+                                                  show_subfigure_labels=True,
+                                                  row_spacing=None
+                                                  ):
     """
     Plots CCFs and their associated normalized lightcurves
     in a side-by-side subplot layout.
@@ -456,7 +466,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
         for i in range(1, rows):
             axes[i, 1].sharex(axes[0, 1])
 
-        fig.subplots_adjust(hspace=0, wspace=0)
+            fig.subplots_adjust(hspace=(0 if row_spacing is None else float(row_spacing)), wspace=0)
         #fig.tight_layout()
         if only_one_label is True:
             # Linke Seite oben (y-Achse): "Normalized Lightcurves"
@@ -1115,6 +1125,7 @@ save_1d_corr_and_lightcurves_general(
     extra_data_name = "OI8446_ref_HAlpha",
     show_histogram = False,
     show_subfigure_labels=True,
+    row_spacing=None
 )
 
 """
