@@ -55,7 +55,8 @@ def save_1d_corr_and_lightcurves_general(
         extra_data_name=None,
         show_histogram=None,
         show_subfigure_labels=True,
-        row_spacing=None
+        row_spacing=None,
+        line_style="-"
 ):
 
     ensure_output_dir(output_dir)
@@ -106,7 +107,8 @@ def save_1d_corr_and_lightcurves_general(
             extra_data_name=extra_data_name,
             show_histogram=show_histogram,
             show_subfigure_labels=show_subfigure_labels,
-            row_spacing=row_spacing
+            row_spacing=row_spacing,
+            line_style=line_style
         )
 
     else:
@@ -138,7 +140,8 @@ def save_1d_corr_and_lightcurves_general(
                 include_extra_data=include_extra_data,
                 show_histogram=show_histogram,
                 show_subfigure_labels=show_subfigure_labels,
-                row_spacing=row_spacing
+                row_spacing=row_spacing,
+                line_style=line_style
 
             )
 
@@ -171,7 +174,8 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
                                            extra_data_name=None,
                                            show_histogram=None,
                                            show_subfigure_labels=True,
-                                           row_spacing=None
+                                           row_spacing=None,
+                                           line_style="-"
                                            ):
     """
     Organizes and plots CFFs and their corresponding lightcurves
@@ -321,7 +325,8 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
                                                   adjust_last_row_gap_inch = adjust_last_row_gap_inch,
                                                   show_histogram=show_histogram,
                                                   show_subfigure_labels=show_subfigure_labels,
-                                                  row_spacing=row_spacing
+                                                  row_spacing=row_spacing,
+                                                  line_style=line_style
                                                   )
 
 
@@ -408,7 +413,8 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
                                                   adjust_last_row_gap_inch=0.0,
                                                   show_histogram=None,
                                                   show_subfigure_labels=True,
-                                                  row_spacing=None
+                                                  row_spacing=None,
+                                                  line_style="-"
                                                   ):
     """
     Plots CCFs and their associated normalized lightcurves
@@ -518,7 +524,8 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
                                               lightcurve_hide_yticklabels = lightcurve_hide_yticklabels,
                                               ccf_show_inline_label_text = ccf_show_inline_label_text,
                                               show_histogram=show_histogram,
-                                              show_subfigure_labels=show_subfigure_labels,)
+                                              show_subfigure_labels=show_subfigure_labels,
+                                              line_style=line_style)
 
         check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs), adjust_last_row_gap_inch=adjust_last_row_gap_inch)
 
@@ -544,7 +551,8 @@ def configure_ccfs_and_reference_axis(ax,
                                       lightcurve_hide_yticklabels=True,
                                       ccf_show_inline_label_text=True,
                                       show_histogram=None,
-                                      show_subfigure_labels=True):
+                                      show_subfigure_labels=True,
+                                      line_style="-"):
     """
     Configures a single subplot axis to display either a normalized lightcurve pair
     or a CCF, depending on the data provided.
@@ -622,23 +630,23 @@ def configure_ccfs_and_reference_axis(ax,
         if line_name != "UVW2":
             if line_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
                 line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"]
-                fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}-"
+                fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}{line_style}"
                 markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["markersize"]
                 alpha = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name].get("alpha", 1.0)
             else:
                 line_color = color[0]
-                fmt = ".-"
+                fmt = f".{line_style}"
                 markersize = 3
                 alpha = 1.0
 
             if reference_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
                 ref_line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["color"]
-                ref_fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]['symbole']}-"
+                ref_fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]['symbole']}{line_style}"
                 ref_markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["markersize"]
                 ref_alpha = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name].get("alpha", 1.0)
             else:
                 ref_line_color = color[0]
-                ref_fmt = ".-"
+                ref_fmt = f".{line_style}"
                 ref_markersize = 3
                 ref_alpha = 1.0
 
@@ -670,7 +678,7 @@ def configure_ccfs_and_reference_axis(ax,
                                              as_latex=False,
                                              for_paper=format_labels_as_paper),
                         color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"],
-                        fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}-",
+                        fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}{line_style}",
                         alpha = 0.8,
                         capsize = 2,
                         markersize = 3,
@@ -1125,7 +1133,8 @@ save_1d_corr_and_lightcurves_general(
     extra_data_name = "OI8446_ref_HAlpha",
     show_histogram = False,
     show_subfigure_labels=True,
-    row_spacing=None
+    row_spacing=None,
+    line_style=":"
 )
 
 """
