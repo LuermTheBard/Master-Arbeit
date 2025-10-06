@@ -53,7 +53,8 @@ def save_1d_corr_and_lightcurves_general(
         adjust_last_row_gap_inch=0.0,
         include_extra_data=False,
         extra_data_name=None,
-        show_histogram=None):
+        show_histogram=None,
+        show_subfigure_labels=None):
 
     ensure_output_dir(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -101,7 +102,8 @@ def save_1d_corr_and_lightcurves_general(
             adjust_last_row_gap_inch = adjust_last_row_gap_inch,
             include_extra_data = include_extra_data,
             extra_data_name=extra_data_name,
-            show_histogram=show_histogram
+            show_histogram=show_histogram,
+            show_subfigure_labels=show_subfigure_labels,
         )
 
     else:
@@ -131,7 +133,8 @@ def save_1d_corr_and_lightcurves_general(
                 ccf_show_inline_label_text=ccf_show_inline_label_text,
                 adjust_last_row_gap_inch=adjust_last_row_gap_inch,
                 include_extra_data=include_extra_data,
-                show_histogram=show_histogram
+                show_histogram=show_histogram,
+                show_subfigure_labels=show_subfigure_labels,
 
             )
 
@@ -141,7 +144,19 @@ def save_1d_corr_and_lightcurves_general(
 # =======================
 
 
-def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, figsize=None, only_one_label=False, centroid_data=None, show_reference_label=False,
+def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
+                                           campaign,
+                                           output_dir,
+                                           key_orders,
+                                           save_only=False,
+                                           file_name=None,
+                                           final_key_order=None,
+                                           rows=4,
+                                           cols=2,
+                                           figsize=None,
+                                           only_one_label=False,
+                                           centroid_data=None,
+                                           show_reference_label=False,
                                            format_labels_as_paper=False,
                                            layout_show_right_ccf_ylabel=True,
                                            layout_show_top_secondary_labels=True,
@@ -150,7 +165,8 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
                                            adjust_last_row_gap_inch=0.0,
                                            include_extra_data=False,
                                            extra_data_name=None,
-                                           show_histogram=None):
+                                           show_histogram=None,
+                                           show_subfigure_labels=None):
     """
     Organizes and plots CFFs and their corresponding lightcurves
     in subplot groups, based on specified key orders.
@@ -297,7 +313,8 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
                                                   lightcurve_hide_yticklabels = lightcurve_hide_yticklabels,
                                                   ccf_show_inline_label_text = ccf_show_inline_label_text,
                                                   adjust_last_row_gap_inch = adjust_last_row_gap_inch,
-                                                  show_histogram=show_histogram)
+                                                  show_histogram=show_histogram,
+                                                  show_subfigure_labels=show_subfigure_labels,)
 
 
 def prepare_ccfs_references_data(data, rows, cols):
@@ -381,7 +398,8 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
                                                   lightcurve_hide_yticklabels=True,
                                                   ccf_show_inline_label_text=True,
                                                   adjust_last_row_gap_inch=0.0,
-                                                  show_histogram=None):
+                                                  show_histogram=None,
+                                                  show_subfigure_labels=None):
     """
     Plots CCFs and their associated normalized lightcurves
     in a side-by-side subplot layout.
@@ -489,7 +507,8 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
                                               layout_show_top_secondary_labels = layout_show_top_secondary_labels,
                                               lightcurve_hide_yticklabels = lightcurve_hide_yticklabels,
                                               ccf_show_inline_label_text = ccf_show_inline_label_text,
-                                              show_histogram=show_histogram)
+                                              show_histogram=show_histogram,
+                                              show_subfigure_labels=show_subfigure_labels,)
 
         check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs), adjust_last_row_gap_inch=adjust_last_row_gap_inch)
 
@@ -514,7 +533,8 @@ def configure_ccfs_and_reference_axis(ax,
                                       layout_show_top_secondary_labels=True,
                                       lightcurve_hide_yticklabels=True,
                                       ccf_show_inline_label_text=True,
-                                      show_histogram=None):
+                                      show_histogram=None,
+                                      show_subfigure_labels=None):
     """
     Configures a single subplot axis to display either a normalized lightcurve pair
     or a CCF, depending on the data provided.
@@ -581,13 +601,14 @@ def configure_ccfs_and_reference_axis(ax,
                                                          err_correction=ref_err_corr,
                                                          err_set=ref_err_set)
 
-        ax.text(
-            57582, 2.5,  # Position relativ zur Achse (x, y)
-            f"{NUMBER_MAPPING[row + 1]})",  # Dein Label
-            ha='right', va='top',
-            fontsize=9,
-            fontweight='bold'  # macht den Text fett
-        )
+        if show_subfigure_labels:
+            ax.text(
+                57582, 2.5,  # Position
+                f"{NUMBER_MAPPING[row + 1]})",
+                ha='right', va='top',
+                fontsize=9,
+                fontweight='bold'
+            )
         if line_name != "UVW2":
             if line_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
                 line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"]
@@ -1092,7 +1113,8 @@ save_1d_corr_and_lightcurves_general(
     adjust_last_row_gap_inch = -0.2,
     include_extra_data = True,
     extra_data_name = "OI8446_ref_HAlpha",
-    show_histogram = False
+    show_histogram = False,
+    show_subfigure_labels=True,
 )
 
 """
