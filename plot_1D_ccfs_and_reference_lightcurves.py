@@ -56,7 +56,8 @@ def save_1d_corr_and_lightcurves_general(
         show_histogram=None,
         show_subfigure_labels=True,
         row_spacing=None,
-        line_style="-"
+        line_style="-",
+        grid=None
 ):
 
     ensure_output_dir(output_dir)
@@ -108,7 +109,8 @@ def save_1d_corr_and_lightcurves_general(
             show_histogram=show_histogram,
             show_subfigure_labels=show_subfigure_labels,
             row_spacing=row_spacing,
-            line_style=line_style
+            line_style=line_style,
+            grid=grid
         )
 
     else:
@@ -141,7 +143,8 @@ def save_1d_corr_and_lightcurves_general(
                 show_histogram=show_histogram,
                 show_subfigure_labels=show_subfigure_labels,
                 row_spacing=row_spacing,
-                line_style=line_style
+                line_style=line_style,
+                grid=grid
 
             )
 
@@ -175,7 +178,8 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
                                            show_histogram=None,
                                            show_subfigure_labels=True,
                                            row_spacing=None,
-                                           line_style="-"
+                                           line_style="-",
+                                           grid=None
                                            ):
     """
     Organizes and plots CFFs and their corresponding lightcurves
@@ -326,7 +330,8 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
                                                   show_histogram=show_histogram,
                                                   show_subfigure_labels=show_subfigure_labels,
                                                   row_spacing=row_spacing,
-                                                  line_style=line_style
+                                                  line_style=line_style,
+                                                  grid=grid
                                                   )
 
 
@@ -414,7 +419,8 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
                                                   show_histogram=None,
                                                   show_subfigure_labels=True,
                                                   row_spacing=None,
-                                                  line_style="-"
+                                                  line_style="-",
+                                                  grid=None
                                                   ):
     """
     Plots CCFs and their associated normalized lightcurves
@@ -525,7 +531,8 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
                                               ccf_show_inline_label_text = ccf_show_inline_label_text,
                                               show_histogram=show_histogram,
                                               show_subfigure_labels=show_subfigure_labels,
-                                              line_style=line_style)
+                                              line_style=line_style,
+                                              grid=grid)
 
         check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs), adjust_last_row_gap_inch=adjust_last_row_gap_inch)
 
@@ -552,7 +559,8 @@ def configure_ccfs_and_reference_axis(ax,
                                       ccf_show_inline_label_text=True,
                                       show_histogram=None,
                                       show_subfigure_labels=True,
-                                      line_style="-"):
+                                      line_style="-",
+                                      grid=None):
     """
     Configures a single subplot axis to display either a normalized lightcurve pair
     or a CCF, depending on the data provided.
@@ -690,6 +698,7 @@ def configure_ccfs_and_reference_axis(ax,
                                        lightcurve_hide_yticklabels=lightcurve_hide_yticklabels,
                                        layout_show_top_secondary_labels=layout_show_top_secondary_labels)
         ax.legend(fontsize=7, loc="upper right", frameon=False, markerfirst=False)
+        _apply_grid(ax, grid)
     else:
         ax.plot(x_values_ccfs, line_data["ccfs"], color=color)
 
@@ -741,6 +750,7 @@ def configure_ccfs_and_reference_axis(ax,
         if ccf_show_inline_label_text:
             ax.text(9, 0.90, ccfs_labels, ha='right', va='top', fontsize=7)
         configure_axes_for_ccfs(ax, row, rows, ylabel_ccfs, only_one_label, layout_show_top_secondary_labels=layout_show_top_secondary_labels)
+        _apply_grid(ax, grid)
 
 
 def configure_axes_for_lightcurves(ax, row, only_one_label=False, lightcurve_hide_yticklabels=True, layout_show_top_secondary_labels=True):
@@ -782,6 +792,8 @@ def configure_axes_for_lightcurves(ax, row, only_one_label=False, lightcurve_hid
     ax.tick_params(axis='x', which='major', direction='inout', length=4)
     ax.xaxis.set_minor_locator(MultipleLocator(1))
     ax.tick_params(axis='x', which='minor', direction='in', length=2)
+
+
 
 
 
@@ -1007,6 +1019,26 @@ def mjd_to_date(mjd):
     mjd_start_date = datetime.datetime(1858, 11, 17)  # MJD Startdatum
     return mjd_start_date + datetime.timedelta(days=mjd)
 
+
+
+def _apply_grid(ax, grid):
+    """
+    grid: None -> kein Grid
+          (minor: bool, alpha: float, linewidth: float, linestyle: str)
+    """
+    if grid is None:
+        return
+    grid_minor, grid_alpha, grid_linewidth, grid_linestyle = grid
+    ax.set_axisbelow(True)
+    ax.grid(True, which='major', axis='both',
+            alpha=grid_alpha, linewidth=grid_linewidth, linestyle=grid_linestyle)
+    if grid_minor:
+        ax.minorticks_on()
+        ax.grid(True, which='minor', axis='both',
+                alpha=max(grid_alpha*0.7, 0.05),
+                linewidth=max(grid_linewidth*0.8, 0.1),
+                linestyle=grid_linestyle)
+
 # =======================
 #   METHODENAUFRUFE
 # =======================
@@ -1134,8 +1166,12 @@ save_1d_corr_and_lightcurves_general(
     show_histogram = False,
     show_subfigure_labels=True,
     row_spacing=None,
-    line_style=":"
+    line_style=":",
+    grid=(True, 0.12, 0.3, ':')
 )
+
+
+
 
 """
 save_1d_corr_and_lightcurves_general(
