@@ -726,7 +726,7 @@ def configure_ccfs_and_reference_axis(ax,
 
             ax.text(
                 9, 0.95,
-                fr"$\mathbf{{\tau_\mathrm{{cent}} = {tau:.1f}^{{+{err_h:.1f}}}_{{-{err_l:.1f}}}}}$",
+                fr"${{\tau_\mathrm{{cent}} = {tau:.1f}^{{+{err_h:.1f}}}_{{-{err_l:.1f}}}}}$",
                 ha='right',
                 va='top',
                 fontsize=7.5
@@ -1145,7 +1145,7 @@ OI_paper_HST_UV_keyorder_HBeta = { "LyAlpha_not_optical_calibrated": ["time shif
                       "Cont1150_not_optical_calibrated": ["time shift (tau)", "HBeta", "OI8446"],
                       #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
                       }
-
+"""
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=OI_paper_keyorder_HAlpha,
@@ -1166,10 +1166,38 @@ save_1d_corr_and_lightcurves_general(
     show_histogram = False,
     show_subfigure_labels=True,
     row_spacing=None,
-    line_style=":",
+    line_style="-",
     grid=(True, 0.12, 0.3, ':')
 )
+"""
 
+OI_paper_keyorder_second_paper_HAlpha = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
+                                          "HAlpha": ["time shift (tau)", "OI8446"],
+                                          "UVW2": ["time shift (tau)",  "OI8446"],
+                      }
+
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[],
+    keyorders_dict=OI_paper_keyorder_second_paper_HAlpha,
+    file_name="OI_ccfs_and_reference_lightcurves_second_paper",
+    final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
+    combine_data=True,
+    rows=3,
+    figsize=(6, 5),
+    show_reference_label=True,
+    format_labels_as_paper = True,
+    layout_show_right_ccf_ylabel = False,
+    layout_show_top_secondary_labels = False,
+    lightcurve_hide_yticklabels = False,
+    ccf_show_inline_label_text = False,
+    adjust_last_row_gap_inch = 0.0,
+    include_extra_data = True,
+    show_histogram = False,
+    show_subfigure_labels=False,
+    row_spacing=0.2,
+    line_style=":",
+    grid=(True, 0.5, 0.3, ':')
+)
 
 
 
