@@ -54,7 +54,7 @@ def save_1d_corr_and_lightcurves_general(
         include_extra_data=False,
         extra_data_name=None,
         show_histogram=None,
-        show_subfigure_labels=None):
+        show_subfigure_labels=True):
 
     ensure_output_dir(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -166,7 +166,7 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
                                            include_extra_data=False,
                                            extra_data_name=None,
                                            show_histogram=None,
-                                           show_subfigure_labels=None):
+                                           show_subfigure_labels=True):
     """
     Organizes and plots CFFs and their corresponding lightcurves
     in subplot groups, based on specified key orders.
@@ -399,7 +399,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
                                                   ccf_show_inline_label_text=True,
                                                   adjust_last_row_gap_inch=0.0,
                                                   show_histogram=None,
-                                                  show_subfigure_labels=None):
+                                                  show_subfigure_labels=True):
     """
     Plots CCFs and their associated normalized lightcurves
     in a side-by-side subplot layout.
@@ -534,7 +534,7 @@ def configure_ccfs_and_reference_axis(ax,
                                       lightcurve_hide_yticklabels=True,
                                       ccf_show_inline_label_text=True,
                                       show_histogram=None,
-                                      show_subfigure_labels=None):
+                                      show_subfigure_labels=True):
     """
     Configures a single subplot axis to display either a normalized lightcurve pair
     or a CCF, depending on the data provided.
