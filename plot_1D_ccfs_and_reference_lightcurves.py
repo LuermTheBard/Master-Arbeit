@@ -45,7 +45,10 @@ def save_1d_corr_and_lightcurves_general(
         combine_data=False,
         campaign_label=None,
         show_reference_label=False,
-        for_paper=False, extra_data_name=None):
+        for_paper=False,
+        extra_data_name=None,
+        show_histogram=None):
+
     ensure_output_dir(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -85,7 +88,8 @@ def save_1d_corr_and_lightcurves_general(
             only_one_label=True,
             show_reference_label=show_reference_label,
             for_paper=for_paper,
-            extra_data_name=extra_data_name
+            extra_data_name=extra_data_name,
+            show_histogram=show_histogram
         )
 
     else:
@@ -107,7 +111,8 @@ def save_1d_corr_and_lightcurves_general(
                 figsize=figsize,
                 centroid_data=centroid_data,
                 only_one_label=True,
-                show_reference_label = show_reference_label
+                show_reference_label = show_reference_label,
+                show_histogram=show_histogram
 
             )
 
@@ -118,7 +123,7 @@ def save_1d_corr_and_lightcurves_general(
 
 
 def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, figsize=None, only_one_label=False, centroid_data=None, show_reference_label=False,
-                                           for_paper=False, extra_data_name=None):
+                                           for_paper=False, extra_data_name=None, show_histogram=None):
     """
     Organizes and plots CFFs and their corresponding lightcurves
     in subplot groups, based on specified key orders.
@@ -245,8 +250,22 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
         final_sorted_data_dict.update(extra_data)
 
 
-    plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs, xlabel_lightcurves, centroid_data=centroid_data,
-                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name + " " + campaign, rows=rows, cols=cols, figsize=figsize, only_one_label=only_one_label, show_reference_label=show_reference_label, for_paper=for_paper)
+    plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
+                                                  xlabel_ccfs,
+                                                  ylabel_ccfs,
+                                                  xlabel_lightcurves,
+                                                  centroid_data=centroid_data,
+                                                  save_only=save_only,
+                                                  output_dir=save_folder,
+                                                  shared_y=False,
+                                                  file_name=file_name + " " + campaign,
+                                                  rows=rows,
+                                                  cols=cols,
+                                                  figsize=figsize,
+                                                  only_one_label=only_one_label,
+                                                  show_reference_label=show_reference_label,
+                                                  for_paper=for_paper,
+                                                  show_histogram=show_histogram)
 
 
 def prepare_ccfs_references_data(data, rows, cols):
@@ -313,7 +332,7 @@ def normalize_lightcurve(y, yerr_vals, err_correction=None):
 def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs,
                                                   xlabel_lightcurves, save_only, output_dir, shared_y,
                                                   file_name, centroid_data=None, rows=4, cols=2, figsize=None, only_one_label=False, show_reference_label=False,
-                                                  for_paper=False):
+                                                  for_paper=False, show_histogram=None):
     """
     Plots CCFs and their associated normalized lightcurves
     in a side-by-side subplot layout.
@@ -399,7 +418,21 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
                 color = "black"
 
 
-            configure_ccfs_and_reference_axis(ax, row, rows, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name_and_ref_name=line_name, centroid_data=centroid_data, only_one_label=only_one_label, show_reference_label=show_reference_label, for_paper=for_paper)
+            configure_ccfs_and_reference_axis(ax,
+                                              row,
+                                              rows,
+                                              col,
+                                              ylabel_ccfs,
+                                              color,
+                                              x_values_ccfs,
+                                              line_data,
+                                              yerr,
+                                              line_name_and_ref_name=line_name,
+                                              centroid_data=centroid_data,
+                                              only_one_label=only_one_label,
+                                              show_reference_label=show_reference_label,
+                                              for_paper=for_paper,
+                                              show_histogram=show_histogram)
 
         check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs), for_paper=for_paper)
 
@@ -408,7 +441,8 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
 
 
 def configure_ccfs_and_reference_axis(ax, row, rows, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr,
-                                      line_name_and_ref_name, centroid_data=None, only_one_label=False, show_reference_label=False, for_paper=False):
+                                      line_name_and_ref_name, centroid_data=None, only_one_label=False, show_reference_label=False, for_paper=False,
+                                      show_histogram=None):
     """
     Configures a single subplot axis to display either a normalized lightcurve pair
     or a CCF, depending on the data provided.
@@ -552,7 +586,7 @@ def configure_ccfs_and_reference_axis(ax, row, rows, col, ylabel_ccfs, color, x_
             try:
 
                 ax.axvline(tau, color="grey", linestyle="--", linewidth=1)
-                if not for_paper:
+                if show_histogram:
                     ax.hist(merged_mc_correlation_data[line_name]["centroids"], bins=50, density=True, alpha=0.7, color="grey")
             except KeyError:
                 print(f"No centroid data found for line {line_name}")
@@ -950,7 +984,8 @@ save_1d_corr_and_lightcurves_general(
     figsize=(6, 8),
     show_reference_label=True,
     for_paper=True,
-    extra_data_name="OI8446_ref_HAlpha"
+    extra_data_name="OI8446_ref_HAlpha",
+    show_histogram=False
 )
 
 """
