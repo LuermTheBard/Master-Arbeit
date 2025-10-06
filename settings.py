@@ -355,6 +355,8 @@ SYMBOLES_AND_COLORS_FOR_LIGHTCURVES = {
 # in prozent
 ERR_CORRECTION = {"LyAlpha_not_optical_calibrated" : 50, "OI8446" : 20}
 
+ERR_SET = {"OI8446" : 2.5}
+
 NUMBER_MAPPING = {
  1: 'a', 2: 'b', 3: 'c', 4: 'd',
  5: 'e', 6: 'f', 7: 'g', 8: 'h',

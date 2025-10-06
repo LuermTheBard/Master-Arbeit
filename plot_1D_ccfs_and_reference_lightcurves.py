@@ -10,7 +10,7 @@ from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
 from import_data import import_1d_correlation_data, import_1d_lightcurve_data, load_centroid_data_by_reference, \
     import_centroid_and_mc_data
 from plot_utils import format_label, calculate_standard_error_for_lightcurves, ensure_output_dir
-from settings import SYMBOLES_AND_COLORS_FOR_LIGHTCURVES, NUMBER_MAPPING, ERR_CORRECTION
+from settings import SYMBOLES_AND_COLORS_FOR_LIGHTCURVES, NUMBER_MAPPING, ERR_CORRECTION, ERR_SET
 
 # =======================
 #   KONSTANTEN & EINSTELLUNGEN
@@ -317,8 +317,8 @@ def prepare_ccfs_references_data(data, rows, cols):
 
 
 
-def normalize_lightcurve(y, yerr_vals, err_correction=None):
-    yerr_vals = calculate_standard_error_for_lightcurves(y, yerr_vals, err_correction=err_correction)
+def normalize_lightcurve(y, yerr_vals, err_correction=None, err_set=None):
+    yerr_vals = calculate_standard_error_for_lightcurves(y, yerr_vals, err_correction=err_correction, err_set=err_set)
     y_mean = y.mean()
     y_std = y.std()
     y_norm = (y - y_mean) / y_std
@@ -481,12 +481,16 @@ def configure_ccfs_and_reference_axis(ax, row, rows, col, ylabel_ccfs, color, x_
 
         err_corr = ERR_CORRECTION.get(line_name, None)
         ref_err_corr = ERR_CORRECTION.get(reference_name, None)
+        err_set = ERR_SET.get(line_name, None)
+        ref_err_set = ERR_SET.get(reference_name, None)
 
     else:
         line_name = None
         reference_name = None
         err_corr = None
         ref_err_corr = None
+        err_set = None
+        ref_err_set = None
 
     if len(line_data) == 0:
         return
@@ -498,10 +502,12 @@ def configure_ccfs_and_reference_axis(ax, row, rows, col, ylabel_ccfs, color, x_
 
         y_norm, yerr_norm = normalize_lightcurve(line_data["lightcurves"][y_key],
                                                  line_data["lightcurves"][yerr_key],
-                                                 err_correction=err_corr)
+                                                 err_correction=err_corr,
+                                                 err_set=err_set)
         y_ref_norm, yerr_ref_norm = normalize_lightcurve(line_data["lightcurves_ref"][y_key],
                                                           line_data["lightcurves_ref"][yerr_key],
-                                                         err_correction=ref_err_corr)
+                                                         err_correction=ref_err_corr,
+                                                         err_set=ref_err_set)
 
         ax.text(
             57582, 2.5,  # Position relativ zur Achse (x, y)
@@ -581,7 +587,7 @@ def configure_ccfs_and_reference_axis(ax, row, rows, col, ylabel_ccfs, color, x_
                 fr"$\mathbf{{\tau_\mathrm{{cent}} = {tau:.1f}^{{+{err_h:.1f}}}_{{-{err_l:.1f}}}}}$",
                 ha='right',
                 va='top',
-                fontsize=7
+                fontsize=7.5
             )
             try:
 
