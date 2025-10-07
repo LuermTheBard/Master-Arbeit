@@ -45,7 +45,21 @@ def save_1d_corr_and_lightcurves_general(
         combine_data=False,
         campaign_label=None,
         show_reference_label=False,
-        for_paper=False, extra_data_name=None):
+        format_labels_as_paper=False,
+        layout_show_right_ccf_ylabel=True,
+        layout_show_top_secondary_labels=True,
+        lightcurve_hide_yticklabels=True,
+        ccf_show_inline_label_text=True,
+        adjust_last_row_gap_inch=0.0,
+        include_extra_data=False,
+        extra_data_name=None,
+        show_histogram=None,
+        show_subfigure_labels=True,
+        row_spacing=None,
+        line_style="-",
+        grid=None
+):
+
     ensure_output_dir(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -84,8 +98,19 @@ def save_1d_corr_and_lightcurves_general(
             centroid_data=centroid_data,
             only_one_label=True,
             show_reference_label=show_reference_label,
-            for_paper=for_paper,
-            extra_data_name=extra_data_name
+            format_labels_as_paper=format_labels_as_paper,
+            layout_show_right_ccf_ylabel = layout_show_right_ccf_ylabel,
+            layout_show_top_secondary_labels = layout_show_top_secondary_labels,
+            lightcurve_hide_yticklabels = lightcurve_hide_yticklabels,
+            ccf_show_inline_label_text = ccf_show_inline_label_text,
+            adjust_last_row_gap_inch = adjust_last_row_gap_inch,
+            include_extra_data = include_extra_data,
+            extra_data_name=extra_data_name,
+            show_histogram=show_histogram,
+            show_subfigure_labels=show_subfigure_labels,
+            row_spacing=row_spacing,
+            line_style=line_style,
+            grid=grid
         )
 
     else:
@@ -107,7 +132,19 @@ def save_1d_corr_and_lightcurves_general(
                 figsize=figsize,
                 centroid_data=centroid_data,
                 only_one_label=True,
-                show_reference_label = show_reference_label
+                show_reference_label=show_reference_label,
+                format_labels_as_paper=format_labels_as_paper,
+                layout_show_right_ccf_ylabel=layout_show_right_ccf_ylabel,
+                layout_show_top_secondary_labels=layout_show_top_secondary_labels,
+                lightcurve_hide_yticklabels=lightcurve_hide_yticklabels,
+                ccf_show_inline_label_text=ccf_show_inline_label_text,
+                adjust_last_row_gap_inch=adjust_last_row_gap_inch,
+                include_extra_data=include_extra_data,
+                show_histogram=show_histogram,
+                show_subfigure_labels=show_subfigure_labels,
+                row_spacing=row_spacing,
+                line_style=line_style,
+                grid=grid
 
             )
 
@@ -117,8 +154,33 @@ def save_1d_corr_and_lightcurves_general(
 # =======================
 
 
-def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, output_dir, key_orders, save_only=False, file_name=None, final_key_order=None, rows=4, cols=2, figsize=None, only_one_label=False, centroid_data=None, show_reference_label=False,
-                                           for_paper=False, extra_data_name=None):
+def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
+                                           campaign,
+                                           output_dir,
+                                           key_orders,
+                                           save_only=False,
+                                           file_name=None,
+                                           final_key_order=None,
+                                           rows=4,
+                                           cols=2,
+                                           figsize=None,
+                                           only_one_label=False,
+                                           centroid_data=None,
+                                           show_reference_label=False,
+                                           format_labels_as_paper=False,
+                                           layout_show_right_ccf_ylabel=True,
+                                           layout_show_top_secondary_labels=True,
+                                           lightcurve_hide_yticklabels=True,
+                                           ccf_show_inline_label_text=True,
+                                           adjust_last_row_gap_inch=0.0,
+                                           include_extra_data=False,
+                                           extra_data_name=None,
+                                           show_histogram=None,
+                                           show_subfigure_labels=True,
+                                           row_spacing=None,
+                                           line_style="-",
+                                           grid=None
+                                           ):
     """
     Organizes and plots CFFs and their corresponding lightcurves
     in subplot groups, based on specified key orders.
@@ -227,7 +289,7 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
         sorted(final_sorted_data_dict.items(),
                key=lambda item: final_sort_keys(item[0])))
 
-    if for_paper and extra_data_name:
+    if include_extra_data and extra_data_name:
 
         line, reference = extra_data_name.split("_ref_")
 
@@ -245,8 +307,32 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict, campaign, 
         final_sorted_data_dict.update(extra_data)
 
 
-    plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs, xlabel_lightcurves, centroid_data=centroid_data,
-                                                  save_only=save_only, output_dir=save_folder, shared_y=False, file_name=file_name + " " + campaign, rows=rows, cols=cols, figsize=figsize, only_one_label=only_one_label, show_reference_label=show_reference_label, for_paper=for_paper)
+    plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
+                                                  xlabel_ccfs,
+                                                  ylabel_ccfs,
+                                                  xlabel_lightcurves,
+                                                  centroid_data=centroid_data,
+                                                  save_only=save_only,
+                                                  output_dir=save_folder,
+                                                  shared_y=False,
+                                                  file_name=file_name + " " + campaign,
+                                                  rows=rows,
+                                                  cols=cols,
+                                                  figsize=figsize,
+                                                  only_one_label=only_one_label,
+                                                  show_reference_label=show_reference_label,
+                                                  format_labels_as_paper=format_labels_as_paper,
+                                                  layout_show_right_ccf_ylabel = layout_show_right_ccf_ylabel,
+                                                  layout_show_top_secondary_labels = layout_show_top_secondary_labels,
+                                                  lightcurve_hide_yticklabels = lightcurve_hide_yticklabels,
+                                                  ccf_show_inline_label_text = ccf_show_inline_label_text,
+                                                  adjust_last_row_gap_inch = adjust_last_row_gap_inch,
+                                                  show_histogram=show_histogram,
+                                                  show_subfigure_labels=show_subfigure_labels,
+                                                  row_spacing=row_spacing,
+                                                  line_style=line_style,
+                                                  grid=grid
+                                                  )
 
 
 def prepare_ccfs_references_data(data, rows, cols):
@@ -310,10 +396,32 @@ def normalize_lightcurve(y, yerr_vals, err_correction=None, err_set=None):
 #   PLOT-ERSTELLUNG
 # =======================
 
-def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel_ccfs, ylabel_ccfs,
-                                                  xlabel_lightcurves, save_only, output_dir, shared_y,
-                                                  file_name, centroid_data=None, rows=4, cols=2, figsize=None, only_one_label=False, show_reference_label=False,
-                                                  for_paper=False):
+def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
+                                                  xlabel_ccfs,
+                                                  ylabel_ccfs,
+                                                  xlabel_lightcurves,
+                                                  save_only,
+                                                  output_dir,
+                                                  shared_y,
+                                                  file_name,
+                                                  centroid_data=None,
+                                                  rows=4,
+                                                  cols=2,
+                                                  figsize=None,
+                                                  only_one_label=False,
+                                                  show_reference_label=False,
+                                                  format_labels_as_paper=False,
+                                                  layout_show_right_ccf_ylabel=True,
+                                                  layout_show_top_secondary_labels=True,
+                                                  lightcurve_hide_yticklabels=True,
+                                                  ccf_show_inline_label_text=True,
+                                                  adjust_last_row_gap_inch=0.0,
+                                                  show_histogram=None,
+                                                  show_subfigure_labels=True,
+                                                  row_spacing=None,
+                                                  line_style="-",
+                                                  grid=None
+                                                  ):
     """
     Plots CCFs and their associated normalized lightcurves
     in a side-by-side subplot layout.
@@ -370,15 +478,20 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
         for i in range(1, rows):
             axes[i, 1].sharex(axes[0, 1])
 
-        fig.subplots_adjust(hspace=0, wspace=0)
+            fig.subplots_adjust(hspace=(0 if row_spacing is None else float(row_spacing)), wspace=0)
         #fig.tight_layout()
         if only_one_label is True:
             # Linke Seite oben (y-Achse): "Normalized Lightcurves"
             fig.text(0.06, 0.5, "Normalized Flux", va='center', ha='left', rotation='vertical', fontsize=12)
 
-            if not for_paper:
-                # Rechte Seite unten (y-Achse): ylabel_ccfs
-                fig.text(1.0, 0.5, ylabel_ccfs, va='center', ha='right', rotation='vertical', fontsize=12)
+            if layout_show_right_ccf_ylabel:
+                fig.text(1.0,
+                         0.5,
+                         ylabel_ccfs,
+                         va='center',
+                         ha='right',
+                         rotation='vertical',
+                         fontsize=12)
 
         for i, (line_name, line_data) in enumerate(current_data):
 
@@ -399,16 +512,55 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict, xlabel
                 color = "black"
 
 
-            configure_ccfs_and_reference_axis(ax, row, rows, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr, line_name_and_ref_name=line_name, centroid_data=centroid_data, only_one_label=only_one_label, show_reference_label=show_reference_label, for_paper=for_paper)
+            configure_ccfs_and_reference_axis(ax,
+                                              row,
+                                              rows,
+                                              col,
+                                              ylabel_ccfs,
+                                              color,
+                                              x_values_ccfs,
+                                              line_data,
+                                              yerr,
+                                              line_name_and_ref_name=line_name,
+                                              centroid_data=centroid_data,
+                                              only_one_label=only_one_label,
+                                              show_reference_label=show_reference_label,
+                                              format_labels_as_paper = format_labels_as_paper,
+                                              layout_show_top_secondary_labels = layout_show_top_secondary_labels,
+                                              lightcurve_hide_yticklabels = lightcurve_hide_yticklabels,
+                                              ccf_show_inline_label_text = ccf_show_inline_label_text,
+                                              show_histogram=show_histogram,
+                                              show_subfigure_labels=show_subfigure_labels,
+                                              line_style=line_style,
+                                              grid=grid)
 
-        check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs), for_paper=for_paper)
+        check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs), adjust_last_row_gap_inch=adjust_last_row_gap_inch)
 
         finalize_figure_ccfs_and_reference(fig, file_name, save_only=save_only, output_dir=output_dir)
 
 
 
-def configure_ccfs_and_reference_axis(ax, row, rows, col, ylabel_ccfs, color, x_values_ccfs, line_data, yerr,
-                                      line_name_and_ref_name, centroid_data=None, only_one_label=False, show_reference_label=False, for_paper=False):
+def configure_ccfs_and_reference_axis(ax,
+                                      row,
+                                      rows,
+                                      col,
+                                      ylabel_ccfs,
+                                      color,
+                                      x_values_ccfs,
+                                      line_data,
+                                      yerr,
+                                      line_name_and_ref_name,
+                                      centroid_data=None,
+                                      only_one_label=False,
+                                      show_reference_label=False,
+                                      format_labels_as_paper=False,
+                                      layout_show_top_secondary_labels=True,
+                                      lightcurve_hide_yticklabels=True,
+                                      ccf_show_inline_label_text=True,
+                                      show_histogram=None,
+                                      show_subfigure_labels=True,
+                                      line_style="-",
+                                      grid=None):
     """
     Configures a single subplot axis to display either a normalized lightcurve pair
     or a CCF, depending on the data provided.
@@ -475,54 +627,78 @@ def configure_ccfs_and_reference_axis(ax, row, rows, col, ylabel_ccfs, color, x_
                                                          err_correction=ref_err_corr,
                                                          err_set=ref_err_set)
 
-        ax.text(
-            57582, 2.5,  # Position relativ zur Achse (x, y)
-            f"{NUMBER_MAPPING[row + 1]})",  # Dein Label
-            ha='right', va='top',
-            fontsize=9,
-            fontweight='bold'  # macht den Text fett
-        )
+        if show_subfigure_labels:
+            ax.text(
+                57582, 2.5,  # Position
+                f"{NUMBER_MAPPING[row + 1]})",
+                ha='right', va='top',
+                fontsize=9,
+                fontweight='bold'
+            )
         if line_name != "UVW2":
             if line_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
                 line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"]
-                fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}-"
+                fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}{line_style}"
                 markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["markersize"]
                 alpha = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name].get("alpha", 1.0)
             else:
                 line_color = color[0]
-                fmt = ".-"
+                fmt = f".{line_style}"
                 markersize = 3
                 alpha = 1.0
 
             if reference_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
                 ref_line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["color"]
-                ref_fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]['symbole']}-"
+                ref_fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]['symbole']}{line_style}"
                 ref_markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["markersize"]
                 ref_alpha = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name].get("alpha", 1.0)
             else:
                 ref_line_color = color[0]
-                ref_fmt = ".-"
+                ref_fmt = f".{line_style}"
                 ref_markersize = 3
                 ref_alpha = 1.0
 
-
-
-            ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
-                        label=format_label(line_name, as_latex=False, for_paper=for_paper), color=line_color, fmt=fmt, capsize=2,
-                        markersize=markersize, alpha=alpha, linewidth=0.5, elinewidth=0.5)
+            ax.errorbar(line_data["lightcurves"][x_key],
+                        y_norm,
+                        yerr=yerr_norm,
+                        label = format_label(line_name,
+                                             as_latex=False,
+                                             for_paper=format_labels_as_paper),
+                        color = line_color,
+                        fmt = fmt,
+                        capsize = 2,
+                        markersize=markersize,
+                        alpha=alpha,
+                        linewidth=0.5,
+                        elinewidth=0.5)
             if show_reference_label:
 
-                ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, label=format_label(reference_name, as_latex=False, for_paper=for_paper), color=ref_line_color, fmt=ref_fmt, capsize=2, markersize=ref_markersize, alpha=ref_alpha, linewidth=0.5, elinewidth=0.5)
+                ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, label=format_label(reference_name, as_latex=False, for_paper=format_labels_as_paper), color=ref_line_color, fmt=ref_fmt, capsize=2, markersize=ref_markersize, alpha=ref_alpha, linewidth=0.5, elinewidth=0.5)
             else:
                ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, color=ref_line_color, fmt=ref_fmt, capsize=2,
                            markersize=ref_markersize, alpha=ref_alpha, linewidth=0.5, elinewidth=0.5)
 
         else:
-            ax.errorbar(line_data["lightcurves"][x_key], y_norm, yerr=yerr_norm,
-                        label=format_label(line_name, as_latex=False, for_paper=for_paper), color=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"], fmt=f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}-", alpha=0.8, capsize=2,  markersize=3, linewidth=0.5, elinewidth=0.5)
-
-        configure_axes_for_lightcurves(ax, row, only_one_label, for_paper=for_paper)
+            ax.errorbar(line_data["lightcurves"][x_key],
+                        y_norm,
+                        yerr=yerr_norm,
+                        label = format_label(line_name,
+                                             as_latex=False,
+                                             for_paper=format_labels_as_paper),
+                        color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"],
+                        fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}{line_style}",
+                        alpha = 0.8,
+                        capsize = 2,
+                        markersize = 3,
+                        linewidth = 0.5,
+                        elinewidth = 0.5)
+        configure_axes_for_lightcurves(ax,
+                                       row,
+                                       only_one_label,
+                                       lightcurve_hide_yticklabels=lightcurve_hide_yticklabels,
+                                       layout_show_top_secondary_labels=layout_show_top_secondary_labels)
         ax.legend(fontsize=7, loc="upper right", frameon=False, markerfirst=False)
+        _apply_grid(ax, grid)
     else:
         ax.plot(x_values_ccfs, line_data["ccfs"], color=color)
 
@@ -550,7 +726,7 @@ def configure_ccfs_and_reference_axis(ax, row, rows, col, ylabel_ccfs, color, x_
 
             ax.text(
                 9, 0.95,
-                fr"$\mathbf{{\tau_\mathrm{{cent}} = {tau:.1f}^{{+{err_h:.1f}}}_{{-{err_l:.1f}}}}}$",
+                fr"${{\tau_\mathrm{{cent}} = {tau:.1f}^{{+{err_h:.1f}}}_{{-{err_l:.1f}}}}}$",
                 ha='right',
                 va='top',
                 fontsize=7.5
@@ -558,7 +734,7 @@ def configure_ccfs_and_reference_axis(ax, row, rows, col, ylabel_ccfs, color, x_
             try:
 
                 ax.axvline(tau, color="grey", linestyle="--", linewidth=1)
-                if not for_paper:
+                if show_histogram:
                     ax.hist(merged_mc_correlation_data[line_name]["centroids"], bins=50, density=True, alpha=0.7, color="grey")
             except KeyError:
                 print(f"No centroid data found for line {line_name}")
@@ -570,12 +746,15 @@ def configure_ccfs_and_reference_axis(ax, row, rows, col, ylabel_ccfs, color, x_
         ccfs_labels = format_label(line_name, as_latex=False).split(" ")[0]
         if "$" in ccfs_labels:
             ccfs_labels = ccfs_labels + "$"
-        if not for_paper:
+
+        if ccf_show_inline_label_text:
             ax.text(9, 0.90, ccfs_labels, ha='right', va='top', fontsize=7)
-        configure_axes_for_ccfs(ax, row, rows, ylabel_ccfs, only_one_label, for_paper=for_paper)
+        configure_axes_for_ccfs(ax, row, rows, ylabel_ccfs, only_one_label, layout_show_top_secondary_labels=layout_show_top_secondary_labels)
+        _apply_grid(ax, grid)
 
 
-def configure_axes_for_lightcurves(ax, row, only_one_label=False, for_paper=False):
+def configure_axes_for_lightcurves(ax, row, only_one_label=False, lightcurve_hide_yticklabels=True, layout_show_top_secondary_labels=True):
+
     """
     Configures axis formatting and ticks for a normalized lightcurve subplot.
 
@@ -605,7 +784,7 @@ def configure_axes_for_lightcurves(ax, row, only_one_label=False, for_paper=Fals
     ax.tick_params(axis='y', which='major', direction='in', length=4)
     ax.tick_params(axis='y', which='minor', direction='in', length=2)
     ax.set_ylim(-3, 3)
-    if not for_paper:
+    if lightcurve_hide_yticklabels:
         ax.set_yticklabels([])
 
 
@@ -613,6 +792,8 @@ def configure_axes_for_lightcurves(ax, row, only_one_label=False, for_paper=Fals
     ax.tick_params(axis='x', which='major', direction='inout', length=4)
     ax.xaxis.set_minor_locator(MultipleLocator(1))
     ax.tick_params(axis='x', which='minor', direction='in', length=2)
+
+
 
 
 
@@ -624,13 +805,13 @@ def configure_axes_for_lightcurves(ax, row, only_one_label=False, for_paper=Fals
 
     ax_top.set_xticklabels([])
 
-    if row == 0 and not for_paper:
+    if row == 0 and layout_show_top_secondary_labels:
         ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
         plt.setp(ax_top.get_xticklabels(), rotation=45, ha='right')
 
 
 
-def configure_axes_for_ccfs(ax, row, nrows, ylabel_ccfs, only_one_label=False, for_paper=False):
+def configure_axes_for_ccfs(ax, row, nrows, ylabel_ccfs, only_one_label=False, layout_show_top_secondary_labels=True):
     ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
     ax.set_xlim(-5, 10)
     ax.set_ylim(0, 1)
@@ -671,15 +852,14 @@ def configure_axes_for_ccfs(ax, row, nrows, ylabel_ccfs, only_one_label=False, f
     ax_top.tick_params(axis='x', which='minor', direction='in', length=2)
     ax_top.set_xticklabels([])
 
-    if row == 0 and not for_paper:
+    if row == 0 and layout_show_top_secondary_labels:
         ax_top.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
 
 
 
 def check_for_empty_rows_ccfs_and_reference(
     axes, fig, x_label,
-    for_paper=False,
-    paper_gap_inch=-0.2,   # Reduzierter Abstand zur vorletzten Reihe (in Zoll)
+    adjust_last_row_gap_inch=0.0,   # z.B. -0.2 für Paper-Layout
     xlabel_pad=2
 ):
     def _is_valid_axis(ax):
@@ -724,10 +904,10 @@ def check_for_empty_rows_ccfs_and_reference(
             lbl = x_label[c] if isinstance(x_label, tuple) else x_label
             axl.set_xlabel(lbl, labelpad=xlabel_pad)
 
-    # 5) Im Paper-Modus: letzte Reihe nach oben schieben (kleinerer Abstand zur vorletzten)
-    if for_paper and penultimate_row is not None:
+    # 5) Optional letzte Reihe nach oben schieben (kleinerer Abstand zur vorletzten)
+    if (adjust_last_row_gap_inch != 0.0) and (penultimate_row is not None):
         fig_w, fig_h = fig.get_size_inches()
-        dy_rel = paper_gap_inch / fig_h  # Zoll -> Figure-Fraction
+        dy_rel = adjust_last_row_gap_inch / fig_h  # Zoll -> Figure-Fraction
         for c in range(2):
             ax_last = axes[lowest_row, c]
             if ax_last not in fig.axes:
@@ -839,6 +1019,26 @@ def mjd_to_date(mjd):
     mjd_start_date = datetime.datetime(1858, 11, 17)  # MJD Startdatum
     return mjd_start_date + datetime.timedelta(days=mjd)
 
+
+
+def _apply_grid(ax, grid):
+    """
+    grid: None -> kein Grid
+          (minor: bool, alpha: float, linewidth: float, linestyle: str)
+    """
+    if grid is None:
+        return
+    grid_minor, grid_alpha, grid_linewidth, grid_linestyle = grid
+    ax.set_axisbelow(True)
+    ax.grid(True, which='major', axis='both',
+            alpha=grid_alpha, linewidth=grid_linewidth, linestyle=grid_linestyle)
+    if grid_minor:
+        ax.minorticks_on()
+        ax.grid(True, which='minor', axis='both',
+                alpha=max(grid_alpha*0.7, 0.05),
+                linewidth=max(grid_linewidth*0.8, 0.1),
+                linestyle=grid_linestyle)
+
 # =======================
 #   METHODENAUFRUFE
 # =======================
@@ -945,7 +1145,7 @@ OI_paper_HST_UV_keyorder_HBeta = { "LyAlpha_not_optical_calibrated": ["time shif
                       "Cont1150_not_optical_calibrated": ["time shift (tau)", "HBeta", "OI8446"],
                       #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
                       }
-
+"""
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=OI_paper_keyorder_HAlpha,
@@ -955,9 +1155,51 @@ save_1d_corr_and_lightcurves_general(
     rows=5,
     figsize=(6, 8),
     show_reference_label=True,
-    for_paper=True,
-    extra_data_name="OI8446_ref_HAlpha"
+    format_labels_as_paper = True,
+    layout_show_right_ccf_ylabel = False,
+    layout_show_top_secondary_labels = False,
+    lightcurve_hide_yticklabels = False,
+    ccf_show_inline_label_text = False,
+    adjust_last_row_gap_inch = -0.2,
+    include_extra_data = True,
+    extra_data_name = "OI8446_ref_HAlpha",
+    show_histogram = False,
+    show_subfigure_labels=True,
+    row_spacing=None,
+    line_style="-",
+    grid=(True, 0.12, 0.3, ':')
 )
+"""
+
+OI_paper_keyorder_second_paper_HAlpha = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
+                                          "HAlpha": ["time shift (tau)", "OI8446"],
+                                          "UVW2": ["time shift (tau)",  "OI8446"],
+                      }
+
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[],
+    keyorders_dict=OI_paper_keyorder_second_paper_HAlpha,
+    file_name="OI_ccfs_and_reference_lightcurves_second_paper",
+    final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
+    combine_data=True,
+    rows=3,
+    figsize=(6, 5),
+    show_reference_label=True,
+    format_labels_as_paper = True,
+    layout_show_right_ccf_ylabel = False,
+    layout_show_top_secondary_labels = False,
+    lightcurve_hide_yticklabels = False,
+    ccf_show_inline_label_text = False,
+    adjust_last_row_gap_inch = 0.0,
+    include_extra_data = True,
+    show_histogram = False,
+    show_subfigure_labels=False,
+    row_spacing=0.2,
+    line_style=":",
+    grid=(True, 0.5, 0.3, ':')
+)
+
+
 
 """
 save_1d_corr_and_lightcurves_general(
@@ -969,7 +1211,13 @@ save_1d_corr_and_lightcurves_general(
     rows=5,
     figsize=(6, 8),
     show_reference_label=True,
-    for_paper=True,
+    format_labels_as_paper=True,
+    layout_show_right_ccf_ylabel=False,
+    layout_show_top_secondary_labels=False,
+    lightcurve_hide_yticklabels=False,
+    ccf_show_inline_label_text=False,
+    adjust_last_row_gap_inch=-0.2,
+    include_extra_data=True,
     extra_data_name="OI8446_ref_HAlpha"
 )
 
@@ -982,7 +1230,13 @@ save_1d_corr_and_lightcurves_general(
     rows=5,
     figsize=(6, 8),
     show_reference_label=True,
-    for_paper=True,
+    format_labels_as_paper=True,
+    layout_show_right_ccf_ylabel=False,
+    layout_show_top_secondary_labels=False,
+    lightcurve_hide_yticklabels=False,
+    ccf_show_inline_label_text=False,
+    adjust_last_row_gap_inch=-0.2,
+    include_extra_data=True,
     extra_data_name="OI8446_ref_HBeta"
 )
 
@@ -996,7 +1250,13 @@ save_1d_corr_and_lightcurves_general(
     rows=5,
     figsize=(6, 8),
     show_reference_label=True,
-    for_paper=True,
+    format_labels_as_paper=True,
+    layout_show_right_ccf_ylabel=False,
+    layout_show_top_secondary_labels=False,
+    lightcurve_hide_yticklabels=False,
+    ccf_show_inline_label_text=False,
+    adjust_last_row_gap_inch=-0.2,
+    include_extra_data=True,
     extra_data_name="OI8446_ref_HBeta"
 )
 """
