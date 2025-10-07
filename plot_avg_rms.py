@@ -2,6 +2,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import MaxNLocator
 
 from import_data import import_fits_data, find_prime_data_folder
 from settings import All_LINES, All_LINE_GROUPS, DEFAULT_OUTPUT_DIR
@@ -421,6 +422,8 @@ def plot_spectra(fits_data, spec_file=None, xlim=None, ylim=None, ax=None, show_
 
     ax.tick_params(axis='both', labelsize=14)
 
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+
     if spec_file is not None:
         fig.savefig(spec_file, dpi=300)
         fig.savefig(f"{spec_file}.png", dpi=300)
@@ -444,7 +447,7 @@ def plot_calibrated_and_uncalibrated_spectra_together(output_dir=DEFAULT_OUTPUT_
     ylim = (0, 13.999)
 
     fig, (ax1, ax2) = plt.subplots(
-        2, 1, sharex=True, figsize=(10, 8),
+        2, 1, sharex=True, figsize=(10, 6),
         gridspec_kw={"hspace": 0}
     )
 
@@ -478,7 +481,7 @@ def plot_calibrated_and_uncalibrated_spectra_together(output_dir=DEFAULT_OUTPUT_
 
 def plot_avg_rms_together(output_dir=DEFAULT_OUTPUT_DIR):
     fig, (ax1, ax2) = plt.subplots(
-        2, 1, sharex=True, figsize=(10, 8),
+        2, 1, sharex=True, figsize=(10, 6),
         gridspec_kw={"hspace": 0}  # Subplots dicht übereinander
     )
 
