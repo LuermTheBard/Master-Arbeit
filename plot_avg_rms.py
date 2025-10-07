@@ -196,9 +196,9 @@ def plot_avg_rms_spectra(
     ax.plot(x_filtered, y1_filtered, label=f"{title1} (shifted by {shift_factor_1:.1f})", linestyle="-", color="blue")
     ax.plot(x_filtered, y2_scaled, label=f"{title2} (scaled by {scale_factor:.1f}, shifted by {shift_factor_2:.1f})", linestyle="-", color="orange")
 
-    ax.set_xlabel(xlabel, fontsize=11)
+    ax.set_xlabel(xlabel, fontsize=12)
     if show_ylable:
-        ax.set_ylabel(f"{new_ylabel} + const.", fontsize=11)
+        ax.set_ylabel(f"{new_ylabel} + const.", fontsize=12)
 
     if log_scale:
         ax.set_yscale("log")
@@ -210,9 +210,9 @@ def plot_avg_rms_spectra(
         ax.set_ylim(ylim)
 
     # ax.grid(visible=True, which="both", linestyle="--", linewidth=0.5)
-    ax.legend(fontsize=7, loc="upper right", frameon=False, markerfirst=False)
+    ax.legend(fontsize=13, loc="upper right", frameon=False, markerfirst=False)
 
-    ax.tick_params(axis='both', labelsize=11)
+    ax.tick_params(axis='both', labelsize=16)
 
 
 
@@ -444,30 +444,30 @@ def plot_calibrated_and_uncalibrated_spectra_together(output_dir=DEFAULT_OUTPUT_
     ylim = (0, 13.999)
 
     fig, (ax1, ax2) = plt.subplots(
-        2, 1, sharex=True, figsize=(9, 8),
+        2, 1, sharex=True, figsize=(10, 8),
         gridspec_kw={"hspace": 0}
     )
 
     # Oberer Plot: uncalibrated
     _, _, ylabel = plot_spectra(uncalibrated_fits_data, xlim=xlim, ylim=ylim,
                                 ax=ax1, show_ylabel=False)
-    ax1.text(0.02, 0.95, "Original", transform=ax1.transAxes,
-             ha="left", va="top", fontsize=14)
+    ax1.text(0.95, 0.95, "Original", transform=ax1.transAxes,
+             ha="right", va="top", fontsize=18)
 
     # Unterer Plot: calibrated
     plot_spectra(calibrated_fits_data, xlim=xlim, ylim=ylim,
                  ax=ax2, show_ylabel=False)
-    ax2.text(0.02, 0.95, "Intercalibrated", transform=ax2.transAxes,
-             ha="left", va="top", fontsize=14)
+    ax2.text(0.95, 0.95, "Intercalibrated", transform=ax2.transAxes,
+             ha="right", va="top", fontsize=18)
 
     # X-Achse nur unten beschriften
-    ax2.set_xlabel(r"Rest Wavelength $[\mathrm{\AA}]$", fontsize=14)
+    ax2.set_xlabel(r"Rest Wavelength $[\mathrm{\AA}]$", fontsize=18)
     for ax in (ax1, ax2):
         ax.label_outer()
 
     # gemeinsames Y-Label
     fig.text(0.02, 0.5, f"{ylabel}",
-             va="center", rotation="vertical", fontsize=14)
+             va="center", rotation="vertical", fontsize=18)
 
     plt.tight_layout(rect=[0.05, 0, 1, 1])
     fig.savefig(output_dir / "avg_rms_spec" / "comparison_spectra.pdf", dpi=300)
@@ -478,7 +478,7 @@ def plot_calibrated_and_uncalibrated_spectra_together(output_dir=DEFAULT_OUTPUT_
 
 def plot_avg_rms_together(output_dir=DEFAULT_OUTPUT_DIR):
     fig, (ax1, ax2) = plt.subplots(
-        2, 1, sharex=True, figsize=(9, 8),
+        2, 1, sharex=True, figsize=(10, 8),
         gridspec_kw={"hspace": 0}  # Subplots dicht übereinander
     )
 
@@ -493,22 +493,22 @@ def plot_avg_rms_together(output_dir=DEFAULT_OUTPUT_DIR):
     # Oberer Plot
     _,_,ylabel = plot_avg_rms_spec(input_dir=uncalibrate_avg_rms_data_path, xlim=xlim, ylim=ylim, no_description=True, ax=ax1, show_ylabel=False)
     ax1.text(0.3, 0.95, "Original",
-             transform=ax1.transAxes, ha="left", va="top", fontsize=14)
+             transform=ax1.transAxes, ha="left", va="top", fontsize=18)
 
     # Unterer Plot
     plot_avg_rms_spec(input_dir=calibrate_avg_rms_data_path, xlim=xlim, ylim=ylim, no_description=True, ax=ax2, show_ylabel=False)
     ax2.text(0.3, 0.95, "Intercalibrated",
-             transform=ax2.transAxes, ha="left", va="top", fontsize=14)
+             transform=ax2.transAxes, ha="left", va="top", fontsize=18)
 
     # Gemeinsame X-Achse nur unten beschriften
-    ax2.set_xlabel("Rest Wavelength [Å]", fontsize=14)
+    ax2.set_xlabel("Rest Wavelength [Å]", fontsize=18)
     for ax in (ax1, ax2):
         ax.label_outer()
 
     # Zentrale Y-Achsenbeschriftung (für beide Plots gemeinsam)
     fig.text(0.02, 0.5,
              f"{ylabel} + const.",
-             va="center", rotation="vertical", fontsize=14)
+             va="center", rotation="vertical", fontsize=18)
 
     plt.tight_layout(rect=[0.05, 0, 1, 1])  # Platz für Y-Label lassen
     fig.savefig(output_dir / "avg_rms_spec" / "comparison_avg_rms.pdf", dpi=300)
@@ -516,8 +516,6 @@ def plot_avg_rms_together(output_dir=DEFAULT_OUTPUT_DIR):
     plt.show()
     return fig, (ax1, ax2)
 
-
-import numpy as np
 
 def measure_line_flux(
     fits_data: dict,
@@ -677,7 +675,7 @@ def get_line_flux(line_window: tuple,cont_windows: tuple):
 
 # get_line_flux(None, None)
 
-plot_avg_rms_spec(file_name='avg_rms_spec.pdf')
+#plot_avg_rms_spec(file_name='avg_rms_spec.pdf')
 #plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1800), ylim=(3, 70), scale_factor=5, shift_factor=(10, 0), line_length=3)
-#plot_avg_rms_together()
-#plot_calibrated_and_uncalibrated_spectra_together()
+plot_avg_rms_together()
+plot_calibrated_and_uncalibrated_spectra_together()
