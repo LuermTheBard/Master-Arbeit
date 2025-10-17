@@ -253,7 +253,14 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
 
     if col == 0:
         if row == 0 and line_lightcurves:
-            ax.set_ylabel((r"$F_{\lambda}$ $[\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, \mathrm{\AA}^{-1}]$"), fontsize=12)
+            ylabel = (r"$F_{\lambda}$ $[\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, \mathrm{\AA}^{-1}]$")
+
+            exponent_value = -15
+            latex_exponent = f"10^{{{exponent_value}}}"
+
+            ylabel_parts = ylabel.split("[")
+            new_ylabel = ylabel_parts[0] + f"[{latex_exponent} " + ylabel_parts[1]
+            ax.set_ylabel(new_ylabel, fontsize=12)
         else:
             ax.set_ylabel(ylabel, fontsize=12)
         ax.yaxis.set_label_coords(-0.15, 0.5)
