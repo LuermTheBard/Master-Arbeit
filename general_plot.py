@@ -230,6 +230,8 @@ def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_labe
             fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
         else:
             fig.suptitle(f'{title}', fontsize=14)
+    else:
+        title = ""
 
     if output_dir:
         if file_name:

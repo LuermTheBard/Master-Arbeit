@@ -61,7 +61,10 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
     super_title = f"{campaign.split('_')[0]} Lines"
 
     try:
-        compare_cont_data = {compare_cont: data_dict["continua"][compare_cont]}
+        if compare_cont == "UVW2":
+            compare_cont_data = {compare_cont: data_dict["lines"][compare_cont]}
+        else:
+            compare_cont_data = {compare_cont: data_dict["continua"][compare_cont]}
         compare_cont_data.update(data_dict["lines"])
     except KeyError:
         print(f"Continuum '{compare_cont}' not found in campaign '{campaign}'. Skipping plot for lines.")
@@ -81,8 +84,14 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
     # Plot for continua (with custom color dictionary if needed)
     super_title = f"{campaign.split('_')[0]} Continua"
 
+    if campaign == "NGC4593_optical_calibrated":
+        all_cont_dict = data_dict["continua"] | {"UVW2": data_dict["lines"]["UVW2"]}
+    else:
+        all_cont_dict = data_dict["continua"]
+
+
     sorted_cont_data_dict = dict(
-        sorted(data_dict["continua"].items(), key=lambda item: sort_keys(item[0], key_order_conts)))
+        sorted(all_cont_dict.items(), key=lambda item: sort_keys(item[0], key_order_conts)))
 
     plot_lightcurves_in_groups(sorted_cont_data_dict, x_key, y_key, compare_cont, xlabel, ylabel_cont, yerr_name=yerr_name,
                            title=super_title, save_only=save_only, output_dir=save_folder,
@@ -211,7 +220,7 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
     _style = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.get(line_name, {})
     _marker = _style.get("marker", _style.get("symbole", "."))   # 'symbole' unterstützen
     _color  = _style.get("color", color)
-    _ms     = _style.get("markersize", 6)
+    _ms     = _style.get("markersize", 4)
     _alpha  = _style.get("alpha", None)
 
     if x_values.size > 0 and y_values.size > 0:
@@ -271,9 +280,9 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
 def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     ensure_output_dir(output_dir)
     data = import_1d_lightcurve_data()
-    for cont in ["Cont1150_not_optical_calibrated", "Cont5100"]:
+    for cont in ["Cont1150_not_optical_calibrated", "UVW2"]:
         key_order_lines = [cont, 'HAlpha', 'HBeta', 'HGamma', 'LyAlpha_not_optical_calibrated', 'HeI5875', 'HeII4685', 'OI8446']
-        key_order_conts = ["Cont1150_not_optical_calibrated", "Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015", "Cont8900"]
+        key_order_conts = ["UVW2", "Cont1150_not_optical_calibrated",  "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015", "Cont8900"]
         for campaign, data_dict in data.items():
             plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont=cont, key_order_lines=key_order_lines, key_order_conts=key_order_conts, save_only=save_only)
 
