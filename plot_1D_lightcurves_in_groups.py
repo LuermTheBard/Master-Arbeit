@@ -5,7 +5,7 @@ from matplotlib.ticker import MultipleLocator, MaxNLocator, FuncFormatter
 from import_data import import_1d_lightcurve_data
 from plot_utils import calculate_standard_error_for_lightcurves, format_label, ensure_output_dir
 from general_plot import prepare_data, finalize_figure, format_relative_days, format_month_day
-from settings import BASE_MJD, COLORCODE_CONTINUA_NORMALIZED, DEFAULT_OUTPUT_DIR
+from settings import BASE_MJD, COLORCODE_CONTINUA_NORMALIZED, DEFAULT_OUTPUT_DIR, SYMBOLES_AND_COLORS_FOR_LIGHTCURVES
 
 
 def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont,
@@ -207,6 +207,12 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
     -----------
     None
     """
+    # --- NEU: Stil aus Mapping holen, Parameter nur als Fallback nutzen ---
+    _style = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.get(line_name, {})
+    _marker = _style.get("marker", _style.get("symbole", "."))   # 'symbole' unterstützen
+    _color  = _style.get("color", color)
+    _ms     = _style.get("markersize", 6)
+    _alpha  = _style.get("alpha", None)
 
     if x_values.size > 0 and y_values.size > 0:
         if yerr_values is not None:
@@ -214,12 +220,24 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
                 format_relative_days(x_values),
                 y_values,
                 yerr=yerr_values,
-                fmt='.:', capsize=3, markersize=4, label=f'{format_label(line_name, as_latex=False)}', color=color
+                fmt=f'{_marker}:',            # war '.:' → jetzt Marker aus Mapping
+                capsize=3,
+                capthick=0.8,
+                elinewidth=0.8,
+                markersize=_ms,
+                label=f'{format_label(line_name, as_latex=False)}',
+                color=_color,
+                **({"alpha": _alpha} if _alpha is not None else {})
             )
         else:
             ax.plot(
                 format_relative_days(x_values),
-                y_values, label=f'{format_label(line_name, as_latex=False)}', color=color
+                y_values,
+                marker=_marker,               # zusätzlich Marker setzen
+                label=f'{format_label(line_name, as_latex=False)}',
+                color=_color,
+                markersize=_ms,
+                **({"alpha": _alpha} if _alpha is not None else {})
             )
 
         ax.legend(fontsize=7.5, loc='upper right')
@@ -230,8 +248,6 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
         else:
             ax.set_ylabel(ylabel, fontsize=12)
         ax.yaxis.set_label_coords(-0.15, 0.5)
-
-
     else:
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
@@ -273,4 +289,4 @@ def save_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
 
 # plot_1d_lightcurves_in_groups()
-# save_1d_lightcurves_in_groups()
+save_1d_lightcurves_in_groups()
