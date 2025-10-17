@@ -190,7 +190,7 @@ def prepare_data(data, rows, cols):
         yield current_data, group_index
 
 
-def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_label, compare_cont=None, line_profile=False, file_name=None):
+def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_label, compare_cont=None, line_profile=False, file_name=None, supertitle=None):
     """
     Finalizes the layout of a Matplotlib figure: removes empty subplot rows, sets title,
     saves the figure as PDF and PNG, and optionally displays it.
@@ -225,13 +225,11 @@ def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_labe
 
     check_for_empty_rows(axes, fig, x_label=x_label, line_profile=line_profile)
 
-    if title:
+    if supertitle:
         if group_index > 0:
-            fig.suptitle(f'{title} - Group {group_index + 1}', fontsize=14, y=0.95)
+            fig.suptitle(f'{supertitle} - Group {group_index + 1}', fontsize=14, y=0.95)
         else:
-            fig.suptitle(f'{title}', fontsize=14)
-    else:
-        title = ""
+            fig.suptitle(f'{supertitle}', fontsize=14)
 
     if output_dir:
         if file_name:
