@@ -49,7 +49,7 @@ def format_month_day(mjd, pos):
         Date string in the format '%b %d', e.g., 'Aug 01'.
     """
 
-    date = mjd_to_date(mjd)
+    date = mjd_to_date(mjd+ 57582.66)
     return date.strftime('%b %d')
 
 
