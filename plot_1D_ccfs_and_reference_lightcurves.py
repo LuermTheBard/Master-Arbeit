@@ -382,6 +382,30 @@ def prepare_ccfs_references_data(data, rows, cols):
 
         yield current_data, group_index
 
+def print_lightcurves_with_final_errors(line_name, x, y, yerr_vals, err_correction=None, err_set=None):
+
+    # Fehler berechnen
+    yerr_vals = calculate_standard_error_for_lightcurves(
+        y, yerr_vals, err_correction=err_correction, err_set=err_set
+    )
+
+    # Dateiname (z.B. OI8446.txt)
+    filename = DEFAULT_OUTPUT_DIR / f"{line_name}_final_errors.txt"
+
+    # Header erzeugen
+    header = (
+        f"# {line_name} timestamps [MJD], fluxes [ergs/s/cm2/A], "
+        f"fluxerrs [ergs/s/cm2/A]\n"
+    )
+
+    # Datei schreiben
+    with open(filename, "w") as f:
+        f.write(header)
+        for xi, yi, ei in zip(x, y, yerr_vals):
+            f.write(f"{xi:.15e} {yi:.15e} {ei:.15e}\n")
+
+    print(f"Saved file: {filename}")
+    return filename, x,y,yerr_vals
 
 
 def normalize_lightcurve(y, yerr_vals, err_correction=None, err_set=None):
@@ -617,15 +641,23 @@ def configure_ccfs_and_reference_axis(ax,
         x_key = 'timestamps [MJD]'
         y_key = 'fluxes [ergs/s/cm2/A]'
         yerr_key = 'fluxerrs [ergs/s/cm2/A]'
+        #print(f"Line name: {line_name}")
 
         y_norm, yerr_norm = normalize_lightcurve(line_data["lightcurves"][y_key],
                                                  line_data["lightcurves"][yerr_key],
                                                  err_correction=err_corr,
                                                  err_set=err_set)
+
+        #print_lightcurves_with_final_errors(line_name, line_data["lightcurves"][x_key], line_data["lightcurves"][y_key], line_data["lightcurves"][yerr_key], err_correction=err_corr, err_set=err_set)
+
+        #print(f"Ref-line name: {reference_name}")
         y_ref_norm, yerr_ref_norm = normalize_lightcurve(line_data["lightcurves_ref"][y_key],
                                                           line_data["lightcurves_ref"][yerr_key],
                                                          err_correction=ref_err_corr,
                                                          err_set=ref_err_set)
+        #print_lightcurves_with_final_errors(reference_name, line_data["lightcurves_ref"][x_key], line_data["lightcurves_ref"][y_key],
+        #                                    line_data["lightcurves_ref"][yerr_key], err_correction=err_corr,
+        #                                    err_set=err_set)
 
         if show_subfigure_labels:
             ax.text(
@@ -1145,7 +1177,7 @@ OI_paper_HST_UV_keyorder_HBeta = { "LyAlpha_not_optical_calibrated": ["time shif
                       "Cont1150_not_optical_calibrated": ["time shift (tau)", "HBeta", "OI8446"],
                       #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
                       }
-"""
+
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=OI_paper_keyorder_HAlpha,
@@ -1201,7 +1233,7 @@ save_1d_corr_and_lightcurves_general(
 
 
 
-"""
+
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=OI_paper_HST_UV_keyorder_HAlpha,
