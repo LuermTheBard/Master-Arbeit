@@ -252,6 +252,7 @@ CENTRAL_WAVELENGTH = {
     'HeII4685': 4685.7,
     'OI8446': 8446.35,
     'OIII5007': 5006.84,
+    'LyAlpha_not_optical_calibrated': 1215.67,
     'LyAlpha': 1215.67
 }
 

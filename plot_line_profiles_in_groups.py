@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
@@ -7,44 +9,31 @@ from import_data import import_line_profile_data, import_fits_data
 from plot_utils import format_label, subtract_continuum, convert_to_velocity, save_velocity_data_to_txt, \
     ensure_output_dir, cut_normalized_line_out, cut_line_out
 from general_plot import finalize_figure, prepare_data
-from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
+from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH, SYMBOLES_AND_COLORS_FOR_LIGHTCURVES
 
 matplotlib.use('Qt5Agg')
 
-def plot_normalized_line_profiles_in_groups(data, save_only=False, output_dir=None,
-                                            rows=4, cols=2, key_order=None,
-                                            title="Normalized Line Profiles", shared_y=False):
-    """
-    Plots normalized AVG and RMS line profiles in a grid of subplots (e.g., 4x2).
-
-    Parameters:
-    -----------
-    data : dict
-        Dictionary containing normalized 'avg' and 'rms' line profiles per line.
-    save_only : bool
-        If True, save the plots without displaying them.
-    output_dir : Path or None
-        Directory to save the plots. Default is DEFAULT_OUTPUT_DIR / "plot_line_profiles".
-    rows : int
-        Number of subplot rows.
-    cols : int
-        Number of subplot columns.
-    key_order : list or None
-        Custom order of lines to plot. If None, all available lines are used in default order.
-    title : str
-        Title of the full figure.
-    shared_y : bool
-        If True, share the y-axis across subplots.
-
-    Returns:
-    --------
-    None
-    """
-
-
+def plot_normalized_line_profiles_in_groups(
+    data,
+    save_only=False,
+    output_dir=None,
+    rows=2,
+    cols=3,
+    key_order=None,
+    fig_size=(8, 8),
+    title="Normalized Line Profiles",
+    shared_y=False,
+    components=("avg", "rms"),   # <- NEU: ("avg",) oder ("rms",) oder ("avg","rms")
+):
     x_key = 'velocity space (km/s)'
     y_key = 'normalized flux'
     ylabel = 'normalized flux'
+
+    # Komponenten normalisieren/prüfen
+    components = tuple(c.lower() for c in components)
+    for c in components:
+        if c not in ("avg", "rms"):
+            raise ValueError(f"Unknown component '{c}'. Use 'avg' and/or 'rms'.")
 
     if output_dir is None:
         output_dir = DEFAULT_OUTPUT_DIR / "plot_line_profiles"
@@ -56,42 +45,57 @@ def plot_normalized_line_profiles_in_groups(data, save_only=False, output_dir=No
     # Vorbereitung der Datenstruktur für prepare_data
     plot_data = {}
     for line in key_order:
-        plot_data[line] = {
-            "avg": {
+        plot_data[line] = {}
+
+        if "avg" in components:
+            plot_data[line]["avg"] = {
                 "x": data["avg"][line]["data_dict"][x_key],
                 "y": data["avg"][line]["data_dict"][y_key]
-            },
-            "rms": {
+            }
+
+        if "rms" in components:
+            plot_data[line]["rms"] = {
                 "x": data["rms"][line]["data_dict"][x_key],
                 "y": data["rms"][line]["data_dict"][y_key]
             }
-        }
 
     for current_data, group_index in prepare_data(plot_data, rows, cols):
-        fig, axes = plt.subplots(rows, cols, figsize=(6, 12), sharex=True, sharey=shared_y)
+        fig, axes = plt.subplots(rows, cols, figsize=fig_size, sharex=True, sharey=shared_y)
+        axes = np.array(axes).reshape(rows, cols)
         fig.subplots_adjust(hspace=0, wspace=0)
 
         for i, (line_name, line_data) in enumerate(current_data):
             row, col = divmod(i, cols)
             ax = axes[row, col]
 
+            if line_data is None:
+                continue
+
+            # Defaults (leere Arrays)
+            avg_x = avg_y = rms_x = rms_y = np.array([])
+
             if line_data is not None:
-                avg_x = line_data["avg"]["x"]
-                avg_y = line_data["avg"]["y"]
-                rms_x = line_data["rms"]["x"]
-                rms_y = line_data["rms"]["y"]
+                if "avg" in components and "avg" in line_data:
+                    avg_x = line_data["avg"]["x"]
+                    avg_y = line_data["avg"]["y"]
+                if "rms" in components and "rms" in line_data:
+                    rms_x = line_data["rms"]["x"]
+                    rms_y = line_data["rms"]["y"]
 
-            else:
-                avg_x = np.array([])
-                avg_y = np.array([])
-                rms_x = np.array([])
-                rms_y = np.array([])
+            # -> Wichtig: configure_line_profile_axis muss wissen, was geplottet werden soll
+            configure_line_profile_axis(
+                ax,
+                row=row,
+                col=col,
+                ylabel=ylabel,
+                avg_x=avg_x,
+                avg_y=avg_y,
+                rms_x=rms_x,
+                rms_y=rms_y,
+                line_name=line_name,
+                components=components,   # <- NEU (siehe unten)
+            )
 
-            configure_line_profile_axis(ax, row=row, col=col, ylabel=ylabel,avg_x=avg_x, avg_y=avg_y,
-                                        rms_x=rms_x, rms_y=rms_y, line_name=line_name)
-
-
-        # Figure finalisieren und speichern/anzeigen
         finalize_figure(
             fig=fig,
             axes=axes,
@@ -104,8 +108,160 @@ def plot_normalized_line_profiles_in_groups(data, save_only=False, output_dir=No
         )
 
 
+def plot_overlaid_normalized_line_profiles_in_panels(
+    data,
+    line_groups,                       # z.B. [["HAlpha","HBeta"], ["HeI5875","HeII4685"]]
+    components=("rms",),
+    save_only=False,
+    output_dir=None,
+    fig_size=(12, 6),
+    title="Overlaid normalized line profiles",
+    xlim=(-9000, 8999),
+    ylim=(-0.1, 1.2),
+    show_vline_zero=True,
+    legend=True,
+    avg_kwargs=None,
+    rms_kwargs=None,
+    color_map=None,                    # optional: Dict -> nur "color" wird genutzt
+    safe_file_name="overlay_groups",   # Windows-safe!
+
+    # NEU:
+    rows=1,
+    cols=None,                         # wenn None: wie vorher -> 1 x n_panels
+):
+    x_key = "velocity space (km/s)"
+    y_key = "normalized flux"
+
+    # Komponenten normalisieren/prüfen
+    components = tuple(c.lower() for c in components)
+    for c in components:
+        if c not in ("avg", "rms"):
+            raise ValueError(f"Unknown component '{c}'. Use 'avg' and/or 'rms'.")
+
+    if output_dir is None:
+        output_dir = DEFAULT_OUTPUT_DIR / "plot_line_profiles_overlay"
+    output_dir = ensure_output_dir(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    if avg_kwargs is None:
+        avg_kwargs = dict(linestyle="-", linewidth=1.5)
+    if rms_kwargs is None:
+        rms_kwargs = dict(linestyle="-", linewidth=1.5)
+
+    n_panels_total = len(line_groups)
+
+    # Backward-compatible Default: 1 x n_panels
+    if cols is None:
+        cols = n_panels_total if rows == 1 else int(np.ceil(n_panels_total / rows))
+
+    panels_per_fig = rows * cols
+    if panels_per_fig <= 0:
+        raise ValueError("rows * cols must be >= 1")
+
+    # Helper: chunking/paging wie prepare_data, aber für line_groups-Listen
+    def _iter_pages(groups, page_size):
+        for start in range(0, len(groups), page_size):
+            page_index = start // page_size
+            chunk = groups[start:start + page_size]
+            # auf volle Gridgröße auffüllen
+            if len(chunk) < page_size:
+                chunk = chunk + [None] * (page_size - len(chunk))
+            yield chunk, page_index
+
+    multi_page = n_panels_total > panels_per_fig
+
+    for page_groups, page_index in _iter_pages(line_groups, panels_per_fig):
+        fig, axes = plt.subplots(rows, cols, figsize=fig_size, sharex=True, sharey=True)
+        axes = np.array(axes).reshape(rows, cols)
+        fig.subplots_adjust(hspace=0, wspace=0)
+
+        for i, group in enumerate(page_groups):
+            r, c = divmod(i, cols)
+            ax = axes[r, c]
+
+            # Leere Panels (Padding) -> ausblenden
+            if group is None:
+                ax.set_visible(False)
+                continue
+
+            # Plot: pro Panel mehrere Lines überlagert, ggf. mehrere components
+            for comp in components:
+                for line in group:
+                    if comp not in data or line not in data[comp]:
+                        continue
+
+                    x = np.asarray(data[comp][line]["data_dict"][x_key])
+                    y = np.asarray(data[comp][line]["data_dict"][y_key])
+
+                    line_label = format_label(line, as_latex=False)
+                    label = f"{line_label} ({comp.upper()})" if len(components) > 1 else line_label
+
+                    kwargs = avg_kwargs if comp == "avg" else rms_kwargs
+
+                    # Farbe aus color_map (falls vorhanden)
+                    if color_map and line in color_map and "color" in color_map[line]:
+                        kwargs = {**kwargs, "color": color_map[line]["color"]}
+
+                    ax.plot(x, y, label=label, **kwargs)
+
+            # Achsen-Setup
+            if show_vline_zero:
+                ax.vlines(0, ylim[0], ylim[1], linestyles="dashed")
+
+            ax.set_xlim(*xlim)
+            ax.set_ylim(*ylim)
+            ax.xaxis.set_major_locator(MultipleLocator(2500))
+            ax.tick_params(axis="both", labelsize=9)
+
+            # X-Labels nur in der untersten Zeile
+            if r == rows - 1:
+                ax.set_xlabel("Velocity (km/s)", fontsize=12)
+            else:
+                ax.set_xticklabels([])
+
+            # Y-Handling:
+            # - linke Spalte: links ticks + ylabel
+            # - rechte Spalte: rechts ticks + ylabel
+            # - mittlere Spalten: keine y-ticks/labels
+            if c == 0:
+                ax.set_ylabel("normalized flux", fontsize=12)
+                ax.tick_params(axis="y", which="both", left=True, labelleft=True)
+            elif c == cols - 1:
+                ax.yaxis.tick_right()
+                ax.yaxis.set_label_position("right")
+                ax.set_ylabel("normalized flux", fontsize=12)
+                ax.tick_params(
+                    axis="y", which="both",
+                    right=True, labelright=True,
+                    left=False, labelleft=False,
+                    direction="out",
+                )
+            else:
+                ax.tick_params(axis="y", which="both", left=False, labelleft=False, right=False, labelright=False)
+
+            if legend:
+                ax.legend(loc="upper left", fontsize=9)
+
+        # Datei-Name pro Seite (wenn nötig)
+        file_name = safe_file_name if not multi_page else f"{safe_file_name}_p{page_index+1:02d}"
+
+        finalize_figure(
+            fig=fig,
+            axes=axes,
+            title=title,
+            group_index=page_index,
+            save_only=save_only,
+            output_dir=output_dir,
+            x_label=("Velocity (km/s)",) * cols,   # tuple pro Spalte
+            line_profile=True,
+            file_name=file_name,
+        )
+
+
+
+
 def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y, line_name,
-                                 line_lightcurves=False):
+                                 line_lightcurves=False, components=("avg","rms")):
     """
     Configures a subplot axis to display normalized AVG and RMS line profiles.
 
@@ -133,9 +289,10 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
     None
     """
 
-
-    ax.plot(avg_x, avg_y, label=f'AVG', color='black')
-    ax.plot(rms_x, rms_y, label=f'RMS', color='red')
+    if "avg" in components:
+        ax.plot(avg_x, avg_y, label=f'AVG', color='black')
+    if "rms" in components:
+        ax.plot(rms_x, rms_y, label=f'RMS', color='red')
     ax.vlines(0, -0.1, 1.5, linestyles='dashed', color='black')
     ax.text(0.95, 0.95, f'{format_label(line_name, as_latex=False)}', transform=ax.transAxes,
             ha='right', va='top', fontsize=11)
@@ -176,6 +333,8 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
 
 pseudo_conts_for_line_avg = {
 
+    'LyAlpha_not_optical_calibrated': {'blue': (1155, 1165), 'red': (1270, 1285)},
+
     'HAlpha': {'blue': (6107, 6129), 'red': (6861, 6900)},
     'HBeta': {'blue': (4762, 4774), 'red': (5085, 5112)},
     'HGamma': {'blue': (4197, 4220), 'red': (4435, 4450)},
@@ -189,6 +348,9 @@ pseudo_conts_for_line_avg = {
     'OIII5007': {'blue': (4976, 4987), 'red': (5085, 5112)},
 }
 pseudo_conts_for_line_rms = {
+
+    'LyAlpha_not_optical_calibrated': {'blue': (1155, 1165), 'red': (1300, 1315)},
+
 
     'HAlpha': {'blue': (6201, 6223), 'red': (6970, 6994)},
     'HBeta': {'blue': (4762, 4774), 'red': (4970, 4990)},
@@ -343,10 +505,43 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     profile_data = import_line_profile_data(normalized=True)
 
     # key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeII4685',
-                 'OI8446']
+    key_order_all = ['HAlpha', 'HBeta', 'HGamma', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
 
-    plot_normalized_line_profiles_in_groups(profile_data, key_order=key_order)
+    key_order_balmer = ['HAlpha', 'HBeta', 'HGamma']
+    key_order_helium = ['HeI5875',  'HeII4685']
+    key_order_Ly_O= ["LyAlpha_not_optical_calibrated", 'OI8446']
+
+    #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_balmer, title="Normalized Balmer Line Profiles", fig_size=(8, 8))
+    #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_helium, title="Normalized Helium Line Profiles", fig_size=(8, 4))
+    #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_Ly_O,
+    #                                        title="Normalized Lyman and Oxygen Line Profiles", fig_size=(10, 5))
+
+    #plot_normalized_line_profiles_in_groups(profile_data, rows=4, cols=2, key_order=key_order_all,
+    #                                        title="Normalized Line Profiles", fig_size=(8, 12))
+
+    #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_balmer,
+    #                                        title="Normalized AVG Balmer Line Profiles", fig_size=(8, 8), components=("avg",))
+    #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_helium,
+    #                                        title="Normalized AVG Helium Line Profiles", fig_size=(8, 4), components=("avg",))
+    #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_balmer,
+    #                                        title="Normalized RMS Balmer Line Profiles", fig_size=(8, 8), components=("rms",))
+    #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_helium,
+    #                                        title="Normalized RMS Helium Line Profiles", fig_size=(8, 4), components=("rms",))
+
+
+    plot_overlaid_normalized_line_profiles_in_panels(
+        data=profile_data,
+        line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"], ['HeI5875', 'HeII4685']],
+        components=("rms",),
+        title="RMS overlay Balmer",
+        color_map=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES,
+        safe_file_name="RMS_overlay_Balmer",
+        xlim=(-4999, 5000),
+        rows=2,
+        cols=2,
+        fig_size=(10, 10)
+    )
+
 
 
 def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT_DIR):
@@ -364,6 +559,17 @@ def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT
     for line in key_order:
         process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot)
         process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=plot)
+
+    uncalibrated_fits_data = import_fits_data(Path("fits") / "uncalibrated_AVG_RMS")
+
+    uncalibrated_wavelenghts = np.array(uncalibrated_fits_data['avg.fits']['x_axis'][0])
+    uncalibrated_avg_data = np.array(uncalibrated_fits_data['avg.fits']['data'][0])
+    uncalibrated_rms_data = np.array(uncalibrated_fits_data['rms.fits']['data'][0])
+
+    process_spectrum(uncalibrated_wavelenghts, uncalibrated_avg_data, "LyAlpha_not_optical_calibrated", spec_type="avg", output_dir=output_dir, plot=plot)
+    process_spectrum(uncalibrated_wavelenghts, uncalibrated_rms_data, "LyAlpha_not_optical_calibrated", spec_type="rms", output_dir=output_dir, plot=plot)
+
+
 
 
 def cut_line_profile(
@@ -421,5 +627,7 @@ def cut_line_profile(
         cut_out_range, intensity_avg, intensity_rms, line_name,
         output_path, plot, velocity_avg, velocity_rms
     )
+
+# substract_pseudo_continua_from_spectra()
 
 run_normalized_profiles_together_in_groups()

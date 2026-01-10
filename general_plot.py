@@ -101,54 +101,58 @@ def is_valid_axis(ax, fig):
 
 
 def check_for_empty_rows(axes, fig, x_label, line_profile=False):
-    """
-    Removes completely empty subplot rows from a figure and sets x-axis labels
-    and tick formatting for the lowest visible row.
+    n_rows, n_cols = axes.shape
 
-    Parameters:
-    -----------
-    axes : numpy.ndarray
-        2D array of Matplotlib Axes objects.
-    fig : matplotlib.figure.Figure
-        The figure containing the subplots.
-    x_label : str or tuple of str
-        X-axis label(s). If a tuple is provided, each column gets a different label.
-    line_profile : bool, optional
-        Whether the plots are line profiles. Affects tick formatting. Default is False.
-    """
+    # x_label: str -> für alle Spalten gleich
+    per_col_labels = None
+    if isinstance(x_label, (tuple, list)):
+        per_col_labels = x_label
 
-    n_rows = axes.shape[0]
+    # 1) Einzelne leere Achsen entfernen
     for row in range(n_rows):
-        if all(not is_valid_axis(axes[row, col], fig) for col in range(2)):
-            for col in range(2):
-                fig.delaxes(axes[row, col])
+        for col in range(n_cols):
+            if not is_valid_axis(axes[row, col], fig):
+                # falls die Achse noch in der Figure hängt, entfernen
+                if axes[row, col] in fig.axes:
+                    fig.delaxes(axes[row, col])
 
-    # Ermittlung der untersten verbleibenden Reihe
-    remaining_rows = [row for row in range(n_rows) if any(is_valid_axis(axes[row, col], fig) for col in range(2))]
-    if remaining_rows:
-        lowest_row = max(remaining_rows)
+    # 2) Unterste sichtbare Zeile PRO SPALTE bestimmen
+    lowest_row_per_col = {}
+    for col in range(n_cols):
+        valid_rows = [
+            row for row in range(n_rows)
+            if (axes[row, col] in fig.axes) and is_valid_axis(axes[row, col], fig)
+        ]
+        if valid_rows:
+            lowest_row_per_col[col] = max(valid_rows)
 
-        for row in remaining_rows:
-            for col in range(2):
-                if is_valid_axis(axes[row, col], fig):
-                    if not line_profile and not isinstance(x_label, tuple):
-                        axes[row, col].xaxis.set_major_locator(MultipleLocator(5))
+    # 3) Ticks/Formatter setzen + X-Label auf die unterste sichtbare Achse jeder Spalte
+    for row in range(n_rows):
+        for col in range(n_cols):
+            ax = axes[row, col]
+            if ax not in fig.axes:
+                continue
+            if not is_valid_axis(ax, fig):
+                continue
 
-                    axes[row, col].xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
+            # Formatter wie bei dir
+            ax.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
 
-                    if row == lowest_row:
-                        if isinstance(x_label, tuple):
-                            label = x_label[col]
-                            axes[row, col].set_xlabel(label, fontsize=12)
-                            if col == 0:
-                                axes[row, col].xaxis.set_major_locator(MultipleLocator(5))
-                            elif col == 1:
-                                axes[row, col].xaxis.set_major_locator(MultipleLocator(2))
-                        else:
-                            axes[row, col].set_xlabel(x_label, fontsize=12)
+            # X-Labels nur unten pro Spalte
+            is_bottom_in_col = (col in lowest_row_per_col) and (row == lowest_row_per_col[col])
+            if is_bottom_in_col:
+                if per_col_labels is not None:
+                    label = per_col_labels[col] if col < len(per_col_labels) else per_col_labels[-1]
+                else:
+                    label = x_label
+                ax.set_xlabel(label, fontsize=12)
+                ax.tick_params(axis='x', which='both', direction='out', labelbottom=True)
+            else:
+                ax.set_xticklabels([])
 
-                        axes[row, col].tick_params(axis='x', which='both', direction='out', labelbottom=True)
-
+            # Locator-Defaults (dein line_profile nutzt sowieso 2500 in configure_line_profile_axis)
+            if not line_profile and per_col_labels is None:
+                ax.xaxis.set_major_locator(MultipleLocator(5))
 
 def prepare_data(data, rows, cols):
     """
