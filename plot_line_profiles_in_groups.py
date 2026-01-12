@@ -8,10 +8,69 @@ from matplotlib.ticker import MultipleLocator
 from import_data import import_line_profile_data, import_fits_data
 from plot_utils import format_label, subtract_continuum, convert_to_velocity, save_velocity_data_to_txt, \
     ensure_output_dir, cut_normalized_line_out, cut_line_out
-from general_plot import finalize_figure, prepare_data
+from general_plot import prepare_data, check_for_empty_rows
 from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH, SYMBOLES_AND_COLORS_FOR_LIGHTCURVES
 
 matplotlib.use('Qt5Agg')
+
+
+def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_label, line_profile=False, file_name=None, supertitle=None):
+    """
+    Finalizes the layout of a Matplotlib figure: removes empty subplot rows, sets title,
+    saves the figure as PDF and PNG, and optionally displays it.
+
+    Parameters:
+    -----------
+    fig : matplotlib.figure.Figure
+        The figure to finalize.
+    axes : numpy.ndarray
+        2D array of Matplotlib Axes objects.
+    title : str
+        Title of the figure.
+    group_index : int
+        Index of the current group (used in filenames).
+    save_only : bool
+        If True, the figure will only be saved (not shown).
+    output_dir : str or pathlib.Path
+        Directory where the figure will be saved.
+    x_label : str or tuple of str
+        Label(s) for the x-axis. Tuple assigns different labels per column.
+    compare_cont : str, optional
+        Optional identifier for use in filenames (e.g., when comparing continua).
+    line_profile : bool, optional
+        Whether the plots represent line profiles (affects formatting).
+    file_name : str, optional
+        Custom filename prefix. If None, the title is used instead.
+
+    Returns:
+    -----------
+    None
+    """
+
+    check_for_empty_rows(axes, fig, x_label=x_label, line_profile=line_profile)
+
+    if supertitle:
+        if group_index > 0:
+            fig.suptitle(f'{supertitle} - Group {group_index + 1}', fontsize=14, y=0.95)
+        else:
+            fig.suptitle(f'{supertitle}', fontsize=14)
+
+    if output_dir:
+        if file_name:
+            save_path = output_dir / f"{file_name}.pdf"
+            plt.savefig(save_path, bbox_inches='tight')
+            save_path = output_dir / f"{file_name}.png"
+            plt.savefig(save_path, bbox_inches='tight')
+        else:
+            save_path = output_dir / f"{title.replace(' ', '_')}.pdf"
+            plt.savefig(save_path, bbox_inches='tight')
+            save_path = output_dir / f"{title.replace(' ', '_')}.png"
+            plt.savefig(save_path, bbox_inches='tight')
+        print(f"Figure saved to {save_path}")
+
+    if not save_only:
+        plt.show()
+    plt.close(fig)
 
 def plot_normalized_line_profiles_in_groups(
     data,
@@ -110,7 +169,7 @@ def plot_normalized_line_profiles_in_groups(
 
 def plot_overlaid_normalized_line_profiles_in_panels(
     data,
-    line_groups,                       # z.B. [["HAlpha","HBeta"], ["HeI5875","HeII4685"]]
+    line_groups,
     components=("rms",),
     save_only=False,
     output_dir=None,
@@ -122,17 +181,14 @@ def plot_overlaid_normalized_line_profiles_in_panels(
     legend=True,
     avg_kwargs=None,
     rms_kwargs=None,
-    color_map=None,                    # optional: Dict -> nur "color" wird genutzt
-    safe_file_name="overlay_groups",   # Windows-safe!
-
-    # NEU:
+    color_map=None,
+    safe_file_name="overlay_groups",
     rows=1,
-    cols=None,                         # wenn None: wie vorher -> 1 x n_panels
+    cols=None,
 ):
     x_key = "velocity space (km/s)"
     y_key = "normalized flux"
 
-    # Komponenten normalisieren/prüfen
     components = tuple(c.lower() for c in components)
     for c in components:
         if c not in ("avg", "rms"):
@@ -148,9 +204,19 @@ def plot_overlaid_normalized_line_profiles_in_panels(
     if rms_kwargs is None:
         rms_kwargs = dict(linestyle="-", linewidth=1.5)
 
-    n_panels_total = len(line_groups)
+    # Panels expandieren, wenn mehrere components getrennt geplottet werden sollen:
+    # Liste aus (group, comp) -> erst alle für components[0], dann für components[1], ...
+    expanded_panels = []
+    if len(components) > 1:
+        for comp in components:
+            for g in line_groups:
+                expanded_panels.append((g, comp))
+    else:
+        for g in line_groups:
+            expanded_panels.append((g, components[0]))
 
-    # Backward-compatible Default: 1 x n_panels
+    n_panels_total = len(expanded_panels)
+
     if cols is None:
         cols = n_panels_total if rows == 1 else int(np.ceil(n_panels_total / rows))
 
@@ -158,53 +224,56 @@ def plot_overlaid_normalized_line_profiles_in_panels(
     if panels_per_fig <= 0:
         raise ValueError("rows * cols must be >= 1")
 
-    # Helper: chunking/paging wie prepare_data, aber für line_groups-Listen
-    def _iter_pages(groups, page_size):
-        for start in range(0, len(groups), page_size):
+    def _iter_pages(panels, page_size):
+        for start in range(0, len(panels), page_size):
             page_index = start // page_size
-            chunk = groups[start:start + page_size]
-            # auf volle Gridgröße auffüllen
+            chunk = panels[start:start + page_size]
             if len(chunk) < page_size:
                 chunk = chunk + [None] * (page_size - len(chunk))
             yield chunk, page_index
 
     multi_page = n_panels_total > panels_per_fig
 
-    for page_groups, page_index in _iter_pages(line_groups, panels_per_fig):
+    for page_panels, page_index in _iter_pages(expanded_panels, panels_per_fig):
         fig, axes = plt.subplots(rows, cols, figsize=fig_size, sharex=True, sharey=True)
         axes = np.array(axes).reshape(rows, cols)
         fig.subplots_adjust(hspace=0, wspace=0)
 
-        for i, group in enumerate(page_groups):
+        for i, panel in enumerate(page_panels):
             r, c = divmod(i, cols)
             ax = axes[r, c]
 
-            # Leere Panels (Padding) -> ausblenden
-            if group is None:
+            if panel is None:
                 ax.set_visible(False)
                 continue
 
-            # Plot: pro Panel mehrere Lines überlagert, ggf. mehrere components
-            for comp in components:
-                for line in group:
-                    if comp not in data or line not in data[comp]:
-                        continue
+            group, comp = panel  # pro Panel genau eine Komponente
 
-                    x = np.asarray(data[comp][line]["data_dict"][x_key])
-                    y = np.asarray(data[comp][line]["data_dict"][y_key])
+            for line in group:
+                if comp not in data or line not in data[comp]:
+                    continue
 
-                    line_label = format_label(line, as_latex=False)
-                    label = f"{line_label} ({comp.upper()})" if len(components) > 1 else line_label
+                x = np.asarray(data[comp][line]["data_dict"][x_key])
+                y = np.asarray(data[comp][line]["data_dict"][y_key])
 
-                    kwargs = avg_kwargs if comp == "avg" else rms_kwargs
+                # DEINE gewünschte Zeile:
+                tmp = format_label(line, as_latex=False)
+                line_label = tmp.split("  ")[0] if "  " in tmp else tmp
 
-                    # Farbe aus color_map (falls vorhanden)
-                    if color_map and line in color_map and "color" in color_map[line]:
-                        kwargs = {**kwargs, "color": color_map[line]["color"]}
+                kwargs = avg_kwargs if comp == "avg" else rms_kwargs
 
-                    ax.plot(x, y, label=label, **kwargs)
+                if color_map and line in color_map and "color" in color_map[line]:
+                    kwargs = {**kwargs, "color": color_map[line]["color"]}
 
-            # Achsen-Setup
+                ax.plot(x, y, label=line_label, **kwargs)
+
+            ax.text(
+                0.98, 0.98, comp.upper(),
+                transform=ax.transAxes,
+                ha="right", va="top",
+                fontsize=11,
+            )
+
             if show_vline_zero:
                 ax.vlines(0, ylim[0], ylim[1], linestyles="dashed")
 
@@ -213,16 +282,11 @@ def plot_overlaid_normalized_line_profiles_in_panels(
             ax.xaxis.set_major_locator(MultipleLocator(2500))
             ax.tick_params(axis="both", labelsize=9)
 
-            # X-Labels nur in der untersten Zeile
             if r == rows - 1:
                 ax.set_xlabel("Velocity (km/s)", fontsize=12)
             else:
                 ax.set_xticklabels([])
 
-            # Y-Handling:
-            # - linke Spalte: links ticks + ylabel
-            # - rechte Spalte: rechts ticks + ylabel
-            # - mittlere Spalten: keine y-ticks/labels
             if c == 0:
                 ax.set_ylabel("normalized flux", fontsize=12)
                 ax.tick_params(axis="y", which="both", left=True, labelleft=True)
@@ -242,7 +306,6 @@ def plot_overlaid_normalized_line_profiles_in_panels(
             if legend:
                 ax.legend(loc="upper left", fontsize=9)
 
-        # Datei-Name pro Seite (wenn nötig)
         file_name = safe_file_name if not multi_page else f"{safe_file_name}_p{page_index+1:02d}"
 
         finalize_figure(
@@ -252,7 +315,7 @@ def plot_overlaid_normalized_line_profiles_in_panels(
             group_index=page_index,
             save_only=save_only,
             output_dir=output_dir,
-            x_label=("Velocity (km/s)",) * cols,   # tuple pro Spalte
+            x_label=("Velocity (km/s)",) * cols,
             line_profile=True,
             file_name=file_name,
         )
@@ -294,11 +357,12 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
     if "rms" in components:
         ax.plot(rms_x, rms_y, label=f'RMS', color='red')
     ax.vlines(0, -0.1, 1.5, linestyles='dashed', color='black')
-    ax.text(0.95, 0.95, f'{format_label(line_name, as_latex=False)}', transform=ax.transAxes,
+    label = format_label(line_name, as_latex=False).split("  ")[0] if "  " in format_label(line_name, as_latex=False) else format_label(line_name, as_latex=False)
+    ax.text(0.96, 0.96, f'{label}', transform=ax.transAxes,
             ha='right', va='top', fontsize=11)
 
-    ax.set_xlim(-9000, 8999)
-    ax.set_ylim(-0.1, 1.2)
+    ax.set_xlim(-5000, 4999)
+    ax.set_ylim(0, 1.05)
     ax.tick_params(axis='both', labelsize=9)
     ax.legend(loc='upper left')
 
@@ -366,6 +430,13 @@ pseudo_conts_for_line_rms = {
 }
 
 
+DELTA_W = {
+
+'HeII4685': 10
+}
+
+
+
 def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_dir=DEFAULT_OUTPUT_DIR, plot=False):
     """
     Processes a spectrum: subtracts pseudo-continuum, normalizes the line,
@@ -393,6 +464,8 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
 
     line_wavelength = CENTRAL_WAVELENGTH[line_name]
 
+    delta_w = DELTA_W.get(line_name, 50)
+
     if spec_type == "avg":
         pseudo_conts_for_line = pseudo_conts_for_line_avg
     else:
@@ -410,7 +483,7 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
 
     y_lim_original = (min_intensity * 0.9, max_intensity * 1.1)  # Optional: 10% Puffer nach oben
 
-    corrected_intensity, continuum = subtract_continuum(wavelength, intensity, line_wavelength, blue_pseudo_cont, red_pseudo_cont)
+    corrected_intensity, continuum = subtract_continuum(wavelength, intensity, line_wavelength, blue_pseudo_cont, red_pseudo_cont, delta_w)
 
     velocity = convert_to_velocity(wavelength, line_wavelength)
 
@@ -511,35 +584,48 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     key_order_helium = ['HeI5875',  'HeII4685']
     key_order_Ly_O= ["LyAlpha_not_optical_calibrated", 'OI8446']
 
-    #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_balmer, title="Normalized Balmer Line Profiles", fig_size=(8, 8))
-    #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_helium, title="Normalized Helium Line Profiles", fig_size=(8, 4))
+    #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_balmer, title="Normalized Balmer Line Profiles", fig_size=(6, 8))
+    #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_helium, title="Normalized Helium Line Profiles", fig_size=(6, 4))
     #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_Ly_O,
     #                                        title="Normalized Lyman and Oxygen Line Profiles", fig_size=(10, 5))
 
     #plot_normalized_line_profiles_in_groups(profile_data, rows=4, cols=2, key_order=key_order_all,
-    #                                        title="Normalized Line Profiles", fig_size=(8, 12))
+    #                                        title="Normalized Line Profiles", fig_size=(6, 12))
 
     #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_balmer,
-    #                                        title="Normalized AVG Balmer Line Profiles", fig_size=(8, 8), components=("avg",))
+    #                                        title="Normalized AVG Balmer Line Profiles", fig_size=(6, 8), components=("avg",))
     #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_helium,
-    #                                        title="Normalized AVG Helium Line Profiles", fig_size=(8, 4), components=("avg",))
+    #                                       title="Normalized AVG Helium Line Profiles", fig_size=(6, 4), components=("avg",))
     #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_balmer,
-    #                                        title="Normalized RMS Balmer Line Profiles", fig_size=(8, 8), components=("rms",))
+    #                                       title="Normalized RMS Balmer Line Profiles", fig_size=(6, 8), components=("rms",))
     #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_helium,
-    #                                        title="Normalized RMS Helium Line Profiles", fig_size=(8, 4), components=("rms",))
+    #                                        title="Normalized RMS Helium Line Profiles", fig_size=(6, 4), components=("rms",))
+
+    plot_overlaid_normalized_line_profiles_in_panels(
+        data=profile_data,
+        line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"], ["HBeta", "HGamma"]],
+        components=("avg", "rms"),
+        title="AVG and RMS overlay Balmer",
+        color_map=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES,
+        safe_file_name="AVG_and_RMS_overlay_Balmer",
+        xlim=(-4999, 5000),
+        rows=2,
+        cols=3,
+        fig_size=(6, 8)
+    )
 
 
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
-        line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"], ['HeI5875', 'HeII4685']],
-        components=("rms",),
-        title="RMS overlay Balmer",
+        line_groups=[['HeI5875', 'HeII4685']],
+        components=("avg","rms"),
+        title="AVG and RMS overlay Helium",
         color_map=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES,
-        safe_file_name="RMS_overlay_Balmer",
+        safe_file_name="AVG_and_RMS_overlay_Helium",
         xlim=(-4999, 5000),
-        rows=2,
+        rows=1,
         cols=2,
-        fig_size=(10, 10)
+        fig_size=(5, 5)
     )
 
 
@@ -628,6 +714,6 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-# substract_pseudo_continua_from_spectra()
+#substract_pseudo_continua_from_spectra(plot=True)
 
 run_normalized_profiles_together_in_groups()

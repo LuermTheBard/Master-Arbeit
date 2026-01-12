@@ -371,7 +371,7 @@ def format_label(name, as_latex=True, for_paper=False):
 #------------------------------------------------------------------------------------------------------------------------------------
 
 
-def subtract_continuum(wavelength, intensity, line_wavelength, left_range, right_range):
+def subtract_continuum(wavelength, intensity, line_wavelength, left_range, right_range, delta_w):
     """
     Estimates and subtracts the pseudo-continuum around an emission line in a spectrum,
     and normalizes the result to the local maximum near the line.
@@ -414,7 +414,7 @@ def subtract_continuum(wavelength, intensity, line_wavelength, left_range, right
     corrected_intensity = intensity - continuum
 
     # Bestimme das Maximum innerhalb des Bereichs ±50 um line_wavelength
-    norm_range = (line_wavelength - 50, line_wavelength + 50)
+    norm_range = (line_wavelength - delta_w, line_wavelength + delta_w)
     norm_mask = (wavelength > norm_range[0]) & (wavelength < norm_range[1])
     if np.any(norm_mask):
         max_value = np.max(corrected_intensity[norm_mask])
