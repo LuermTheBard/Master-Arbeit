@@ -439,12 +439,12 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
     if row < 3:
         ax.set_xticklabels([])
 
-    ax.xaxis.set_major_locator(MultipleLocator(2500))
+    ax.xaxis.set_major_locator(MultipleLocator(5000))
     #ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
 
     if row == 0:
         ax_top = ax.secondary_xaxis('top')
-        ax_top.xaxis.set_major_locator(MultipleLocator(2500))
+        ax_top.xaxis.set_major_locator(MultipleLocator(5000))
         #ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
         ax_top.tick_params(axis='x', rotation=45, labelsize=9)
 
@@ -632,7 +632,7 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     profile_data = import_line_profile_data(normalized=True)
 
     # key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
-    key_order_all = ['HAlpha', 'HBeta', 'HGamma', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
+    key_order_all = ['HAlpha', 'HBeta', 'HGamma', 'OI8446', 'HeI5875', 'HeII4685']
 
     key_order_balmer = ['HAlpha', 'HBeta', 'HGamma']
     key_order_helium = ['HeI5875',  'HeII4685']
@@ -643,8 +643,8 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_Ly_O,
     #                                        title="Normalized Lyman and Oxygen Line Profiles", fig_size=(10, 5))
 
-    plot_normalized_line_profiles_in_groups(profile_data, rows=4, cols=2, key_order=key_order_all,
-                                            title="Normalized Line Profiles", fig_size=(8, 12))
+    plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=3, key_order=key_order_all,
+                                            title="Normalized Line Profiles", fig_size=(8, 8))
 
     #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_balmer,
     #                                        title="Normalized AVG Balmer Line Profiles", fig_size=(6, 8), components=("avg",))
