@@ -9,9 +9,24 @@ from import_data import import_line_profile_data, import_fits_data
 from plot_utils import format_label, subtract_continuum, convert_to_velocity, save_velocity_data_to_txt, \
     ensure_output_dir, cut_normalized_line_out, cut_line_out
 from general_plot import prepare_data, check_for_empty_rows
-from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH, SYMBOLES_AND_COLORS_FOR_LIGHTCURVES
+from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
 
 matplotlib.use('Qt5Agg')
+
+
+DEFAULT_LINE_COLORS = [
+    "black",
+    "#d62728",   # rot
+    "#1f77b4",   # blau
+    "#ffbf00",   # gelb/amber (besser sichtbar als reines gelb)
+    "#2ca02c",   # grün
+    "#9467bd",   # lila
+    "#17becf",   # cyan
+    "#ff7f0e",   # orange
+    "#8c564b",   # braun
+    "#e377c2",   # pink
+    "#7f7f7f",   # grau
+]
 
 
 def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_label, line_profile=False, file_name=None, supertitle=None):
@@ -176,12 +191,12 @@ def plot_overlaid_normalized_line_profiles_in_panels(
     fig_size=(12, 6),
     title="Overlaid normalized line profiles",
     xlim=(-9000, 8999),
-    ylim=(-0.1, 1.2),
+    ylim=(-0.05, 1.05),
     show_vline_zero=True,
     legend=True,
     avg_kwargs=None,
     rms_kwargs=None,
-    color_map=None,
+    color_map=None,                    # optional: Dict -> {"HAlpha":{"color":"red"}, ...} oder {"HAlpha":"red",...}
     safe_file_name="overlay_groups",
     rows=1,
     cols=None,
@@ -200,12 +215,40 @@ def plot_overlaid_normalized_line_profiles_in_panels(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if avg_kwargs is None:
-        avg_kwargs = dict(linestyle="-", linewidth=1.5)
+        avg_kwargs = dict(linestyle="-", linewidth=1)
     if rms_kwargs is None:
-        rms_kwargs = dict(linestyle="-", linewidth=1.5)
+        rms_kwargs = dict(linestyle="-", linewidth=1)
 
-    # Panels expandieren, wenn mehrere components getrennt geplottet werden sollen:
-    # Liste aus (group, comp) -> erst alle für components[0], dann für components[1], ...
+    # ------------------------------------------------------------------
+    # NEU: globale Farbzuordnung pro Linie, wenn nichts übergeben wurde
+    # Alle Linien sammeln, die überhaupt vorkommen
+    unique_lines = []
+    seen = set()
+    for g in line_groups:
+        for ln in g:
+            if ln not in seen:
+                seen.add(ln)
+                unique_lines.append(ln)
+
+    # Matplotlib Default-Farbzyklus (gute Verteilung)
+    default_cycle = DEFAULT_LINE_COLORS.copy()
+
+    # wenn mehr Linien als Farben: hänge Matplotlib Farben hinten dran
+    mpl_cycle = plt.rcParams["axes.prop_cycle"].by_key().get("color", [])
+    for c in mpl_cycle:
+        if c not in default_cycle:
+            default_cycle.append(c)
+
+    auto_color_map = {}
+    if not color_map:
+        if len(default_cycle) == 0:
+            default_cycle = ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9"]
+
+        for i, ln in enumerate(unique_lines):
+            auto_color_map[ln] = default_cycle[i % len(default_cycle)]
+    # ------------------------------------------------------------------
+
+    # Panels expandieren, wenn mehrere components getrennt geplottet werden sollen
     expanded_panels = []
     if len(components) > 1:
         for comp in components:
@@ -247,7 +290,7 @@ def plot_overlaid_normalized_line_profiles_in_panels(
                 ax.set_visible(False)
                 continue
 
-            group, comp = panel  # pro Panel genau eine Komponente
+            group, comp = panel
 
             for line in group:
                 if comp not in data or line not in data[comp]:
@@ -256,30 +299,39 @@ def plot_overlaid_normalized_line_profiles_in_panels(
                 x = np.asarray(data[comp][line]["data_dict"][x_key])
                 y = np.asarray(data[comp][line]["data_dict"][y_key])
 
-                # DEINE gewünschte Zeile:
                 tmp = format_label(line, as_latex=False)
                 line_label = tmp.split("  ")[0] if "  " in tmp else tmp
 
                 kwargs = avg_kwargs if comp == "avg" else rms_kwargs
 
-                if color_map and line in color_map and "color" in color_map[line]:
-                    kwargs = {**kwargs, "color": color_map[line]["color"]}
+                # Farbe: 1) user color_map  2) auto_color_map
+                if color_map:
+                    # akzeptiert sowohl {"HAlpha":{"color":"red"}} als auch {"HAlpha":"red"}
+                    if line in color_map:
+                        if isinstance(color_map[line], dict) and "color" in color_map[line]:
+                            kwargs = {**kwargs, "color": color_map[line]["color"]}
+                        elif isinstance(color_map[line], str):
+                            kwargs = {**kwargs, "color": color_map[line]}
+                else:
+                    if line in auto_color_map:
+                        kwargs = {**kwargs, "color": auto_color_map[line]}
 
                 ax.plot(x, y, label=line_label, **kwargs)
 
             ax.text(
-                0.98, 0.98, comp.upper(),
+                0.90, 0.98, comp.upper(),
                 transform=ax.transAxes,
                 ha="right", va="top",
                 fontsize=11,
             )
 
             if show_vline_zero:
-                ax.vlines(0, ylim[0], ylim[1], linestyles="dashed")
+                ax.vlines(0, ylim[0], ylim[1], linestyles="dashed", color="black", linewidth=0.5)
+                ax.hlines(0, xlim[0], xlim[1], linestyles="dashed", color="black", linewidth=0.5)
 
             ax.set_xlim(*xlim)
             ax.set_ylim(*ylim)
-            ax.xaxis.set_major_locator(MultipleLocator(2500))
+            ax.xaxis.set_major_locator(MultipleLocator(5000))
             ax.tick_params(axis="both", labelsize=9)
 
             if r == rows - 1:
@@ -323,6 +375,7 @@ def plot_overlaid_normalized_line_profiles_in_panels(
 
 
 
+
 def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y, line_name,
                                  line_lightcurves=False, components=("avg","rms")):
     """
@@ -356,13 +409,14 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
         ax.plot(avg_x, avg_y, label=f'AVG', color='black')
     if "rms" in components:
         ax.plot(rms_x, rms_y, label=f'RMS', color='red')
-    ax.vlines(0, -0.1, 1.5, linestyles='dashed', color='black')
+    ax.vlines(0,-0.1, 1.5, linestyles="dashed", color="black", linewidth=0.5)
+    ax.hlines(0, -10000, 10000, linestyles="dashed", color="black", linewidth=0.5)
     label = format_label(line_name, as_latex=False).split("  ")[0] if "  " in format_label(line_name, as_latex=False) else format_label(line_name, as_latex=False)
-    ax.text(0.96, 0.96, f'{label}', transform=ax.transAxes,
+    ax.text(0.9, 0.97, f'{label}', transform=ax.transAxes,
             ha='right', va='top', fontsize=11)
 
-    ax.set_xlim(-5000, 4999)
-    ax.set_ylim(0, 1.05)
+    ax.set_xlim(-9999, 10000)
+    ax.set_ylim(-0.1, 1.05)
     ax.tick_params(axis='both', labelsize=9)
     ax.legend(loc='upper left')
 
@@ -399,11 +453,11 @@ pseudo_conts_for_line_avg = {
 
     'LyAlpha_not_optical_calibrated': {'blue': (1155, 1165), 'red': (1270, 1285)},
 
-    'HAlpha': {'blue': (6107, 6129), 'red': (6861, 6900)},
+    'HAlpha': {'blue': (6194, 6216), 'red': (6861, 6900)},
     'HBeta': {'blue': (4762, 4774), 'red': (5085, 5112)},
     'HGamma': {'blue': (4197, 4220), 'red': (4435, 4450)},
     'HDelta': {'blue': (4026, 4033), 'red': (4197, 4220)},
-    'HeI5875': {'blue': (5645, 5653), 'red': (6044, 6057)},
+    'HeI5875': {'blue': (5679, 5697), 'red': (6044, 6057)},
     'HeI7065': {'blue': (6934, 6941), 'red': (7331, 7357)},
     'HeI4471': {'blue': (4210, 4225), 'red': (4762, 4774)},
     'HeI5015': {'blue': (4976, 4981), 'red': (5085, 5112)},
@@ -416,15 +470,15 @@ pseudo_conts_for_line_rms = {
     'LyAlpha_not_optical_calibrated': {'blue': (1155, 1165), 'red': (1300, 1315)},
 
 
-    'HAlpha': {'blue': (6201, 6223), 'red': (6970, 6994)},
-    'HBeta': {'blue': (4762, 4774), 'red': (4970, 4990)},
-    'HGamma': {'blue': (4197, 4220), 'red': (4435, 4450)},
+    'HAlpha': {'blue': (6279, 6301), 'red': (6742, 6781)},
+    'HBeta': {'blue': (4762, 4774), 'red': (4967, 4984)},
+    'HGamma': {'blue': (4197, 4220), 'red': (4417, 4429)},
     'HDelta': {'blue': (3939, 3950), 'red': (4197, 4220)},
-    'HeI5875': {'blue': (5649, 5660), 'red': (6068, 6081)},
+    'HeI5875': {'blue': (5736, 5753), 'red': (6027, 6045)},
     'HeI7065': {'blue': (6934, 6941), 'red': (7335, 7349)},
     'HeI4471': {'blue': (4210, 4225), 'red': (4762, 4774)},
     'HeI5015': {'blue': (4976, 4981), 'red': (5119, 5133)},
-    'HeII4685': {'blue': (4198, 4225), 'red': (4770, 4787)},
+    'HeII4685': {'blue': (4543, 4554), 'red': (4766, 4778)},
     'OI8446': {'blue': (8222, 8238), 'red': (8748, 8767)},
     'OIII5007': {'blue': (4976, 4987), 'red': (5085, 5112)},
 }
@@ -589,8 +643,8 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_Ly_O,
     #                                        title="Normalized Lyman and Oxygen Line Profiles", fig_size=(10, 5))
 
-    #plot_normalized_line_profiles_in_groups(profile_data, rows=4, cols=2, key_order=key_order_all,
-    #                                        title="Normalized Line Profiles", fig_size=(6, 12))
+    plot_normalized_line_profiles_in_groups(profile_data, rows=4, cols=2, key_order=key_order_all,
+                                            title="Normalized Line Profiles", fig_size=(8, 12))
 
     #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_balmer,
     #                                        title="Normalized AVG Balmer Line Profiles", fig_size=(6, 8), components=("avg",))
@@ -606,12 +660,11 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
         line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"], ["HBeta", "HGamma"]],
         components=("avg", "rms"),
         title="AVG and RMS overlay Balmer",
-        color_map=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES,
         safe_file_name="AVG_and_RMS_overlay_Balmer",
-        xlim=(-4999, 5000),
+        xlim=(-9999, 10000),
         rows=2,
         cols=3,
-        fig_size=(6, 8)
+        fig_size=(8, 8)
     )
 
 
@@ -620,12 +673,11 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
         line_groups=[['HeI5875', 'HeII4685']],
         components=("avg","rms"),
         title="AVG and RMS overlay Helium",
-        color_map=SYMBOLES_AND_COLORS_FOR_LIGHTCURVES,
         safe_file_name="AVG_and_RMS_overlay_Helium",
-        xlim=(-4999, 5000),
+        xlim=(-9999, 10000),
         rows=1,
         cols=2,
-        fig_size=(5, 5)
+        fig_size=(8, 4)
     )
 
 
@@ -714,6 +766,6 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-#substract_pseudo_continua_from_spectra(plot=True)
+#substract_pseudo_continua_from_spectra()
 
 run_normalized_profiles_together_in_groups()
