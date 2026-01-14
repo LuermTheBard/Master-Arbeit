@@ -87,6 +87,19 @@ def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_labe
         plt.show()
     plt.close(fig)
 
+
+
+def add_top_velocity_axis(ax, xlim, major=2500, labelsize=9, rotation=45):
+    ax_top = ax.secondary_xaxis("top")
+    ax_top.set_xlim(*xlim)
+    ax_top.xaxis.set_major_locator(MultipleLocator(major))
+
+    # gleiche Optik wie unten:
+    ax_top.tick_params(axis="x", labelsize=labelsize, rotation=rotation,
+                       length=3.5, width=0.8, direction="out")  # <- anpassen nach Geschmack
+    return ax_top
+
+
 def plot_normalized_line_profiles_in_groups(
     data,
     save_only=False,
@@ -196,7 +209,7 @@ def plot_overlaid_normalized_line_profiles_in_panels(
     legend=True,
     avg_kwargs=None,
     rms_kwargs=None,
-    color_map=None,                    # optional: Dict -> {"HAlpha":{"color":"red"}, ...} oder {"HAlpha":"red",...}
+    color_map=None,
     safe_file_name="overlay_groups",
     rows=1,
     cols=None,
@@ -221,7 +234,6 @@ def plot_overlaid_normalized_line_profiles_in_panels(
 
     # ------------------------------------------------------------------
     # NEU: globale Farbzuordnung pro Linie, wenn nichts übergeben wurde
-    # Alle Linien sammeln, die überhaupt vorkommen
     unique_lines = []
     seen = set()
     for g in line_groups:
@@ -230,10 +242,8 @@ def plot_overlaid_normalized_line_profiles_in_panels(
                 seen.add(ln)
                 unique_lines.append(ln)
 
-    # Matplotlib Default-Farbzyklus (gute Verteilung)
     default_cycle = DEFAULT_LINE_COLORS.copy()
 
-    # wenn mehr Linien als Farben: hänge Matplotlib Farben hinten dran
     mpl_cycle = plt.rcParams["axes.prop_cycle"].by_key().get("color", [])
     for c in mpl_cycle:
         if c not in default_cycle:
@@ -306,7 +316,6 @@ def plot_overlaid_normalized_line_profiles_in_panels(
 
                 # Farbe: 1) user color_map  2) auto_color_map
                 if color_map:
-                    # akzeptiert sowohl {"HAlpha":{"color":"red"}} als auch {"HAlpha":"red"}
                     if line in color_map:
                         if isinstance(color_map[line], dict) and "color" in color_map[line]:
                             kwargs = {**kwargs, "color": color_map[line]["color"]}
@@ -331,8 +340,13 @@ def plot_overlaid_normalized_line_profiles_in_panels(
 
             ax.set_xlim(*xlim)
             ax.set_ylim(*ylim)
-            ax.xaxis.set_major_locator(MultipleLocator(5000))
+            ax.xaxis.set_major_locator(MultipleLocator(2500))
             ax.tick_params(axis="both", labelsize=9)
+
+            # --- NEU: Top-X-Achse in der ersten Row (wie in configure_line_profile_axis) ---
+            if r == 0:
+                add_top_velocity_axis(ax, xlim=xlim, major=2500, labelsize=9, rotation=45)
+            # ---------------------------------------------------------------------------
 
             if r == rows - 1:
                 ax.set_xlabel("Velocity (km/s)", fontsize=12)
@@ -371,7 +385,6 @@ def plot_overlaid_normalized_line_profiles_in_panels(
             line_profile=True,
             file_name=file_name,
         )
-
 
 
 
@@ -439,12 +452,12 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
     if row < 3:
         ax.set_xticklabels([])
 
-    ax.xaxis.set_major_locator(MultipleLocator(5000))
+    ax.xaxis.set_major_locator(MultipleLocator(2500))
     #ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
 
     if row == 0:
         ax_top = ax.secondary_xaxis('top')
-        ax_top.xaxis.set_major_locator(MultipleLocator(5000))
+        ax_top.xaxis.set_major_locator(MultipleLocator(2500))
         #ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
         ax_top.tick_params(axis='x', rotation=45, labelsize=9)
 
@@ -644,7 +657,7 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     #                                        title="Normalized Lyman and Oxygen Line Profiles", fig_size=(10, 5))
 
     plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=3, key_order=key_order_all,
-                                            title="Normalized Line Profiles", fig_size=(8, 8))
+                                            title="Normalized Line Profiles", fig_size=(12, 8))
 
     #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_balmer,
     #                                        title="Normalized AVG Balmer Line Profiles", fig_size=(6, 8), components=("avg",))
@@ -664,7 +677,7 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
         xlim=(-9999, 10000),
         rows=2,
         cols=3,
-        fig_size=(8, 8)
+        fig_size=(12, 8)
     )
 
 
