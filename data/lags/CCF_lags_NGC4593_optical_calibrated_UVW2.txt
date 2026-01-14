@@ -1,5 +1,4 @@
 name tau_cent tau_cent_err_low tau_cent_err_high M_Mo M_Mo_err_low M_Mo_err_high
-HAlpha 3.2550 0.5133 1.0793 1.0668 0.3093 0.5958
-HBeta 2.7232 0.5257 0.4419 0.9555 0.2790 0.3001
-OI8446 4.6580 1.3134 2.3111 2.3635 1.0049 1.9563
+HAlpha 3.2550 0.5133 1.0793 1.1070 0.3184 0.6135
+HBeta 2.7232 0.5257 0.4419 1.1304 0.3213 0.3408
 LyAlpha_not_optical_calibrated 1.0068 0.1480 0.3810 0.6321 0.0929 0.2392
