@@ -503,6 +503,84 @@ DELTA_W = {
 }
 
 
+import numpy as np
+
+def compute_fwhm_velocity_windowed(
+    velocity: np.ndarray,
+    flux: np.ndarray,
+    center_v: float = 0.0,
+    fwhm_window: float = 15000.0,   # +/- km/s Fenster nur um die Ziellinie
+    peak_search_window: float = 3000.0,  # Peak-Suche enger um center_v
+) -> float:
+    """
+    FWHM in km/s im Fenster um center_v. Gibt NaN zurück, wenn Halbmaximum
+    links/rechts nicht sauber gekreuzt wird (z.B. echte Überlappung im Fenster).
+    """
+    v = np.asarray(velocity, dtype=float)
+    f = np.asarray(flux, dtype=float)
+
+    if v.size < 5 or f.size != v.size:
+        return np.nan
+
+    # sortieren
+    if np.any(np.diff(v) < 0):
+        s = np.argsort(v)
+        v, f = v[s], f[s]
+
+    # 1) Nur Fenster um die Linie behalten (damit andere Linien nicht stören)
+    mask = (v >= center_v - fwhm_window) & (v <= center_v + fwhm_window)
+    if np.count_nonzero(mask) < 10:
+        return np.nan
+
+    vw = v[mask]
+    fw = f[mask]
+
+    # 2) Peak nahe center_v finden (falls Center minimal daneben liegt)
+    mask_peak = (vw >= center_v - peak_search_window) & (vw <= center_v + peak_search_window)
+    if np.count_nonzero(mask_peak) < 5:
+        return np.nan
+
+    i_peak_local = np.nanargmax(fw[mask_peak])
+    peak = fw[mask_peak][i_peak_local]
+    if not np.isfinite(peak) or peak <= 0:
+        return np.nan
+
+    # Index des Peaks im Fenster
+    peak_indices = np.where(mask_peak)[0]
+    i_peak = peak_indices[i_peak_local]
+
+    half = 0.5 * peak
+
+    # 3) Links vom Peak: erstes Crossing von >half nach <half suchen
+    left = np.where(fw[:i_peak] < half)[0]
+    if left.size == 0:
+        return np.nan
+    i1 = left[-1]          # letzter Punkt unter half vor dem Peak
+    i2 = i1 + 1            # erster Punkt über half
+
+    # lineare Interpolation links
+    if fw[i2] == fw[i1]:
+        return np.nan
+    v_left = vw[i1] + (half - fw[i1]) * (vw[i2] - vw[i1]) / (fw[i2] - fw[i1])
+
+    # 4) Rechts vom Peak: erstes Crossing von >half nach <half suchen
+    right = np.where(fw[i_peak:] < half)[0]
+    if right.size == 0:
+        return np.nan
+    j2 = i_peak + right[0]     # erster Punkt unter half nach dem Peak
+    j1 = j2 - 1                # letzter Punkt über half
+
+    # lineare Interpolation rechts
+    if fw[j2] == fw[j1]:
+        return np.nan
+    v_right = vw[j1] + (half - fw[j1]) * (vw[j2] - vw[j1]) / (fw[j2] - fw[j1])
+
+    fwhm = v_right - v_left
+    if not np.isfinite(fwhm) or fwhm <= 0:
+        return np.nan
+
+    return float(fwhm)
+
 
 def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_dir=DEFAULT_OUTPUT_DIR, plot=False):
     """
@@ -553,6 +631,14 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
     corrected_intensity, continuum = subtract_continuum(wavelength, intensity, line_wavelength, blue_pseudo_cont, red_pseudo_cont, delta_w)
 
     velocity = convert_to_velocity(wavelength, line_wavelength)
+
+    fwhm_kms = compute_fwhm_velocity_windowed(
+        velocity, corrected_intensity,
+        center_v=0.0,
+        fwhm_window=15000.0,  # ggf. 10000..20000 testen
+        peak_search_window=3000.0
+    )
+    print(f"[{line_name} | {spec_type}] FWHM (km/s) = {fwhm_kms}")
 
     output_dir = output_dir / "substracted_pseudocont_data"
 
@@ -779,6 +865,6 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-#substract_pseudo_continua_from_spectra()
+substract_pseudo_continua_from_spectra()
 
-run_normalized_profiles_together_in_groups()
+#run_normalized_profiles_together_in_groups()
