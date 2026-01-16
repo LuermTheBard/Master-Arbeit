@@ -447,7 +447,7 @@ def convert_to_velocity(wavelength, line_wavelength):
     """
 
     c_km_s = c.to('km/s').value  # Lichtgeschwindigkeit in km/s
-    return (wavelength - line_wavelength) / line_wavelength * c_km_s
+    return c_km_s * (wavelength - line_wavelength) / line_wavelength
 
 
 def transform_wavelength_to_velocity_and_cut(wavelength, intensity, line_name, velocity_range=None, filename=None):
