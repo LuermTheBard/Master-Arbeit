@@ -7,7 +7,7 @@ from matplotlib.ticker import MultipleLocator
 
 from import_data import import_line_profile_data, import_fits_data
 from plot_utils import format_label, subtract_continuum, convert_to_velocity, save_velocity_data_to_txt, \
-    ensure_output_dir, cut_normalized_line_out, cut_line_out
+    ensure_output_dir, cut_normalized_line_out, cut_line_out, transform_wavelength_to_velocity_and_cut
 from general_plot import prepare_data, check_for_empty_rows
 from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
 
@@ -503,83 +503,75 @@ DELTA_W = {
 }
 
 
-import numpy as np
 
-def compute_fwhm_velocity_windowed(
+def compute_fwhm_velocity_windowed_with_positions(
     velocity: np.ndarray,
     flux: np.ndarray,
     center_v: float = 0.0,
-    fwhm_window: float = 15000.0,   # +/- km/s Fenster nur um die Ziellinie
-    peak_search_window: float = 3000.0,  # Peak-Suche enger um center_v
-) -> float:
+    fwhm_window: float = 15000.0,
+    peak_search_window: float = 3000.0
+):
     """
-    FWHM in km/s im Fenster um center_v. Gibt NaN zurück, wenn Halbmaximum
-    links/rechts nicht sauber gekreuzt wird (z.B. echte Überlappung im Fenster).
+    Returns (fwhm_kms, v_left, v_right, half, peak).
+    If not measurable -> (np.nan, np.nan, np.nan, np.nan, np.nan)
     """
     v = np.asarray(velocity, dtype=float)
     f = np.asarray(flux, dtype=float)
 
     if v.size < 5 or f.size != v.size:
-        return np.nan
+        return (np.nan, np.nan, np.nan, np.nan, np.nan)
 
-    # sortieren
     if np.any(np.diff(v) < 0):
         s = np.argsort(v)
         v, f = v[s], f[s]
 
-    # 1) Nur Fenster um die Linie behalten (damit andere Linien nicht stören)
     mask = (v >= center_v - fwhm_window) & (v <= center_v + fwhm_window)
     if np.count_nonzero(mask) < 10:
-        return np.nan
+        return (np.nan, np.nan, np.nan, np.nan, np.nan)
 
     vw = v[mask]
     fw = f[mask]
 
-    # 2) Peak nahe center_v finden (falls Center minimal daneben liegt)
     mask_peak = (vw >= center_v - peak_search_window) & (vw <= center_v + peak_search_window)
     if np.count_nonzero(mask_peak) < 5:
-        return np.nan
+        return (np.nan, np.nan, np.nan, np.nan, np.nan)
 
     i_peak_local = np.nanargmax(fw[mask_peak])
     peak = fw[mask_peak][i_peak_local]
     if not np.isfinite(peak) or peak <= 0:
-        return np.nan
+        return (np.nan, np.nan, np.nan, np.nan, np.nan)
 
-    # Index des Peaks im Fenster
     peak_indices = np.where(mask_peak)[0]
     i_peak = peak_indices[i_peak_local]
 
-    half = 0.5 * peak
+    half = 0.5 * peak  # (Baseline=0 Annahme, weil continuum-subtracted / normalized)
 
-    # 3) Links vom Peak: erstes Crossing von >half nach <half suchen
+    # links: letzter Punkt < half vor dem Peak
     left = np.where(fw[:i_peak] < half)[0]
     if left.size == 0:
-        return np.nan
-    i1 = left[-1]          # letzter Punkt unter half vor dem Peak
-    i2 = i1 + 1            # erster Punkt über half
-
-    # lineare Interpolation links
+        return (np.nan, np.nan, np.nan, np.nan, np.nan)
+    i1 = left[-1]
+    i2 = i1 + 1
     if fw[i2] == fw[i1]:
-        return np.nan
+        return (np.nan, np.nan, np.nan, np.nan, np.nan)
     v_left = vw[i1] + (half - fw[i1]) * (vw[i2] - vw[i1]) / (fw[i2] - fw[i1])
 
-    # 4) Rechts vom Peak: erstes Crossing von >half nach <half suchen
+    # rechts: erster Punkt < half nach dem Peak
     right = np.where(fw[i_peak:] < half)[0]
     if right.size == 0:
-        return np.nan
-    j2 = i_peak + right[0]     # erster Punkt unter half nach dem Peak
-    j1 = j2 - 1                # letzter Punkt über half
-
-    # lineare Interpolation rechts
+        return (np.nan, np.nan, np.nan, np.nan, np.nan)
+    j2 = i_peak + right[0]
+    j1 = j2 - 1
     if fw[j2] == fw[j1]:
-        return np.nan
+        return (np.nan, np.nan, np.nan, np.nan, np.nan)
     v_right = vw[j1] + (half - fw[j1]) * (vw[j2] - vw[j1]) / (fw[j2] - fw[j1])
 
     fwhm = v_right - v_left
     if not np.isfinite(fwhm) or fwhm <= 0:
-        return np.nan
+        return (np.nan, np.nan, np.nan, np.nan, np.nan)
 
-    return float(fwhm)
+    return (float(fwhm), float(v_left), float(v_right), float(half), float(peak))
+
 
 
 def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_dir=DEFAULT_OUTPUT_DIR, plot=False):
@@ -632,11 +624,13 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
 
     velocity = convert_to_velocity(wavelength, line_wavelength)
 
-    fwhm_kms = compute_fwhm_velocity_windowed(
-        velocity, corrected_intensity,
+    cut_intensity, cut_velocity = cut_normalized_line_out(corrected_intensity, velocity, [-20000,20000])
+
+    fwhm_kms, v_left, v_right, half, peak = compute_fwhm_velocity_windowed_with_positions(
+        cut_velocity, cut_intensity,
         center_v=0.0,
-        fwhm_window=15000.0,  # ggf. 10000..20000 testen
-        peak_search_window=3000.0
+        fwhm_window=10000.0,
+        peak_search_window=1000.0
     )
     print(f"[{line_name} | {spec_type}] FWHM (km/s) = {fwhm_kms}")
 
@@ -646,7 +640,7 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
 
     np.savetxt(str(output_dir / f"{line_name}_{spec_type}_corrected_spectrum.txt"), np.column_stack((wavelength, corrected_intensity, continuum)),
                header="Wavelength (Å)  Intensity  Continuum")
-    np.savetxt(str(output_dir /f"{line_name}_normalized_{spec_type}_line_profile-{blue_pseudo_cont}-{red_pseudo_cont}.txt"), np.column_stack((velocity, corrected_intensity)),
+    np.savetxt(str(output_dir /f"{line_name}_normalized_{spec_type}_line_profile-{blue_pseudo_cont}-{red_pseudo_cont}.txt"), np.column_stack((cut_velocity, cut_intensity)),
                header="velocity space (km/s) \t normalized flux")
 
     if plot is True:
@@ -665,11 +659,22 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
         plt.show()
 
         plt.figure(figsize=(8, 5))
-        plt.plot(velocity, corrected_intensity, label="Linienprofil im Geschwindigkeitsraum")
+        plt.plot(cut_velocity, cut_intensity, label="Linienprofil im Geschwindigkeitsraum")
         plt.axvline(0, color="r", linestyle=":", label="v = 0 km/s (Zentrum)")
-        plt.xlim(-10000,10000)
+        plt.xlim(-20000, 20000)
         plt.ylim(-0.1, 1.2)
         plt.axhline(0, color="black", linestyle=":")
+
+        # --- FWHM-Positionen einzeichnen ---
+        if np.isfinite(fwhm_kms):
+            plt.axhline(half, linestyle="--", label=f"Half max = {half:.3f}")
+            plt.axvline(v_left, linestyle="--", label=f"v_left = {v_left:.0f} km/s")
+            plt.axvline(v_right, linestyle="--", label=f"v_right = {v_right:.0f} km/s")
+            plt.axvspan(v_left, v_right, alpha=0.15, label=f"FWHM = {fwhm_kms:.0f} km/s")
+        else:
+            plt.text(0.02, 0.95, "FWHM: NaN (overlap / no crossing)",
+                     transform=plt.gca().transAxes, va="top")
+
         plt.legend()
         plt.xlabel("Geschwindigkeit (km/s)")
         plt.ylabel("Intensität")
@@ -790,8 +795,7 @@ def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT
     avg_data = np.array(fits_data['NGC4593_avg.fits']['data'][0])
     rms_data = np.array(fits_data['NGC4593_rms.fits']['data'][0])
 
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685',
-                 'OI8446', "OIII5007"]
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeII4685', "OIII5007"]
 
     for line in key_order:
         process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot)
@@ -865,6 +869,6 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-substract_pseudo_continua_from_spectra()
+substract_pseudo_continua_from_spectra(plot=True)
 
 #run_normalized_profiles_together_in_groups()

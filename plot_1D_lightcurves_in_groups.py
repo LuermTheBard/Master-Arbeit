@@ -304,5 +304,5 @@ def save_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     run_1d_lightcurves_groups(output_dir, save_only=True)
 
 
-# plot_1d_lightcurves_in_groups()
+#plot_1d_lightcurves_in_groups()
 save_1d_lightcurves_in_groups()
