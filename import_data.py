@@ -483,16 +483,3 @@ def import_centroid_and_mc_data(campaign, continuum, lines):
     return correlation_data_dict, mc_data
 
 
-def calc_mean():
-
-    lighcurve_data = import_1d_lightcurve_data()
-
-    OIIIData = lighcurve_data['NGC4593_optical_calibrated']['lines']['OIII5007']['fluxes [ergs/s/cm2/A]']
-
-    mean = np.mean(OIIIData)
-    std = np.std(OIIIData)
-    print(f"Mean {mean} +- {std}")
-
-
-
-# calc_mean()

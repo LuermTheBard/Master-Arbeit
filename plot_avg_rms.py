@@ -520,6 +520,23 @@ def plot_avg_rms_together(output_dir=DEFAULT_OUTPUT_DIR):
     return fig, (ax1, ax2)
 
 
+
+def _robust_std(x):
+    x = np.asarray(x, float)
+    x = x[np.isfinite(x)]
+    if x.size < 3:
+        return np.nan
+    med = np.median(x)
+    mad = np.median(np.abs(x - med))
+    if np.isfinite(mad) and mad > 0:
+        return 1.4826 * mad  # MAD -> std
+    q25, q75 = np.percentile(x, [25, 75])
+    if np.isfinite(q25 + q75) and (q75 - q25) > 0:
+        return (q75 - q25) / 1.349  # IQR -> std
+    return np.std(x, ddof=1)
+
+
+
 def measure_line_flux(
     fits_data: dict,
     line_window: tuple,
@@ -529,44 +546,15 @@ def measure_line_flux(
     lam_key: str = "x_axis",
     sigma_key: str = "sigma",
 ):
-    """
-    Integrierter Linienfluss F_line aus einem AVG-Spektrum.
-
-    Parameters
-    ----------
-    fits_data : dict
-        Muss Arrays unter lam_key (Å), flux_key (z.B. erg s^-1 cm^-2 Å^-1) enthalten.
-        Optional: sigma_key (gleiche Einheiten wie flux, pro Pixel).
-    line_window : (lam_min, lam_max)
-        Integrationsfenster der Linie in Angström (observed oder rest, aber konsistent).
-    cont_windows : ((c1_min, c1_max), (c2_min, c2_max))
-        Zwei linienfreie Fenster links/rechts für den Kontinuumfit.
-    degree : int, default 1
-        Grad des Polynoms fürs Kontinuum (1 = linear; 0 = konstant).
-    flux_key, lam_key, sigma_key : str
-        Dict-Schlüssel.
-
-    Returns
-    -------
-    F_line : float
-        Integrierter Linienfluss (Einheiten: flux * Å).
-    F_err : float or np.nan
-        1σ-Unsicherheit (inkl. grober Kontinuumskomponente), np.nan wenn keine Fehler.
-    EW : float or np.nan
-        Äquivalentbreite in Å (Emission > 0), np.nan wenn Kontinuum ≈ 0.
-    meta : dict
-        Zusatzinfos: Kontinuumkoeffs, Kontinuumfunktion (callable), Masken, usw.
-    """
     lam = np.asarray(fits_data[lam_key], dtype=float)
     flux = np.asarray(fits_data[flux_key], dtype=float)
+
     sigma = None
     if sigma_key in fits_data and fits_data[sigma_key] is not None:
         sigma = np.asarray(fits_data[sigma_key], dtype=float)
 
-    # sortieren & gültige Werte
+    # gültige Werte (sigma darf fehlen -> NICHT hier rausfiltern)
     m_good = np.isfinite(lam) & np.isfinite(flux)
-    if sigma is not None:
-        m_good &= np.isfinite(sigma)
     lam, flux = lam[m_good], flux[m_good]
     sigma = (sigma[m_good] if sigma is not None else None)
 
@@ -575,7 +563,6 @@ def measure_line_flux(
     if sigma is not None:
         sigma = sigma[idx]
 
-    # Fenster-Masken
     (lmin, lmax) = line_window
     (c1min, c1max), (c2min, c2max) = cont_windows
 
@@ -587,20 +574,25 @@ def measure_line_flux(
     if lam_line.size < 3 or lam_cont.size < (degree + 2):
         raise ValueError("Zu wenige Punkte im Linien- oder Kontinuumsfenster.")
 
-    # Gewichte für Polyfit (np.polyfit erwartet 'w' ~ 1/σ)
+    # Gewichte: nur wo sigma finite & >0
     w = None
     if sigma is not None:
-        w = 1.0 / np.clip(sigma[m_cont], 1e-300, np.inf)
+        sig_cont = sigma[m_cont]
+        m_sig_ok = np.isfinite(sig_cont) & (sig_cont > 0)
+        if np.any(m_sig_ok):
+            w = np.zeros_like(sig_cont, dtype=float)
+            w[m_sig_ok] = 1.0 / np.clip(sig_cont[m_sig_ok], 1e-300, np.inf)
+        else:
+            w = None  # fallback unweighted
 
-    # Kontinuumfit (Polynom in λ)
+    # Kontinuumfit
     coeffs = np.polyfit(lam_cont, flux_cont, deg=degree, w=w)
     cont_poly = np.poly1d(coeffs)
 
-    # Residuum im Linienfenster
     cont_line = cont_poly(lam_line)
     resid = flux_line - cont_line
 
-    # Trapezintegration mit expliziten Gewichten (für Fehlerfortpflanzung)
+    # Trapezgewichte
     dlam = np.diff(lam_line)
     w_trap = np.empty_like(lam_line)
     w_trap[0] = dlam[0] / 2.0
@@ -609,26 +601,38 @@ def measure_line_flux(
 
     F_line = float(np.sum(resid * w_trap))
 
-    # Fehler der Integration
-    if sigma is not None:
-        sigma_line = sigma[m_line]
+    # --- NEU: sigma aus Kontinuum schätzen & fehlende sigma auffüllen ---
+    cont_resid = flux_cont - cont_poly(lam_cont)
+    sigma0 = _robust_std(cont_resid)  # Pixelrauschen-Schätzer
+    if not np.isfinite(sigma0) or sigma0 <= 0:
+        sigma0 = np.nan
 
-        # Varianz aus Pixelrauschen (ungekoppelt angenommen)
+    if sigma is None:
+        # keine sigma geliefert -> überall sigma0 nutzen (wenn möglich)
+        sigma_use = None if not np.isfinite(sigma0) else np.full_like(flux, sigma0, dtype=float)
+    else:
+        sigma_use = sigma.copy()
+        # fehlende/ungültige sigma auffüllen
+        m_bad = (~np.isfinite(sigma_use)) | (sigma_use <= 0)
+        if np.any(m_bad) and np.isfinite(sigma0):
+            sigma_use[m_bad] = sigma0
+
+    # Fehler der Integration
+    if sigma_use is not None:
+        sigma_line = sigma_use[m_line]
+
+        # Varianz aus Pixelrauschen
         var_pix = np.sum((sigma_line * w_trap) ** 2)
 
-        # Grobe Kontinuum-Komponente: Streuung der Kontinuumresiduen × Linienbreite
-        cont_resid = flux_cont - cont_poly(lam_cont)
-        # robust: IQR/1.349 ~ std
-        q25, q75 = np.percentile(cont_resid, [25, 75])
-        cont_std = (q75 - q25) / 1.349 if np.isfinite(q25 + q75) else np.std(cont_resid, ddof=1)
+        # Kontinuum-Komponente (wie bei dir)
         delta_lambda = lam_line[-1] - lam_line[0]
-        var_cont = (cont_std * delta_lambda) ** 2
+        cont_std = _robust_std(cont_resid)
+        var_cont = (cont_std * delta_lambda) ** 2 if np.isfinite(cont_std) else 0.0
 
         F_err = float(np.sqrt(var_pix + var_cont))
     else:
         F_err = np.nan
 
-    # Äquivalentbreite (Kontinuum am Linienzentrum)
     lam0 = 0.5 * (lmin + lmax)
     fcont0 = float(cont_poly(lam0))
     EW = (F_line / fcont0) if np.isfinite(fcont0) and fcont0 != 0 else np.nan
@@ -642,8 +646,12 @@ def measure_line_flux(
         degree=degree,
         lam0=lam0,
         fcont0=fcont0,
+        sigma0=sigma0,
+        sigma_was_filled=(sigma is not None) and np.any((~np.isfinite(sigma)) | (sigma <= 0)),
+        sigma_was_missing=(sigma is None),
     )
     return F_line, F_err, EW, meta
+
 
 
 # -----------------------------
@@ -665,20 +673,34 @@ def measure_line_flux(
 
 def get_line_flux(line_window: tuple,cont_windows: tuple):
     data_path = find_prime_data_folder()
-    avg_fits_data = import_fits_data(data_path / "fits")['NGC4593_avg.fits']
+    avg_fits_data = import_fits_data(data_path / "fits" / "intercalibrated_fits")
 
-    line_window = (4995.66, 5021.75)
-    cont_windows = ((4762, 4774),(5085, 5112))
+    F_line_list, F_err_list, EW_list, meta_list = [], [], [], []
 
-    F_line, F_err, EW, meta= measure_line_flux(avg_fits_data, line_window, cont_windows)
+    for data in avg_fits_data.values():
 
-    print(f"F_line = {F_line:.3e} ± {F_err:.3e}  (EW = {EW:.2f} Å)")
+        F_line, F_err, EW, meta= measure_line_flux(data, line_window, cont_windows)
+        F_line_list.append(F_line)
+        F_err_list.append(F_err)
+        EW_list.append(EW)
+        meta_list.append(meta)
+
+
+    F_line_mean = np.mean(F_line_list)
+    F_sigma = np.std(F_line_list)
+
+    mean_square_sigma = np.sum(np.array(F_err_list)**2)/ len(F_err_list)
+
+    F_var = np.sqrt((F_sigma**2 - mean_square_sigma)) / F_line_mean
+
+
+    print(f"F_var = {F_var:.3e}")
 
 
 
-# get_line_flux(None, None)
+get_line_flux((4995.66, 5021.75), ((4762, 4774),(5085, 5112)))
 
 #plot_avg_rms_spec(file_name='avg_rms_spec.pdf')
 #plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1800), ylim=(3, 70), scale_factor=5, shift_factor=(10, 0), line_length=3)
-plot_avg_rms_together()
-plot_calibrated_and_uncalibrated_spectra_together()
+#plot_avg_rms_together()
+#plot_calibrated_and_uncalibrated_spectra_together()

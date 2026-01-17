@@ -5,7 +5,7 @@ from astropy.constants.codata2018 import c
 from scipy.interpolate import interp1d
 
 from import_data import find_prime_data_folder
-from settings import F_MEAN, F_SIGMA, CENTRAL_WAVELENGTH
+from settings import F_MEAN, F_SIGMA, CENTRAL_WAVELENGTH, F_VAR, F_REL
 
 
 def calculate_standard_error_for_lightcurves(flux, flux_noise_err, err_correction=None, err_set=None):
@@ -34,7 +34,7 @@ def calculate_standard_error_for_lightcurves(flux, flux_noise_err, err_correctio
     if F_MEAN == 0:
         raise ValueError("Der Mittelwert des Flusses (F_MEAN) darf nicht 0 sein.")
 
-    total_error = np.sqrt((F_SIGMA / F_MEAN * flux) ** 2 + flux_noise_err ** 2)
+    total_error = np.sqrt((F_VAR * flux) ** 2 + flux_noise_err ** 2)
 
     if err_correction:
         total_error += total_error * err_correction / 100

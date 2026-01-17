@@ -20,9 +20,13 @@ COLORCODE_CONTINUA = {
 
 BASE_MJD = 57581.66
 
-F_MEAN = 1.3387 * 10 ** (-13)
+F_MEAN = 1.114 * 10 ** (-13)
 
-F_SIGMA = 1.839 * 10 ** (-15)
+F_SIGMA = 1.983 * 10 ** (-15)
+
+F_VAR = 1.429 * 10 ** (-2)
+
+F_REL = 0.0472
 
 VALUES_CONTINUA = {'Cont1150': (1140, 1160),
                    'Cont4010': (4026, 4033),
