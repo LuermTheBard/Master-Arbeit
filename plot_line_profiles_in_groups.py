@@ -5,7 +5,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
-from import_data import import_line_profile_data, import_fits_data
+from import_data import import_line_profile_data, import_fits_data, find_prime_data_folder
 from plot_utils import format_label, subtract_continuum, convert_to_velocity, save_velocity_data_to_txt, \
     ensure_output_dir, cut_normalized_line_out, cut_line_out, transform_wavelength_to_velocity_and_cut
 from general_plot import prepare_data, check_for_empty_rows
@@ -487,11 +487,11 @@ pseudo_conts_for_line_rms = {
     'HBeta': {'blue': (4762, 4774), 'red': (4967, 4984)},
     'HGamma': {'blue': (4197, 4220), 'red': (4417, 4429)},
     'HDelta': {'blue': (3939, 3950), 'red': (4197, 4220)},
-    'HeI5875': {'blue': (5736, 5753), 'red': (6027, 6045)},
+    'HeI5875': {'blue': (5773, 5790), 'red': (5952, 5961)},
     'HeI7065': {'blue': (6934, 6941), 'red': (7335, 7349)},
     'HeI4471': {'blue': (4210, 4225), 'red': (4762, 4774)},
     'HeI5015': {'blue': (4976, 4981), 'red': (5119, 5133)},
-    'HeII4685': {'blue': (4543, 4554), 'red': (4766, 4778)},
+    'HeII4685': {'blue': (4543, 4554), 'red': (4762, 4774)},
     'OI8446': {'blue': (8222, 8238), 'red': (8748, 8767)},
     'OIII5007': {'blue': (4976, 4987), 'red': (5085, 5112)},
 }
@@ -502,18 +502,28 @@ DELTA_W = {
 'HeII4685': 10
 }
 
-
-
-def compute_fwhm_velocity_windowed_with_positions(
+def compute_width_velocity_windowed_with_positions(
     velocity: np.ndarray,
     flux: np.ndarray,
     center_v: float = 0.0,
-    fwhm_window: float = 15000.0,
-    peak_search_window: float = 3000.0
+    window: float = 15000.0,
+    peak_search_window: float = 3000.0,
+    level: float = 0.5,
+    level_mode: str = "relative",  # "relative" or "absolute"
 ):
     """
-    Returns (fwhm_kms, v_left, v_right, half, peak).
+    Compute line width at a specified height in velocity space.
+
+    Returns (width_kms, v_left, v_right, y_level, peak).
     If not measurable -> (np.nan, np.nan, np.nan, np.nan, np.nan)
+
+    level_mode:
+      - "relative": y_level = level * peak  (e.g. 0.5 -> FWHM, 0.7 -> width@70%)
+      - "absolute": y_level = level        (e.g. 0.7 means flux=0.7)
+
+    Notes:
+      - Assumes baseline ~ 0 (continuum-subtracted). If not, use a baseline-corrected flux.
+      - Returns NaN if level is never crossed on left or right.
     """
     v = np.asarray(velocity, dtype=float)
     f = np.asarray(flux, dtype=float)
@@ -521,17 +531,20 @@ def compute_fwhm_velocity_windowed_with_positions(
     if v.size < 5 or f.size != v.size:
         return (np.nan, np.nan, np.nan, np.nan, np.nan)
 
+    # sort by velocity
     if np.any(np.diff(v) < 0):
         s = np.argsort(v)
         v, f = v[s], f[s]
 
-    mask = (v >= center_v - fwhm_window) & (v <= center_v + fwhm_window)
+    # limit to window around the expected center
+    mask = (v >= center_v - window) & (v <= center_v + window)
     if np.count_nonzero(mask) < 10:
         return (np.nan, np.nan, np.nan, np.nan, np.nan)
 
     vw = v[mask]
     fw = f[mask]
 
+    # find peak near center
     mask_peak = (vw >= center_v - peak_search_window) & (vw <= center_v + peak_search_window)
     if np.count_nonzero(mask_peak) < 5:
         return (np.nan, np.nan, np.nan, np.nan, np.nan)
@@ -544,40 +557,65 @@ def compute_fwhm_velocity_windowed_with_positions(
     peak_indices = np.where(mask_peak)[0]
     i_peak = peak_indices[i_peak_local]
 
-    half = 0.5 * peak  # (Baseline=0 Annahme, weil continuum-subtracted / normalized)
+    # define y-level
+    if level_mode == "relative":
+        if not (0.0 < level < 1.0):
+            return (np.nan, np.nan, np.nan, np.nan, np.nan)
+        y_level = level * peak
+    elif level_mode == "absolute":
+        y_level = float(level)
+    else:
+        raise ValueError("level_mode must be 'relative' or 'absolute'")
 
-    # links: letzter Punkt < half vor dem Peak
-    left = np.where(fw[:i_peak] < half)[0]
+    # if level is above peak, impossible
+    if y_level >= peak:
+        return (np.nan, np.nan, np.nan, np.nan, np.nan)
+
+    # --- left crossing: last point below y_level before the peak ---
+    left = np.where(fw[:i_peak] < y_level)[0]
     if left.size == 0:
         return (np.nan, np.nan, np.nan, np.nan, np.nan)
     i1 = left[-1]
     i2 = i1 + 1
     if fw[i2] == fw[i1]:
         return (np.nan, np.nan, np.nan, np.nan, np.nan)
-    v_left = vw[i1] + (half - fw[i1]) * (vw[i2] - vw[i1]) / (fw[i2] - fw[i1])
+    v_left = vw[i1] + (y_level - fw[i1]) * (vw[i2] - vw[i1]) / (fw[i2] - fw[i1])
 
-    # rechts: erster Punkt < half nach dem Peak
-    right = np.where(fw[i_peak:] < half)[0]
+    # --- right crossing: first point below y_level after the peak ---
+    right = np.where(fw[i_peak:] < y_level)[0]
     if right.size == 0:
         return (np.nan, np.nan, np.nan, np.nan, np.nan)
     j2 = i_peak + right[0]
     j1 = j2 - 1
     if fw[j2] == fw[j1]:
         return (np.nan, np.nan, np.nan, np.nan, np.nan)
-    v_right = vw[j1] + (half - fw[j1]) * (vw[j2] - vw[j1]) / (fw[j2] - fw[j1])
+    v_right = vw[j1] + (y_level - fw[j1]) * (vw[j2] - vw[j1]) / (fw[j2] - fw[j1])
 
-    fwhm = v_right - v_left
-    if not np.isfinite(fwhm) or fwhm <= 0:
+    width = v_right - v_left
+    if not np.isfinite(width) or width <= 0:
         return (np.nan, np.nan, np.nan, np.nan, np.nan)
 
-    return (float(fwhm), float(v_left), float(v_right), float(half), float(peak))
+    return (float(width), float(v_left), float(v_right), float(y_level), float(peak))
 
 
 
-def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_dir=DEFAULT_OUTPUT_DIR, plot=False):
+
+def process_spectrum(
+    wavelength,
+    intensity,
+    line_name,
+    spec_type="rms",
+    output_dir=DEFAULT_OUTPUT_DIR,
+    plot=False,
+    width_level=0.5,               # <- neu: z.B. 0.7 oder 0.8
+    width_level_mode="relative",   # <- "relative" (0..1 vom Peak) oder "absolute"
+):
     """
     Processes a spectrum: subtracts pseudo-continuum, normalizes the line,
     converts to velocity space, saves outputs, and optionally plots.
+
+    Additionally computes a line width at a user-defined height:
+      - width_level=0.5 corresponds to classic FWHM (if mode="relative").
 
     Parameters:
     -----------
@@ -593,6 +631,12 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
         Directory to save the processed spectrum and line profile.
     plot : bool
         If True, show diagnostic plots for the spectrum and line profile.
+    width_level : float
+        Level at which the width is measured.
+        If width_level_mode="relative": fraction of peak (0 < level < 1).
+        If width_level_mode="absolute": absolute flux value.
+    width_level_mode : str
+        "relative" or "absolute".
 
     Returns:
     --------
@@ -600,7 +644,6 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
     """
 
     line_wavelength = CENTRAL_WAVELENGTH[line_name]
-
     delta_w = DELTA_W.get(line_name, 50)
 
     if spec_type == "avg":
@@ -608,40 +651,55 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
     else:
         pseudo_conts_for_line = pseudo_conts_for_line_rms
 
-
     blue_pseudo_cont = pseudo_conts_for_line[line_name]['blue']
     red_pseudo_cont = pseudo_conts_for_line[line_name]['red']
 
-    wavelength_x_lim = (blue_pseudo_cont[0]-100, red_pseudo_cont[1]+100)
+    wavelength_x_lim = (blue_pseudo_cont[0] - 100, red_pseudo_cont[1] + 100)
 
     mask_x_lim = (wavelength >= wavelength_x_lim[0]) & (wavelength <= wavelength_x_lim[1])
     max_intensity = np.max(intensity[mask_x_lim])
     min_intensity = np.min(intensity[mask_x_lim])
 
-    y_lim_original = (min_intensity * 0.9, max_intensity * 1.1)  # Optional: 10% Puffer nach oben
+    y_lim_original = (min_intensity * 0.9, max_intensity * 1.1)
 
-    corrected_intensity, continuum = subtract_continuum(wavelength, intensity, line_wavelength, blue_pseudo_cont, red_pseudo_cont, delta_w)
+    corrected_intensity, continuum = subtract_continuum(
+        wavelength, intensity, line_wavelength,
+        blue_pseudo_cont, red_pseudo_cont, delta_w
+    )
 
     velocity = convert_to_velocity(wavelength, line_wavelength)
 
-    cut_intensity, cut_velocity = cut_normalized_line_out(corrected_intensity, velocity, [-20000,20000])
+    cut_intensity, cut_velocity = cut_normalized_line_out(
+        corrected_intensity, velocity, [-20000, 20000]
+    )
 
-    fwhm_kms, v_left, v_right, half, peak = compute_fwhm_velocity_windowed_with_positions(
+    # --- Width at chosen level (FWHM if width_level=0.5 & mode="relative") ---
+    width_kms, v_left, v_right, y_level, peak = compute_width_velocity_windowed_with_positions(
         cut_velocity, cut_intensity,
         center_v=0.0,
-        fwhm_window=10000.0,
-        peak_search_window=1000.0
+        window=10000.0,
+        peak_search_window=1000.0,
+        level=width_level,
+        level_mode=width_level_mode
     )
-    print(f"[{line_name} | {spec_type}] FWHM (km/s) = {fwhm_kms}")
 
-    output_dir = output_dir / "substracted_pseudocont_data"
+    if width_level_mode == "relative":
+        label = f"W@{width_level:.2f}*peak"
+    else:
+        label = f"W@flux={width_level:.2f}"
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"[{line_name} | {spec_type}] {label} (km/s) = {width_kms}")
 
-    np.savetxt(str(output_dir / f"{line_name}_{spec_type}_corrected_spectrum.txt"), np.column_stack((wavelength, corrected_intensity, continuum)),
-               header="Wavelength (Å)  Intensity  Continuum")
-    np.savetxt(str(output_dir /f"{line_name}_normalized_{spec_type}_line_profile-{blue_pseudo_cont}-{red_pseudo_cont}.txt"), np.column_stack((cut_velocity, cut_intensity)),
-               header="velocity space (km/s) \t normalized flux")
+    np.savetxt(
+        str(output_dir / f"{line_name}_{spec_type}_corrected_spectrum.txt"),
+        np.column_stack((wavelength, corrected_intensity, continuum)),
+        header="Wavelength (Å)  Intensity  Continuum"
+    )
+    np.savetxt(
+        str(output_dir / f"{line_name}_normalized_{spec_type}_line_profile-{blue_pseudo_cont}-{red_pseudo_cont}.txt"),
+        np.column_stack((cut_velocity, cut_intensity)),
+        header="velocity space (km/s) \t normalized flux"
+    )
 
     if plot is True:
         plt.figure(figsize=(8, 5))
@@ -665,21 +723,25 @@ def process_spectrum(wavelength, intensity, line_name, spec_type="rms", output_d
         plt.ylim(-0.1, 1.2)
         plt.axhline(0, color="black", linestyle=":")
 
-        # --- FWHM-Positionen einzeichnen ---
-        if np.isfinite(fwhm_kms):
-            plt.axhline(half, linestyle="--", label=f"Half max = {half:.3f}")
+        # --- Width-Positionen einzeichnen ---
+        if np.isfinite(width_kms):
+            plt.axhline(y_level, linestyle="--", label=f"Level = {y_level:.3f}")
             plt.axvline(v_left, linestyle="--", label=f"v_left = {v_left:.0f} km/s")
             plt.axvline(v_right, linestyle="--", label=f"v_right = {v_right:.0f} km/s")
-            plt.axvspan(v_left, v_right, alpha=0.15, label=f"FWHM = {fwhm_kms:.0f} km/s")
+            plt.axvspan(v_left, v_right, alpha=0.15, label=f"{label} = {width_kms:.0f} km/s")
         else:
-            plt.text(0.02, 0.95, "FWHM: NaN (overlap / no crossing)",
-                     transform=plt.gca().transAxes, va="top")
+            plt.text(
+                0.02, 0.95,
+                f"{label}: NaN (overlap / no crossing)",
+                transform=plt.gca().transAxes, va="top"
+            )
 
         plt.legend()
         plt.xlabel("Geschwindigkeit (km/s)")
         plt.ylabel("Intensität")
         plt.title(line_name + " RMS")
         plt.show()
+
 
 
 def plot_cut_out_line_profile(cut_out_range, intensity_avg, intensity_rms, line_name, output_path, plot, velocity_avg, velocity_rms):
@@ -787,6 +849,11 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
 
 def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT_DIR):
+
+    data_path = find_prime_data_folder()
+
+    output_dir = data_path / "LineProfiles"
+
     ensure_output_dir(output_dir)
 
     fits_data = import_fits_data()
@@ -798,8 +865,8 @@ def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT
     key_order = ['HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeII4685', "OIII5007"]
 
     for line in key_order:
-        process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot)
-        process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=plot)
+        process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot, width_level=0.5)
+        process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=plot, width_level=0.5)
 
     uncalibrated_fits_data = import_fits_data(Path("fits") / "uncalibrated_AVG_RMS")
 
@@ -869,6 +936,6 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-substract_pseudo_continua_from_spectra(plot=True)
+substract_pseudo_continua_from_spectra()
 
-#run_normalized_profiles_together_in_groups()
+run_normalized_profiles_together_in_groups()
