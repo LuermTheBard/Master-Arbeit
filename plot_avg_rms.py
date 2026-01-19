@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MaxNLocator
@@ -7,6 +8,8 @@ from matplotlib.ticker import MaxNLocator
 from import_data import import_fits_data, find_prime_data_folder
 from settings import All_LINES, All_LINE_GROUPS, DEFAULT_OUTPUT_DIR
 
+
+matplotlib.use('Qt5Agg')
 
 def validate_fits_data(fits_data):
     """
@@ -698,9 +701,9 @@ def get_line_flux(line_window: tuple,cont_windows: tuple):
 
 
 
-get_line_flux((4995.66, 5021.75), ((4762, 4774),(5085, 5112)))
+#get_line_flux((4995.66, 5021.75), ((4762, 4774),(5085, 5112)))
 
-#plot_avg_rms_spec(file_name='avg_rms_spec.pdf')
+plot_avg_rms_spec(file_name='avg_rms_spec.pdf')
 #plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1800), ylim=(3, 70), scale_factor=5, shift_factor=(10, 0), line_length=3)
 #plot_avg_rms_together()
 #plot_calibrated_and_uncalibrated_spectra_together()

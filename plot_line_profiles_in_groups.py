@@ -936,6 +936,6 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-substract_pseudo_continua_from_spectra()
+substract_pseudo_continua_from_spectra(plot=True)
 
 run_normalized_profiles_together_in_groups()

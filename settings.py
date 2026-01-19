@@ -165,6 +165,10 @@ All_LINE_GROUPS = {
                             5336.18],
                "tick_vertical_shift_avg": 0.5},
 
+    "Fe II  ": {"position": [4233.1,
+                             4303.17],
+               "tick_vertical_shift_avg": 1.5},
+
     "[S II] 6716,6730 ": {"position": [6716.44,
                                        6730.81],
                           "tick_vertical_shift_avg": 0.1,
