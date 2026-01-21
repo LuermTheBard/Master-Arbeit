@@ -1106,34 +1106,21 @@ save_1d_corr_and_lightcurves_general(
 )
 
 
-
+"""
 uvw2_keyorders_optical = {"UVW2":
                               ["time shift (tau)",
                                "HAlpha",
                                "HBeta",
                                "HGamma",
-                               "HDelta",
-                               "LyAlpha_not_optical_calibrated",
                                "HeI5875",
-                               "HeII4685",
-                               "OI8446"]}
-
+                               "HeII4685"]}
+"""
 uvw2_keyorders_not_optical = { "UVW2": ["time shift (tau)",
                                         "SiIV1393_not_optical_calibrated",
                                         "NV1238_not_optical_calibrated",
                                         "CIV1548_not_optical_calibrated",
                                         "HeII1640_not_optical_calibrated"]}
-
-
-save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],
-    keyorders_dict=uvw2_keyorders_optical,
-    file_name="UVW2_ccfs_and_reference_lightcurves_optical",
-    combine_data=True,
-    rows=8,
-    figsize=(5, 8)
-)
-
+                                        
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=uvw2_keyorders_not_optical,
@@ -1141,6 +1128,16 @@ save_1d_corr_and_lightcurves_general(
     combine_data=True,
     rows=4,
     figsize=(5, 4)
+)
+
+"""
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[],
+    keyorders_dict=uvw2_keyorders_optical,
+    file_name="UVW2_ccfs_and_reference_lightcurves_optical",
+    combine_data=True,
+    rows=8,
+    figsize=(5, 8)
 )
 
 OI_keyorder = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
@@ -1157,7 +1154,7 @@ save_1d_corr_and_lightcurves_general(
     figsize=(6, 4),
     show_reference_label=True
 )
-"""
+
 OI_paper_keyorder_HAlpha = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446","HAlpha"],
                       "UVW2": ["time shift (tau)", "HAlpha", "OI8446"],
                       #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
