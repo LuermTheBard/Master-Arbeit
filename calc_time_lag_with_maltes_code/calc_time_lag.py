@@ -107,7 +107,7 @@ def get_fluoreszenz_table(top_percent=None):
 calc_centroid_malte_code("NGC4593_optical_calibrated", "LyAlpha_not_optical_calibrated", lines=['HAlpha', "HBeta", "OI8446"], include_mass=False, create_tex_file=True, top_percent=0.8)
 #calc_centroid_malte_code("NGC4593_optical_calibrated", "LyAlpha", lines=["HBeta", "OI8446"], include_mass=False)
 #calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1150", lines=['HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685'], include_mass=True)
-#calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1150_not_optical_calibrated", lines=['HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685'], include_mass=True, create_tex_file=True)
+calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1150_not_optical_calibrated", lines=["UVW2"], include_mass=False, create_tex_file=True)
 #calc_centroid_malte_code("NGC4593_optical_calibrated", "HBeta", lines=["OI8446", "OI8446_not_optical_calibrated"], include_mass=True, create_tex_file=True)
 calc_centroid_malte_code("NGC4593_optical_calibrated", "HAlpha", lines=["OI8446"], include_mass=True, create_tex_file=True, top_percent=0.8)
 calc_centroid_malte_code("NGC4593_optical_calibrated", "HBeta", lines=["OI8446"], include_mass=True, create_tex_file=True, top_percent=0.8)

@@ -556,7 +556,8 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
                                               show_histogram=show_histogram,
                                               show_subfigure_labels=show_subfigure_labels,
                                               line_style=line_style,
-                                              grid=grid)
+                                              grid=grid,
+                                              row_spacing=row_spacing)
 
         check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs), adjust_last_row_gap_inch=adjust_last_row_gap_inch)
 
@@ -582,6 +583,7 @@ def configure_ccfs_and_reference_axis(ax,
                                       lightcurve_hide_yticklabels=True,
                                       ccf_show_inline_label_text=True,
                                       show_histogram=None,
+                                      row_spacing=None,
                                       show_subfigure_labels=True,
                                       line_style="-",
                                       grid=None):
@@ -666,29 +668,34 @@ def configure_ccfs_and_reference_axis(ax,
                 ha='right', va='top',
                 fontsize=9,
                 fontweight='bold'
-            )
-        if line_name != "UVW2":
-            if line_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
-                line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"]
-                fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}{line_style}"
-                markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["markersize"]
-                alpha = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name].get("alpha", 1.0)
-            else:
-                line_color = color[0]
-                fmt = f".{line_style}"
-                markersize = 3
-                alpha = 1.0
 
-            if reference_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
-                ref_line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["color"]
-                ref_fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]['symbole']}{line_style}"
-                ref_markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["markersize"]
-                ref_alpha = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name].get("alpha", 1.0)
-            else:
-                ref_line_color = color[0]
-                ref_fmt = f".{line_style}"
-                ref_markersize = 3
-                ref_alpha = 1.0
+
+            )
+
+        if line_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
+            line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"]
+            fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}{line_style}"
+            markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["markersize"]
+            alpha = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name].get("alpha", 1.0)
+        else:
+            line_color = color[0]
+            fmt = f".{line_style}"
+            markersize = 3
+            alpha = 1.0
+
+        if reference_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
+            ref_line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["color"]
+            ref_fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]['symbole']}{line_style}"
+            ref_markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["markersize"]
+            ref_alpha = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name].get("alpha", 1.0)
+        else:
+            ref_line_color = color[0]
+            ref_fmt = f".{line_style}"
+            ref_markersize = 3
+            ref_alpha = 1.0
+
+        if line_name != "UVW2":
+
 
             ax.errorbar(line_data["lightcurves"][x_key],
                         y_norm,
@@ -724,6 +731,19 @@ def configure_ccfs_and_reference_axis(ax,
                         markersize = 3,
                         linewidth = 0.5,
                         elinewidth = 0.5)
+            if reference_name != "UVW2":
+                if show_reference_label:
+
+                    ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm,
+                                label=format_label(reference_name, as_latex=False, for_paper=format_labels_as_paper),
+                                color=ref_line_color, fmt=ref_fmt, capsize=2, markersize=ref_markersize,
+                                alpha=ref_alpha, linewidth=0.5, elinewidth=0.5)
+                else:
+                    ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm,
+                                color=ref_line_color, fmt=ref_fmt, capsize=2,
+                                markersize=ref_markersize, alpha=ref_alpha, linewidth=0.5, elinewidth=0.5)
+
+
         configure_axes_for_lightcurves(ax,
                                        row,
                                        only_one_label,
@@ -751,25 +771,30 @@ def configure_ccfs_and_reference_axis(ax,
 
         if centroid_data:
 
-
-            tau = math.ceil(abs(centroid_data[reference_name][line_name]["tau_cent"])*10)/10
-            err_h = math.ceil(abs(centroid_data[reference_name][line_name]["tau_cent_err_high"])*10)/10
-            err_l = math.ceil(abs(centroid_data[reference_name][line_name]["tau_cent_err_low"])*10)/10
-
-            ax.text(
-                9, 0.95,
-                fr"${{\tau_\mathrm{{cent}} = {tau:.1f}^{{+{err_h:.1f}}}_{{-{err_l:.1f}}}}}$",
-                ha='right',
-                va='top',
-                fontsize=7.5
-            )
             try:
+                tau = math.ceil(abs(centroid_data[reference_name][line_name]["tau_cent"])*10)/10
+                err_h = math.ceil(abs(centroid_data[reference_name][line_name]["tau_cent_err_high"])*10)/10
+                err_l = math.ceil(abs(centroid_data[reference_name][line_name]["tau_cent_err_low"])*10)/10
 
-                ax.axvline(tau, color="grey", linestyle="--", linewidth=1)
-                if show_histogram:
-                    ax.hist(merged_mc_correlation_data[line_name]["centroids"], bins=50, density=True, alpha=0.7, color="grey")
+                ax.text(
+                    9, 0.95,
+                    fr"${{\tau_\mathrm{{cent}} = {tau:.1f}^{{+{err_h:.1f}}}_{{-{err_l:.1f}}}}}$",
+                    ha='right',
+                    va='top',
+                    fontsize=7.5
+                )
+                try:
+
+                    ax.axvline(tau, color="grey", linestyle="--", linewidth=1)
+                    if show_histogram:
+                        ax.hist(merged_mc_correlation_data[line_name]["centroids"], bins=50, density=True, alpha=0.7,
+                                color="grey")
+                except KeyError:
+                    print(f"No centroid data found for line {line_name}")
             except KeyError:
                 print(f"No centroid data found for line {line_name}")
+
+
 
 
 
@@ -781,7 +806,7 @@ def configure_ccfs_and_reference_axis(ax,
 
         if ccf_show_inline_label_text:
             ax.text(9, 0.90, ccfs_labels, ha='right', va='top', fontsize=7)
-        configure_axes_for_ccfs(ax, row, rows, ylabel_ccfs, only_one_label, layout_show_top_secondary_labels=layout_show_top_secondary_labels)
+        configure_axes_for_ccfs(ax, row, rows, ylabel_ccfs, only_one_label, layout_show_top_secondary_labels=layout_show_top_secondary_labels, row_spacing=row_spacing)
         _apply_grid(ax, grid)
 
 
@@ -843,7 +868,7 @@ def configure_axes_for_lightcurves(ax, row, only_one_label=False, lightcurve_hid
 
 
 
-def configure_axes_for_ccfs(ax, row, nrows, ylabel_ccfs, only_one_label=False, layout_show_top_secondary_labels=True):
+def configure_axes_for_ccfs(ax, row, nrows, ylabel_ccfs, only_one_label=False, layout_show_top_secondary_labels=True, row_spacing=None):
     ax.axvline(x=0, color='black', linestyle=':', linewidth=0.5)
     ax.set_xlim(-5, 10)
     ax.set_ylim(0, 1)
@@ -860,7 +885,11 @@ def configure_axes_for_ccfs(ax, row, nrows, ylabel_ccfs, only_one_label=False, l
 
     # --- Tick-Labels steuern: 1 überall, 0 nur unten & vorletzte ---
     is_bottom = (row == nrows - 1)
+    if row_spacing == 0:
+        is_bottom = (row == nrows)
     is_penultimate = (row == nrows - 2)
+    if row_spacing == 0:
+        is_penultimate = (row == nrows-1)
 
     def _yfmt(y, pos):
         if np.isclose(y, 0.0):
@@ -1109,11 +1138,20 @@ save_1d_corr_and_lightcurves_general(
 """
 uvw2_keyorders_optical = {"UVW2":
                               ["time shift (tau)",
+                               "UVW2",
+                               "LyAlpha_not_optical_calibrated",
                                "HAlpha",
                                "HBeta",
                                "HGamma",
                                "HeI5875",
-                               "HeII4685"]}
+                               "HeII4685",
+                               "OI8446"]}
+
+UV_keyorders_not_optical = {"Cont1150_not_optical_calibrated": ["time shift (tau)",
+                               "UVW2",],
+                            "UVW2": ["time shift (tau)", "LyAlpha_not_optical_calibrated"]}
+
+
 """
 uvw2_keyorders_not_optical = { "UVW2": ["time shift (tau)",
                                         "SiIV1393_not_optical_calibrated",
@@ -1136,8 +1174,22 @@ save_1d_corr_and_lightcurves_general(
     keyorders_dict=uvw2_keyorders_optical,
     file_name="UVW2_ccfs_and_reference_lightcurves_optical",
     combine_data=True,
-    rows=8,
-    figsize=(5, 8)
+    rows=9,
+    figsize=(6, 12),
+    show_reference_label=True,
+    format_labels_as_paper = True,
+    layout_show_right_ccf_ylabel = False,
+    layout_show_top_secondary_labels = False,
+    lightcurve_hide_yticklabels = False,
+    ccf_show_inline_label_text = False,
+    adjust_last_row_gap_inch = -0.2,
+    include_extra_data = True,
+    extra_data_name = "UVW2_ref_Cont1150_not_optical_calibrated",
+    show_histogram = False,
+    show_subfigure_labels=True,
+    row_spacing=None,
+    line_style="-",
+    grid=(True, 0.12, 0.3, ':')
 )
 
 OI_keyorder = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],

@@ -346,7 +346,7 @@ def format_label(name, as_latex=True, for_paper=False):
         "HeI7065": r"$\text{He}\thinspace\text{I}$",
         "HeI4471": r"$\text{He}\thinspace\text{I$",
         "HeI5015": r"$\text{He}\thinspace\text{I}$",
-        "HeII4685": r"$\text{He}\thinspace\text{II}",
+        "HeII4685": r"$\text{He}\thinspace\text{II}$",
         "OI8446": r"$\text{O}\thinspace\text{I}$",
         "LyAlpha": r"Lyα",
         "SiIV1393": r"$\text{Si}\thinspace\text{IV}$",

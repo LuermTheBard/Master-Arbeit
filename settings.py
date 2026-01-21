@@ -334,7 +334,7 @@ DISPERSION_SIGMA_RMS = {
 
 SYMBOLES_AND_COLORS_FOR_LIGHTCURVES = {
     "UVW2": {"symbole": ".", "color": "darkblue", "markersize": 3, "alpha": 0.6},
-    "Cont1150_not_optical_calibrated": {"symbole": ".", "color": "#1f77b4", "markersize": 6},
+    #"Cont1150_not_optical_calibrated": {"symbole": ".", "color": "#1f77b4", "markersize": 6},
 
     "HAlpha": {"symbole": "^", "color": "#d62728", "markersize": 4},
     "HBeta": {"symbole": ">", "color": "darkgoldenrod", "markersize": 3},
