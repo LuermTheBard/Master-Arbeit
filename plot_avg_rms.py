@@ -193,7 +193,7 @@ def plot_avg_rms_spectra(
 
     # Falls kein ax übergeben wurde → neue Figure erzeugen
     if ax is None:
-        fig, ax = plt.subplots(figsize=(8, 5))
+        fig, ax = plt.subplots(figsize=(11, 7))
     else:
         fig = ax.figure  # Hole Figure aus dem vorhandenen ax
 
@@ -214,7 +214,7 @@ def plot_avg_rms_spectra(
         ax.set_ylim(ylim)
 
     # ax.grid(visible=True, which="both", linestyle="--", linewidth=0.5)
-    ax.legend(fontsize=13, loc="upper right", frameon=False, markerfirst=False)
+    ax.legend(fontsize=10, loc="upper right", frameon=False, markerfirst=False)
 
     ax.tick_params(axis='both', labelsize=16)
 
@@ -257,6 +257,8 @@ def plot_avg_rms_spectra(
         fig.savefig(save_path, dpi=300)
         fig.savefig(f"{save_path}.png", dpi=300)
         print(f"Plot saved to {save_path}")
+
+    plt.show()
 
     return fig, ax, new_ylabel
 

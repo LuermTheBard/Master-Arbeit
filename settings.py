@@ -93,12 +93,22 @@ All_LINES = {
 
     # "He I 3487": {"position": 3487.72, "text_vertical_shift": 0.1, "slanted": True},
     "He I $\lambda$ 4471": {"position": 4471.48, "text_vertical_shift": 0.1, "slanted": False, "text_shift": -20},
-    "He I $\lambda$ 5875": {"position": 5875.6, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.3},
+    "He I $\lambda$ 5876": {"position": 5875.6, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.3},
     "He I $\lambda$ 5015": {"position": 5015.67, "text_vertical_shift": -1, "slanted": False, "tick_shift_avg": 1,"text_shift": 70, "show_no_tick_rms": True},
     "He I $\lambda$ 7065": {"position": 7065.2, "text_vertical_shift": 0.1, "slanted": False, "text_shift": -20},
-    "He II $\lambda$ 4685": {"position": 4685.7, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.4},
+    "He II $\lambda$ 4686": {"position": 4685.7, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.4},
     # "He I 3187": {"position": 3187.74, "text_vertical_shift": 0.2, "slanted": True},
     # "He II 3203": {"position": 3203.1, "text_vertical_shift": 0.1, "slanted": True},
+
+    #"Fe II $\lambda$ 4233": {"position": 4233.17, "text_vertical_shift": 0.1, "slanted": False, "text_shift": 0},
+    # "[Fe V] $\lambda$ 4227": {"position": 4227.19, "text_vertical_shift": 0.1, "slanted": False, "text_shift": 0},
+    #"[Fe II] $\lambda$ 4287": {"position": 4287.39, "text_vertical_shift": -0.2, "slanted": False, "text_shift": 0, "show_no_tick_rms": True},
+
+    "Fe II $\lambda$ 4303": {"position": 4303.18, "text_vertical_shift": 0.2, "slanted": False, "text_shift": -10},
+
+    # "O II $\lambda$ 4317": {"position": 4317.13, "text_vertical_shift": 0.1, "slanted": False, "text_shift": 0},
+
+
 
     "[O III] $\lambda$ 4363": {"position": 4363.21, "text_vertical_shift": 0.1, "slanted": False, "text_shift": 40},
     "[O III] $\lambda$ 4958": {"position": 4958.91, "text_vertical_shift": 0.1, "slanted": False, "show_no_tick_rms": True},
@@ -165,9 +175,9 @@ All_LINE_GROUPS = {
                             5336.18],
                "tick_vertical_shift_avg": 0.5},
 
-    "Fe II  ": {"position": [4233.1,
-                             4303.17],
-               "tick_vertical_shift_avg": 1.5},
+    #"Fe II  ": {"position": [4233.1,
+    #                         4303.17],
+    #           "tick_vertical_shift_avg": 1.5},
 
     "[S II] 6716,6730 ": {"position": [6716.44,
                                        6730.81],
