@@ -287,11 +287,17 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
 def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     ensure_output_dir(output_dir)
     data = import_1d_lightcurve_data()
-    for cont in ["Cont1150_not_optical_calibrated", "UVW2"]:
-        key_order_lines = [cont, 'HAlpha', 'HBeta', 'HGamma', 'LyAlpha_not_optical_calibrated', 'HeI5875', 'HeII4685', 'OI8446']
-        key_order_conts = ["UVW2", "Cont1150_not_optical_calibrated", "Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015"] #, "Cont8900"]
-        for campaign, data_dict in data.items():
-            plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont=cont, key_order_lines=key_order_lines, key_order_conts=key_order_conts, save_only=save_only)
+    #for cont in ["Cont1150_not_optical_calibrated", "UVW2"]:
+     #   key_order_lines = [cont, 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'OI8446']
+
+      #  key_order_conts = ["UVW2", "Cont1150_not_optical_calibrated", "Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015"] #, "Cont8900"]
+       # for campaign, data_dict in data.items():
+        #    plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont=cont, key_order_lines=key_order_lines, key_order_conts=key_order_conts, save_only=save_only)
+    key_order_uv_lines = ["UVW2", 'LyAlpha_not_optical_calibrated', 'NV1238_not_optical_calibrated',
+                          'SiIV1393_not_optical_calibrated', 'CIV1548_not_optical_calibrated',
+                          'HeII1640_not_optical_calibrated']
+
+    plot_all_1d_lightcurves_in_groups(data["NGC4593_not_optical_calibrated"],"NGC4593_not_optical_calibrated", output_dir, compare_cont="UVW2", key_order_lines=key_order_uv_lines, key_order_conts=[], save_only=save_only)
 
 # methods to run
 
