@@ -271,6 +271,10 @@ CENTRAL_WAVELENGTH = {
     'OI8446': 8446.35,
     'OIII5007': 5006.84,
     'LyAlpha_not_optical_calibrated': 1215.67,
+    "SiIV1393_not_optical_calibrated": 1393.76,
+    'NV1238_not_optical_calibrated': 1238.82,
+    'CIV1548_not_optical_calibrated': 1548.19,
+    'HeII1640_not_optical_calibrated': 1640.42,
     'LyAlpha': 1215.67
 }
 
@@ -296,13 +300,14 @@ IONIZATION_POTENTIAL = {
 
 
 FWHM_RMS = {
-    'HAlpha': 3111, 'HBeta': 3437, 'HGamma': 3852, 'HDelta': 4940.0,
+    'HAlpha': 3111, 'HBeta': 3437, 'HGamma': 3852, 'HDelta': 4893,
     'HeI5875': 3793, 'HeI7065': 2542, 'HeI4471': 999, 'HeI5015': np.nan,
-    'HeII4685': 5778, 'OI8446': 3800, 'LyAlpha': 3384, "LyAlpha_not_optical_calibrated": 4227,
+    'HeII4685': 5778, 'OI8446': 3800, 'LyAlpha': 3384,
+    "LyAlpha_not_optical_calibrated": 4406,
     "NV1238_not_optical_calibrated": 3250,
-    "SiIV1393_not_optical_calibrated": 9113,
-    "CIV1548_not_optical_calibrated": 7560,
-    "HeII1640_not_optical_calibrated": 6789
+    "SiIV1393_not_optical_calibrated": 7507,
+    "CIV1548_not_optical_calibrated": 3637,
+    "HeII1640_not_optical_calibrated": 4452
 }
 
 #DELTA_V = calculate_velocity_errors(CENTRAL_WAVELENGTH)

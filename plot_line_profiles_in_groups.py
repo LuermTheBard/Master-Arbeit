@@ -7,7 +7,7 @@ from matplotlib.ticker import MultipleLocator
 
 from import_data import import_line_profile_data, import_fits_data, find_prime_data_folder
 from plot_utils import format_label, subtract_continuum, convert_to_velocity, save_velocity_data_to_txt, \
-    ensure_output_dir, cut_normalized_line_out, cut_line_out, transform_wavelength_to_velocity_and_cut
+    ensure_output_dir, cut_normalized_line_out, cut_line_out
 from general_plot import prepare_data, check_for_empty_rows
 from settings import DEFAULT_OUTPUT_DIR, CENTRAL_WAVELENGTH
 
@@ -18,8 +18,8 @@ DEFAULT_LINE_COLORS = [
     "black",
     "#d62728",   # rot
     "#1f77b4",   # blau
-    "#ffbf00",   # gelb/amber (besser sichtbar als reines gelb)
     "#2ca02c",   # grün
+    "#ffbf00",   # gelb/amber (besser sichtbar als reines gelb)
     "#9467bd",   # lila
     "#17becf",   # cyan
     "#ff7f0e",   # orange
@@ -465,6 +465,10 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
 pseudo_conts_for_line_avg = {
 
     'LyAlpha_not_optical_calibrated': {'blue': (1155, 1165), 'red': (1270, 1285)},
+    'NV1238_not_optical_calibrated': {'blue': (1155, 1165), 'red': (1270, 1285)},
+    'SiIV1393_not_optical_calibrated': {'blue': (1350, 1360), 'red': (1430,1440)},
+    'CIV1548_not_optical_calibrated': {'blue': (1461, 1468), 'red': (1679, 1685)},
+    'HeII1640_not_optical_calibrated': {'blue': (1461, 1468), 'red': (1679, 1685)},
 
     'HAlpha': {'blue': (6194, 6216), 'red': (6861, 6900)},
     'HBeta': {'blue': (4762, 4774), 'red': (5085, 5112)},
@@ -480,13 +484,17 @@ pseudo_conts_for_line_avg = {
 }
 pseudo_conts_for_line_rms = {
 
-    'LyAlpha_not_optical_calibrated': {'blue': (1155, 1165), 'red': (1300, 1315)},
+    'LyAlpha_not_optical_calibrated': {'blue': (1155, 1165), 'red': (1340, 1355)},
+    'NV1238_not_optical_calibrated': {'blue': (1155, 1165), 'red': (1270, 1285)},
+    'SiIV1393_not_optical_calibrated': {'blue': (1340, 1355), 'red': (1430,1440)},
+    'CIV1548_not_optical_calibrated': {'blue': (1461, 1468), 'red': (1679, 1685)},
+    'HeII1640_not_optical_calibrated': {'blue': (1461, 1468), 'red': (1679, 1685)},
 
 
     'HAlpha': {'blue': (6279, 6301), 'red': (6742, 6781)},
     'HBeta': {'blue': (4762, 4774), 'red': (4967, 4984)},
     'HGamma': {'blue': (4197, 4220), 'red': (4417, 4429)},
-    'HDelta': {'blue': (3939, 3950), 'red': (4197, 4220)},
+    'HDelta': {'blue': (4006, 4016), 'red': (4197, 4220)},
     'HeI5875': {'blue': (5773, 5790), 'red': (5952, 5961)},
     'HeI7065': {'blue': (6934, 6941), 'red': (7335, 7349)},
     'HeI4471': {'blue': (4210, 4225), 'red': (4762, 4774)},
@@ -609,6 +617,7 @@ def process_spectrum(
     plot=False,
     width_level=0.5,               # <- neu: z.B. 0.7 oder 0.8
     width_level_mode="relative",   # <- "relative" (0..1 vom Peak) oder "absolute"
+    peak_search_window=1000.0
 ):
     """
     Processes a spectrum: subtracts pseudo-continuum, normalizes the line,
@@ -678,7 +687,7 @@ def process_spectrum(
         cut_velocity, cut_intensity,
         center_v=0.0,
         window=10000.0,
-        peak_search_window=1000.0,
+        peak_search_window=peak_search_window,
         level=width_level,
         level_mode=width_level_mode
     )
@@ -798,7 +807,7 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     profile_data = import_line_profile_data(normalized=True)
 
     # key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
-    key_order_all = ['HAlpha', 'HBeta', 'HGamma', 'OI8446', 'HeI5875', 'HeII4685']
+    key_order_all = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685']
 
     key_order_balmer = ['HAlpha', 'HBeta', 'HGamma']
     key_order_helium = ['HeI5875',  'HeII4685']
@@ -823,14 +832,14 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
-        line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"], ["HBeta", "HGamma"]],
+        line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"], ["HAlpha", "HDelta"],["HBeta", "HGamma"],["HBeta", "HDelta"], ["HGamma", "HDelta"]],
         components=("avg", "rms"),
         title="AVG and RMS overlay Balmer",
         safe_file_name="AVG_and_RMS_overlay_Balmer",
         xlim=(-9999, 10000),
-        rows=2,
-        cols=3,
-        fig_size=(12, 8)
+        rows=3,
+        cols=2,
+        fig_size=(8, 12)
     )
 
 
@@ -862,7 +871,7 @@ def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT
     avg_data = np.array(fits_data['NGC4593_avg.fits']['data'][0])
     rms_data = np.array(fits_data['NGC4593_rms.fits']['data'][0])
 
-    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HeI5875', 'HeII4685', "OIII5007"]
+    key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', "OIII5007"]
 
     for line in key_order:
         process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot, width_level=0.5)
@@ -874,8 +883,12 @@ def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT
     uncalibrated_avg_data = np.array(uncalibrated_fits_data['avg.fits']['data'][0])
     uncalibrated_rms_data = np.array(uncalibrated_fits_data['rms.fits']['data'][0])
 
-    process_spectrum(uncalibrated_wavelenghts, uncalibrated_avg_data, "LyAlpha_not_optical_calibrated", spec_type="avg", output_dir=output_dir, plot=plot)
-    process_spectrum(uncalibrated_wavelenghts, uncalibrated_rms_data, "LyAlpha_not_optical_calibrated", spec_type="rms", output_dir=output_dir, plot=plot)
+    uv_key_order = ["LyAlpha_not_optical_calibrated", "SiIV1393_not_optical_calibrated", "NV1238_not_optical_calibrated",
+                    "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated"]
+
+    for line in uv_key_order:
+        process_spectrum(uncalibrated_wavelenghts, uncalibrated_avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot, peak_search_window=2000)
+        process_spectrum(uncalibrated_wavelenghts, uncalibrated_rms_data, line, spec_type="rms", output_dir=output_dir, plot=plot, peak_search_window=2000)
 
 
 
@@ -936,6 +949,6 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-substract_pseudo_continua_from_spectra(plot=True)
+#(plot=True)
 
 run_normalized_profiles_together_in_groups()

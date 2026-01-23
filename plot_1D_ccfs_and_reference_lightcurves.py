@@ -1139,7 +1139,6 @@ save_1d_corr_and_lightcurves_general(
 uvw2_keyorders_optical = {"UVW2":
                               ["time shift (tau)",
                                "UVW2",
-                               "LyAlpha_not_optical_calibrated",
                                "HAlpha",
                                "HBeta",
                                "HGamma",
@@ -1152,8 +1151,10 @@ UV_keyorders_not_optical = {"Cont1150_not_optical_calibrated": ["time shift (tau
                             "UVW2": ["time shift (tau)", "LyAlpha_not_optical_calibrated"]}
 
 
-"""
+
 uvw2_keyorders_not_optical = { "UVW2": ["time shift (tau)",
+                                        "UVW2",
+                                        "LyAlpha_not_optical_calibrated",
                                         "SiIV1393_not_optical_calibrated",
                                         "NV1238_not_optical_calibrated",
                                         "CIV1548_not_optical_calibrated",
@@ -1164,17 +1165,31 @@ save_1d_corr_and_lightcurves_general(
     keyorders_dict=uvw2_keyorders_not_optical,
     file_name="UVW2_ccfs_and_reference_lightcurves_not_optical",
     combine_data=True,
-    rows=4,
-    figsize=(5, 4)
+    rows=7,
+    figsize=(7, 8),
+    show_reference_label=True,
+    format_labels_as_paper = True,
+    layout_show_right_ccf_ylabel = False,
+    layout_show_top_secondary_labels = False,
+    lightcurve_hide_yticklabels = False,
+    ccf_show_inline_label_text = False,
+    adjust_last_row_gap_inch = -0.2,
+    include_extra_data = True,
+    extra_data_name = "UVW2_ref_Cont1150_not_optical_calibrated",
+    show_histogram = False,
+    show_subfigure_labels=True,
+    row_spacing=None,
+    line_style="-",
+    grid=(True, 0.12, 0.3, ':')
 )
 
-"""
+
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=uvw2_keyorders_optical,
     file_name="UVW2_ccfs_and_reference_lightcurves_optical",
     combine_data=True,
-    rows=9,
+    rows=8,
     figsize=(6, 12),
     show_reference_label=True,
     format_labels_as_paper = True,
@@ -1195,7 +1210,7 @@ save_1d_corr_and_lightcurves_general(
 OI_keyorder = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
                 "HAlpha": ["time shift (tau)", "OI8446"],
                 "UVW2": ["time shift (tau)", "HAlpha", "OI8446"],}
-
+"""
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=OI_keyorder,
@@ -1206,7 +1221,7 @@ save_1d_corr_and_lightcurves_general(
     figsize=(6, 4),
     show_reference_label=True
 )
-
+"""
 OI_paper_keyorder_HAlpha = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446","HAlpha"],
                       "UVW2": ["time shift (tau)", "HAlpha", "OI8446"],
                       #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
