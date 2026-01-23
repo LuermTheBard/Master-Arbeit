@@ -9,7 +9,7 @@ from settings import BASE_MJD, COLORCODE_CONTINUA_NORMALIZED, DEFAULT_OUTPUT_DIR
 
 
 def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont,
-                                      key_order_lines=None, key_order_conts=None, save_only=False):
+                                      key_order_lines=None, key_order_conts=None, save_only=False, file_name=None):
     """
     Plots all available 1D lightcurves (emission lines and continua) in grouped subplots.
 
@@ -79,7 +79,7 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
     sorted_line_data_dict = dict(sorted(compare_cont_data.items(), key=lambda item: sort_keys(item[0], key_order_lines)))
 
     plot_lightcurves_in_groups(sorted_line_data_dict, x_key, y_key, compare_cont, xlabel, ylabel_line, yerr_name=yerr_name, title=super_title,
-                           save_only=save_only, output_dir=save_folder, line_light_curves=True)
+                           save_only=save_only, output_dir=save_folder, line_light_curves=True, file_name=file_name)
 
     # Plot for continua (with custom color dictionary if needed)
     super_title = f"{campaign.split('_')[0]} Continua"
@@ -100,7 +100,7 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
 
 def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
                                yerr_name=None, title=None, save_only=False,
-                               output_dir=None, color_dict=None, rows=4, cols=2, line_light_curves=False):
+                               output_dir=None, color_dict=None, rows=4, cols=2, line_light_curves=False, file_name=None):
     """
     Plots lightcurves grouped in subplots with optional error bars and custom layout.
 
@@ -179,7 +179,7 @@ def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis'
             configure_lightcurves_axis(ax, row, col, new_ylabel, color, x_values, y_values, yerr_values, line_name, line_light_curves)
 
         finalize_figure(fig, axes, x_label=xlabel, title=title, group_index=group_index,
-                        save_only=save_only, output_dir=output_dir, compare_cont=compare_cont)
+                        save_only=save_only, output_dir=output_dir, compare_cont=compare_cont, file_name=file_name)
 
 
 def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
@@ -287,17 +287,17 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
 def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     ensure_output_dir(output_dir)
     data = import_1d_lightcurve_data()
-    #for cont in ["Cont1150_not_optical_calibrated", "UVW2"]:
-     #   key_order_lines = [cont, 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'OI8446']
+    for cont in ["UVW2"]:
+        key_order_lines = [cont, 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'OI8446']
 
-      #  key_order_conts = ["UVW2", "Cont1150_not_optical_calibrated", "Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015"] #, "Cont8900"]
-       # for campaign, data_dict in data.items():
-        #    plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont=cont, key_order_lines=key_order_lines, key_order_conts=key_order_conts, save_only=save_only)
+        key_order_conts = ["UVW2", "Cont1150_not_optical_calibrated", "Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015"] #, "Cont8900"]
+        for campaign, data_dict in data.items():
+            plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont=cont, key_order_lines=key_order_lines, key_order_conts=key_order_conts, save_only=save_only, file_name=f"{campaign}_{cont}_lightcurves")
     key_order_uv_lines = ["UVW2", 'LyAlpha_not_optical_calibrated', 'NV1238_not_optical_calibrated',
                           'SiIV1393_not_optical_calibrated', 'CIV1548_not_optical_calibrated',
                           'HeII1640_not_optical_calibrated']
 
-    plot_all_1d_lightcurves_in_groups(data["NGC4593_not_optical_calibrated"],"NGC4593_not_optical_calibrated", output_dir, compare_cont="UVW2", key_order_lines=key_order_uv_lines, key_order_conts=[], save_only=save_only)
+    plot_all_1d_lightcurves_in_groups(data["NGC4593_not_optical_calibrated"],"NGC4593_not_optical_calibrated", output_dir, compare_cont="UVW2", key_order_lines=key_order_uv_lines, key_order_conts=[], save_only=save_only, file_name="UV_lightcurves")
 
 # methods to run
 
