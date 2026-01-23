@@ -1,2 +1,2 @@
 name tau_cent tau_cent_err_low tau_cent_err_high M_Mo M_Mo_err_low M_Mo_err_high
-UVW2 0.4802 0.4090 0.1761 0.0000 0.0000 0.0000
+UVW2 0.4802 0.4184 0.1764 0.0000 0.0000 0.0000
