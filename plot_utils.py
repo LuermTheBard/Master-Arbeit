@@ -1,11 +1,10 @@
 from pathlib import Path
 
 import numpy as np
-from astropy.constants.codata2018 import c
 from scipy.interpolate import interp1d
 
 from import_data import find_prime_data_folder
-from settings import F_MEAN, F_SIGMA, CENTRAL_WAVELENGTH, F_VAR, F_REL
+from settings import F_MEAN, CENTRAL_WAVELENGTH, F_VAR
 
 
 def calculate_standard_error_for_lightcurves(flux, flux_noise_err, err_correction=None, err_set=None):
@@ -428,26 +427,69 @@ def subtract_continuum(wavelength, intensity, line_wavelength, left_range, right
 
 def convert_to_velocity(wavelength, line_wavelength):
     """
-    Converts wavelength values to velocity space (in km/s), relative to a given line center.
+    Converts wavelength values to line-of-sight velocity space (in km/s),
+    relative to a given rest-frame line center, using the relativistic Doppler formula.
 
-    The velocity is calculated using the non-relativistic Doppler formula:
-        v = (λ - λ₀) / λ₀ * c
+    The velocity is computed via the relativistic relation between observed and rest wavelength:
+        R = λ / λ₀
+        β = v/c = (R² - 1) / (R² + 1) = (λ² - λ₀²) / (λ² + λ₀²)
+        v = β * c
+
+    Notes:
+    ------
+    - For λ > λ₀ the returned velocity is positive (redshift), and for λ < λ₀ negative (blueshift).
+    - This assumes pure radial motion (line-of-sight) and uses the special-relativistic Doppler shift.
 
     Parameters:
     -----------
     wavelength : array-like
-        Observed wavelength(s).
+        Observed wavelength(s), same units as `line_wavelength`.
     line_wavelength : float
-        Central rest-frame wavelength of the emission line.
+        Rest-frame (central) wavelength of the line, same units as `wavelength`.
 
     Returns:
-    -----------
+    --------
     np.ndarray
-        Velocity values in km/s corresponding to the input wavelengths.
+        Relativistic velocity values in km/s corresponding to the input wavelengths.
     """
 
-    c_km_s = c.to('km/s').value  # Lichtgeschwindigkeit in km/s
-    return c_km_s * (wavelength - line_wavelength) / line_wavelength
+
+    c = 299792.458
+    squared_wavelengths = wavelength ** 2
+    beta = (squared_wavelengths - line_wavelength ** 2) / (squared_wavelengths + line_wavelength ** 2)
+    velos = beta * c
+    # velos = (wavelengths/centralWavelength - 1) * c
+    return velos
+
+
+def calculate_dispersion_velocity(lines_wavelengths):
+    """
+    Gibt ein Dictionary mit Liniennamen und der Geschwindigkeitsauflösung (km/s) pro Pixel zurück,
+    basierend auf der Dispersion des jeweils passenden STIS-Gitters.
+    """
+
+    dispersion_velocity = {}
+
+    for line, central_wavelength in lines_wavelengths.items():
+        if 1119 <= central_wavelength <= 1715:
+            dispersion = 0.584  # Å/pixel für G140L
+        elif 2888 <= central_wavelength <= 5697:
+            dispersion = 2.746  # Å/pixel für G430L
+        elif 5245 <= central_wavelength <= 10233:
+            dispersion = 4.882  # Å/pixel für G750L
+        else:
+            dispersion = None
+
+        if dispersion:
+            delta_v = convert_to_velocity(central_wavelength + dispersion, central_wavelength)
+            dispersion_velocity[line] = round(delta_v, 1)
+        else:
+            dispersion_velocity[line] = None
+            print(f"Warnung: Keine passende Gitter-Dispersion für {line} (λ = {central_wavelength} Å) gefunden.")
+
+    return dispersion_velocity
+
+
 
 
 def transform_wavelength_to_velocity_and_cut(wavelength, intensity, line_name, velocity_range=None, filename=None):
@@ -627,3 +669,6 @@ def ensure_output_dir(output_dir):
     if not is_dir:
         output_dir_path.mkdir(parents=True, exist_ok=True)
     return output_dir_path
+
+
+# calculate_dispersion_velocity(CENTRAL_WAVELENGTH)

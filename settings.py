@@ -229,32 +229,7 @@ def calculate_velocity_errors(lines_wavelengths):
     return velocity_errors
 
 
-def calculate_dispersion_velocity(lines_wavelengths):
-    """
-    Gibt ein Dictionary mit Liniennamen und der Geschwindigkeitsauflösung (km/s) pro Pixel zurück,
-    basierend auf der Dispersion des jeweils passenden STIS-Gitters.
-    """
-    c = 299792.458
-    dispersion_velocity = {}
 
-    for line, central_wavelength in lines_wavelengths.items():
-        if 1119 <= central_wavelength <= 1715:
-            dispersion = 0.584   # Å/pixel für G140L
-        elif 2888 <= central_wavelength <= 5697:
-            dispersion = 2.746   # Å/pixel für G430L
-        elif 5245 <= central_wavelength <= 10233:
-            dispersion = 4.882   # Å/pixel für G750L
-        else:
-            dispersion = None
-
-        if dispersion:
-            delta_v = c * (dispersion / central_wavelength)
-            dispersion_velocity[line] = round(delta_v, 1)
-        else:
-            dispersion_velocity[line] = None
-            print(f"Warnung: Keine passende Gitter-Dispersion für {line} (λ = {central_wavelength} Å) gefunden.")
-
-    return dispersion_velocity
 
 
 
@@ -300,31 +275,43 @@ IONIZATION_POTENTIAL = {
 
 
 FWHM_RMS = {
-    'HAlpha': 3111, 'HBeta': 3437, 'HGamma': 3852, 'HDelta': 4893,
-    'HeI5875': 3793, 'HeI7065': 2542, 'HeI4471': 999, 'HeI5015': np.nan,
-    'HeII4685': 5778, 'OI8446': 3800, 'LyAlpha': 3384,
-    "LyAlpha_not_optical_calibrated": 4406,
+    'HAlpha': 3111,
+    'HBeta': 3437,
+    'HGamma': 3852,
+    'HDelta': 4893,
+    'HeI5875': 3952,
+    'HeI7065': 2542,
+    'HeI4471': 999,
+    'HeI5015': np.nan,
+    'HeII4685': 5971,
+    'OI8446': 3800,
+    "LyAlpha_not_optical_calibrated": 4566,
     "NV1238_not_optical_calibrated": 3250,
-    "SiIV1393_not_optical_calibrated": 7507,
-    "CIV1548_not_optical_calibrated": 3637,
-    "HeII1640_not_optical_calibrated": 4452
+    "SiIV1393_not_optical_calibrated": 10005,
+    "CIV1548_not_optical_calibrated":  8428,
+    "HeII1640_not_optical_calibrated": 7459
 }
 
 #DELTA_V = calculate_velocity_errors(CENTRAL_WAVELENGTH)
 
-#KM_PER_S_PER_PIXEL = calculate_dispersion_velocity(CENTRAL_WAVELENGTH)
 
 
-KM_PER_S_PER_PIXEL = {
-    'HAlpha': 222.9,     # (Grating: G750L, Dispersion: 4.882 Å/pixel)
-    'HBeta': 169.2,      # (Grating: G430L, Dispersion: 2.746 Å/pixel)
-    'HGamma': 189.4,     # (Grating: G430L, Dispersion: 2.746 Å/pixel)
-    'HDelta': 200.7,     # (Grating: G430L, Dispersion: 2.746 Å/pixel)
-    'HeI5875': 249.1,    # (Grating: G750L, Dispersion: 4.882 Å/pixel)
-    'HeII4685': 175.7,   # (Grating: G430L, Dispersion: 2.746 Å/pixel)
-    'OI8446': 173.3,     # (Grating: G750L, Dispersion: 4.882 Å/pixel)
-    'LyAlpha': 143.9     # (Grating: G140L, Dispersion: 0.584 Å/pixel)
-}
+KM_PER_S_PER_PIXEL ={'CIV1548_not_optical_calibrated': 113.1,
+                     'HAlpha': 222.9,
+                     'HBeta': 169.3,
+                     'HDelta': 200.6,
+                     'HGamma': 189.6,
+                     'HeI4471': 184.1,
+                     'HeI5015': 164.1,
+                     'HeI5875': 249.0,
+                     'HeI7065': 207.1,
+                     'HeII1640_not_optical_calibrated': 106.7,
+                     'HeII4685': 175.6,
+                     'LyAlpha_not_optical_calibrated': 144.0,
+                     'NV1238_not_optical_calibrated': 141.3,
+                     'OI8446': 173.2,
+                     'OIII5007': 164.4,
+                     'SiIV1393_not_optical_calibrated': 125.6}
 
 FWHM_ERR = {
     'HAlpha': 250,
@@ -334,7 +321,10 @@ FWHM_ERR = {
     'HeI5875': 300,
     'HeII4685': 200.0,
     'OI8446': 400.0,
-    'LyAlpha': 200.0,
+    'HeII1640_not_optical_calibrated':200,
+    'SiIV1393_not_optical_calibrated': 500,
+    'CIV1548_not_optical_calibrated': 500,
+    'LyAlpha_not_optical_calibrated': 150,
 }
 
 

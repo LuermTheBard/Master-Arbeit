@@ -464,7 +464,7 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
 
 pseudo_conts_for_line_avg = {
 
-    'LyAlpha_not_optical_calibrated': {'blue': (1155, 1165), 'red': (1270, 1285)},
+    'LyAlpha_not_optical_calibrated': {'blue': (1151, 1161), 'red': (1270, 1285)},
     'NV1238_not_optical_calibrated': {'blue': (1155, 1165), 'red': (1270, 1285)},
     'SiIV1393_not_optical_calibrated': {'blue': (1350, 1360), 'red': (1430,1440)},
     'CIV1548_not_optical_calibrated': {'blue': (1461, 1468), 'red': (1679, 1685)},
@@ -474,7 +474,7 @@ pseudo_conts_for_line_avg = {
     'HBeta': {'blue': (4762, 4774), 'red': (5085, 5112)},
     'HGamma': {'blue': (4197, 4220), 'red': (4435, 4450)},
     'HDelta': {'blue': (4026, 4033), 'red': (4197, 4220)},
-    'HeI5875': {'blue': (5679, 5697), 'red': (6044, 6057)},
+    'HeI5875': {'blue': (5645, 5653), 'red': (6044, 6057)},
     'HeI7065': {'blue': (6934, 6941), 'red': (7331, 7357)},
     'HeI4471': {'blue': (4210, 4225), 'red': (4762, 4774)},
     'HeI5015': {'blue': (4976, 4981), 'red': (5085, 5112)},
@@ -484,7 +484,7 @@ pseudo_conts_for_line_avg = {
 }
 pseudo_conts_for_line_rms = {
 
-    'LyAlpha_not_optical_calibrated': {'blue': (1155, 1165), 'red': (1340, 1355)},
+    'LyAlpha_not_optical_calibrated': {'blue': (1151, 1161), 'red': (1340, 1355)},
     'NV1238_not_optical_calibrated': {'blue': (1155, 1165), 'red': (1270, 1285)},
     'SiIV1393_not_optical_calibrated': {'blue': (1340, 1355), 'red': (1430,1440)},
     'CIV1548_not_optical_calibrated': {'blue': (1461, 1468), 'red': (1679, 1685)},
@@ -494,7 +494,7 @@ pseudo_conts_for_line_rms = {
     'HAlpha': {'blue': (6279, 6301), 'red': (6742, 6781)},
     'HBeta': {'blue': (4762, 4774), 'red': (4967, 4984)},
     'HGamma': {'blue': (4197, 4220), 'red': (4417, 4429)},
-    'HDelta': {'blue': (4006, 4016), 'red': (4197, 4220)},
+    'HDelta': {'blue': (4006, 4016), 'red': (4197, 4211)},
     'HeI5875': {'blue': (5773, 5790), 'red': (5952, 5961)},
     'HeI7065': {'blue': (6934, 6941), 'red': (7335, 7349)},
     'HeI4471': {'blue': (4210, 4225), 'red': (4762, 4774)},
@@ -949,6 +949,6 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-#(plot=True)
+substract_pseudo_continua_from_spectra(plot=True)
 
 run_normalized_profiles_together_in_groups()
