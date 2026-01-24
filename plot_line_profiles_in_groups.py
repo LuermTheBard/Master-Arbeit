@@ -807,19 +807,25 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     profile_data = import_line_profile_data(normalized=True)
 
     # key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
-    key_order_all = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685']
+    key_order_all = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'HeII1640_not_optical_calibrated', 'OI8446']
 
     key_order_balmer = ['HAlpha', 'HBeta', 'HGamma']
     key_order_helium = ['HeI5875',  'HeII4685']
     key_order_Ly_O= ["LyAlpha_not_optical_calibrated", 'OI8446']
+    key_order_UV = ['LyAlpha_not_optical_calibrated',
+                   # 'NV1238_not_optical_calibrated',
+                    'SiIV1393_not_optical_calibrated',
+                    'CIV1548_not_optical_calibrated']
 
     #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_balmer, title="Normalized Balmer Line Profiles", fig_size=(6, 8))
     #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_helium, title="Normalized Helium Line Profiles", fig_size=(6, 4))
     #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_Ly_O,
     #                                        title="Normalized Lyman and Oxygen Line Profiles", fig_size=(10, 5))
 
-    plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=3, key_order=key_order_all,
-                                            title="Normalized Line Profiles", fig_size=(12, 8))
+    plot_normalized_line_profiles_in_groups(profile_data, rows=4, cols=2, key_order=key_order_all,
+                                            title="Normalized Line Profiles", fig_size=(8, 14))
+    plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_UV,
+                                            title="Normalized Line Profiles UV", fig_size=(8, 8))
 
     #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_balmer,
     #                                        title="Normalized AVG Balmer Line Profiles", fig_size=(6, 8), components=("avg",))
@@ -832,7 +838,7 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
-        line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"], ["HAlpha", "HDelta"],["HBeta", "HGamma"],["HBeta", "HDelta"], ["HGamma", "HDelta"]],
+        line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"], ["HBeta", "HGamma"], ["HAlpha", "HDelta"],["HBeta", "HDelta"], ["HGamma", "HDelta"]],
         components=("avg", "rms"),
         title="AVG and RMS overlay Balmer",
         safe_file_name="AVG_and_RMS_overlay_Balmer",
@@ -845,14 +851,14 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
-        line_groups=[['HeI5875', 'HeII4685']],
+        line_groups=[['HeI5875', 'HeII4685'], ['HeI5875', 'HeII1640_not_optical_calibrated'],['HeII4685', 'HeII1640_not_optical_calibrated']],
         components=("avg","rms"),
         title="AVG and RMS overlay Helium",
         safe_file_name="AVG_and_RMS_overlay_Helium",
         xlim=(-9999, 10000),
-        rows=1,
+        rows=3,
         cols=2,
-        fig_size=(8, 4)
+        fig_size=(8, 12)
     )
 
 
@@ -873,9 +879,9 @@ def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT
 
     key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', "OIII5007"]
 
-    for line in key_order:
-        process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot, width_level=0.5)
-        process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=plot, width_level=0.5)
+    #for line in key_order:
+    #    process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot, width_level=0.5)
+    #    process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=plot, width_level=0.5)
 
     uncalibrated_fits_data = import_fits_data(Path("fits") / "uncalibrated_AVG_RMS")
 
@@ -883,12 +889,25 @@ def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT
     uncalibrated_avg_data = np.array(uncalibrated_fits_data['avg.fits']['data'][0])
     uncalibrated_rms_data = np.array(uncalibrated_fits_data['rms.fits']['data'][0])
 
-    uv_key_order = ["LyAlpha_not_optical_calibrated", "SiIV1393_not_optical_calibrated", "NV1238_not_optical_calibrated",
-                    "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated"]
+    uv_lines_peak_windows = {
+        "LyAlpha_not_optical_calibrated": 2000,
+        "SiIV1393_not_optical_calibrated": 2000,
+        #"NV1238_not_optical_calibrated": 1000,
+        "CIV1548_not_optical_calibrated": 2000,
+        "HeII1640_not_optical_calibrated": 2000,
+    }
 
-    for line in uv_key_order:
-        process_spectrum(uncalibrated_wavelenghts, uncalibrated_avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot, peak_search_window=2000)
-        process_spectrum(uncalibrated_wavelenghts, uncalibrated_rms_data, line, spec_type="rms", output_dir=output_dir, plot=plot, peak_search_window=2000)
+    for line, peak_window in uv_lines_peak_windows.items():
+        process_spectrum(
+            uncalibrated_wavelenghts, uncalibrated_avg_data, line,
+            spec_type="avg", output_dir=output_dir, plot=plot,
+            peak_search_window=peak_window
+        )
+        process_spectrum(
+            uncalibrated_wavelenghts, uncalibrated_rms_data, line,
+            spec_type="rms", output_dir=output_dir, plot=plot,
+            peak_search_window=peak_window
+        )
 
 
 
@@ -949,6 +968,6 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-substract_pseudo_continua_from_spectra(plot=True)
+# substract_pseudo_continua_from_spectra(plot=True)
 
 run_normalized_profiles_together_in_groups()

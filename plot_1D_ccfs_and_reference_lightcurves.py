@@ -1142,6 +1142,7 @@ uvw2_keyorders_optical = {"UVW2":
                                "HAlpha",
                                "HBeta",
                                "HGamma",
+                               "HDelta",
                                "HeI5875",
                                "HeII4685",
                                "OI8446"]}
@@ -1155,8 +1156,8 @@ UV_keyorders_not_optical = {"Cont1150_not_optical_calibrated": ["time shift (tau
 uvw2_keyorders_not_optical = { "UVW2": ["time shift (tau)",
                                         "UVW2",
                                         "LyAlpha_not_optical_calibrated",
-                                        "SiIV1393_not_optical_calibrated",
                                         "NV1238_not_optical_calibrated",
+                                        "SiIV1393_not_optical_calibrated",
                                         "CIV1548_not_optical_calibrated",
                                         "HeII1640_not_optical_calibrated"]}
                                         
@@ -1189,7 +1190,7 @@ save_1d_corr_and_lightcurves_general(
     keyorders_dict=uvw2_keyorders_optical,
     file_name="UVW2_ccfs_and_reference_lightcurves_optical",
     combine_data=True,
-    rows=8,
+    rows=9,
     figsize=(6, 12),
     show_reference_label=True,
     format_labels_as_paper = True,
