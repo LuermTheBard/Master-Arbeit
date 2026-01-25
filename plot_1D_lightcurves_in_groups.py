@@ -112,7 +112,7 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
 
 def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
                                yerr_name=None, title=None, save_only=False,
-                               output_dir=None, color_dict=None, rows=None, cols=2, line_light_curves=False, file_name=None):
+                               output_dir=None, color_dict=None, rows=4, cols=2, line_light_curves=False, file_name=None):
     """
     Plots lightcurves grouped in subplots with optional error bars and custom layout.
 
@@ -165,8 +165,8 @@ def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis'
         rows = math.ceil(n_panels / cols)
 
     # -------- FIXE Panel-Größe (jedes Subplot bleibt gleich groß) --------
-    panel_w = 3.2  # inch pro Panel (Breite) -> einmal einstellen
-    panel_h = 3.2  # inch pro Panel (Höhe)   -> einmal einstellen
+    panel_w = 2.1  # inch pro Panel (Breite) -> einmal einstellen
+    panel_h = 2.1  # inch pro Panel (Höhe)   -> einmal einstellen
 
     # Extra Platz für Titel/Labels (einmal einstellen)
     pad_w = 0.8  # links/rechts
@@ -323,12 +323,12 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
             ax.set_ylabel(new_ylabel, fontsize=12)
         else:
             ax.set_ylabel(ylabel, fontsize=12)
-        ax.yaxis.set_label_coords(-0.15, 0.5)
+        ax.yaxis.set_label_coords(-0.2, 0.5)
     else:
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
         ax.set_ylabel(ylabel, fontsize=12)
-        ax.yaxis.set_label_coords(1.15, 0.5)
+        ax.yaxis.set_label_coords(1.2, 0.5)
 
     if row < 3:
         ax.set_xticklabels([])

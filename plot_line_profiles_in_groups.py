@@ -107,10 +107,11 @@ def plot_normalized_line_profiles_in_groups(
     rows=2,
     cols=3,
     key_order=None,
-    fig_size=(8, 8),
+    fig_size=None,                 # <- optional lassen, wir berechnen wenn None
     title="Normalized Line Profiles",
     shared_y=False,
-    components=("avg", "rms"),   # <- NEU: ("avg",) oder ("rms",) oder ("avg","rms")
+    components=("avg", "rms"),
+    safe_file_name="normalized_profiles",
 ):
     x_key = 'velocity space (km/s)'
     y_key = 'normalized flux'
@@ -146,14 +147,33 @@ def plot_normalized_line_profiles_in_groups(
                 "y": data["rms"][line]["data_dict"][y_key]
             }
 
+    # -------- FIXE Panel-Größe: Panels bleiben immer gleich groß --------
+    panel_w = 3.2   # inch pro Panel (Breite) -> einmal einstellen
+    panel_h = 4.8   # inch pro Panel (Höhe)   -> einmal einstellen
+    pad_w = 0.8     # extra links/rechts
+    pad_h = 1.4     # extra oben/unten
+
+    if fig_size is None:
+        fig_size = (cols * panel_w + pad_w, rows * panel_h + pad_h)
+    # -------------------------------------------------------------------
+
     for current_data, group_index in prepare_data(plot_data, rows, cols):
         fig, axes = plt.subplots(rows, cols, figsize=fig_size, sharex=True, sharey=shared_y)
-        axes = np.array(axes).reshape(rows, cols)
-        fig.subplots_adjust(hspace=0, wspace=0)
+
+        # axes immer 2D (für finalize_figure / check_for_empty_rows)
+        if not isinstance(axes, np.ndarray):
+            axes = np.array([[axes]])
+        else:
+            axes = axes.reshape(rows, cols)
+
+        axes_flat = axes.ravel()
+
+        # Panels ohne Abstand + geringe Außenränder (tweak falls nötig)
+        fig.subplots_adjust(left=0.06, right=0.99, bottom=0.06, top=0.93, hspace=0.0, wspace=0.0)
 
         for i, (line_name, line_data) in enumerate(current_data):
+            ax = axes_flat[i]
             row, col = divmod(i, cols)
-            ax = axes[row, col]
 
             if line_data is None:
                 continue
@@ -161,15 +181,13 @@ def plot_normalized_line_profiles_in_groups(
             # Defaults (leere Arrays)
             avg_x = avg_y = rms_x = rms_y = np.array([])
 
-            if line_data is not None:
-                if "avg" in components and "avg" in line_data:
-                    avg_x = line_data["avg"]["x"]
-                    avg_y = line_data["avg"]["y"]
-                if "rms" in components and "rms" in line_data:
-                    rms_x = line_data["rms"]["x"]
-                    rms_y = line_data["rms"]["y"]
+            if "avg" in components and "avg" in line_data:
+                avg_x = line_data["avg"]["x"]
+                avg_y = line_data["avg"]["y"]
+            if "rms" in components and "rms" in line_data:
+                rms_x = line_data["rms"]["x"]
+                rms_y = line_data["rms"]["y"]
 
-            # -> Wichtig: configure_line_profile_axis muss wissen, was geplottet werden soll
             configure_line_profile_axis(
                 ax,
                 row=row,
@@ -180,8 +198,19 @@ def plot_normalized_line_profiles_in_groups(
                 rms_x=rms_x,
                 rms_y=rms_y,
                 line_name=line_name,
-                components=components,   # <- NEU (siehe unten)
+                components=components,
             )
+
+        # Optional: leere Slots komplett entfernen (falls letzte Reihe nicht voll)
+        for j in range(len(current_data), rows * cols):
+            fig.delaxes(axes_flat[j])
+
+        # wie viele Panels insgesamt?
+        n_panels_total = len(plot_data)
+        panels_per_fig = rows * cols
+        multi_page = n_panels_total > panels_per_fig
+
+        file_name = safe_file_name if not multi_page else f"{safe_file_name}_p{group_index + 1:02d}"
 
         finalize_figure(
             fig=fig,
@@ -191,7 +220,8 @@ def plot_normalized_line_profiles_in_groups(
             save_only=save_only,
             output_dir=output_dir,
             x_label="Velocity (km/s)",
-            line_profile=True
+            line_profile=True,
+            file_name=file_name,  # <- NEU
         )
 
 
@@ -201,7 +231,7 @@ def plot_overlaid_normalized_line_profiles_in_panels(
     components=("rms",),
     save_only=False,
     output_dir=None,
-    fig_size=(12, 6),
+    fig_size=None,                      # <- None = automatisch aus Panelgröße
     title="Overlaid normalized line profiles",
     xlim=(-9000, 8999),
     ylim=(-0.05, 1.05),
@@ -233,7 +263,7 @@ def plot_overlaid_normalized_line_profiles_in_panels(
         rms_kwargs = dict(linestyle="-", linewidth=1)
 
     # ------------------------------------------------------------------
-    # NEU: globale Farbzuordnung pro Linie, wenn nichts übergeben wurde
+    # globale Farbzuordnung pro Linie, wenn nichts übergeben wurde
     unique_lines = []
     seen = set()
     for g in line_groups:
@@ -277,6 +307,16 @@ def plot_overlaid_normalized_line_profiles_in_panels(
     if panels_per_fig <= 0:
         raise ValueError("rows * cols must be >= 1")
 
+    # -------- FIXE Panel-Größe: Panels bleiben immer gleich groß --------
+    panel_w = 3.2  # inch pro Panel (Breite) -> einmal einstellen
+    panel_h = 4.8  # inch pro Panel (Höhe)   -> einmal einstellen
+    pad_w = 0.8  # extra links/rechts
+    pad_h = 1.4  # extra oben/unten
+
+    if fig_size is None:
+        fig_size = (cols * panel_w + pad_w, rows * panel_h + pad_h)
+    # -------------------------------------------------------------------
+
     def _iter_pages(panels, page_size):
         for start in range(0, len(panels), page_size):
             page_index = start // page_size
@@ -289,15 +329,25 @@ def plot_overlaid_normalized_line_profiles_in_panels(
 
     for page_panels, page_index in _iter_pages(expanded_panels, panels_per_fig):
         fig, axes = plt.subplots(rows, cols, figsize=fig_size, sharex=True, sharey=True)
-        axes = np.array(axes).reshape(rows, cols)
-        fig.subplots_adjust(hspace=0, wspace=0)
+
+        # axes immer 2D (wichtig für finalize_figure)
+        if not isinstance(axes, np.ndarray):
+            axes = np.array([[axes]])
+        else:
+            axes = axes.reshape(rows, cols)
+
+        axes_flat = axes.ravel()
+
+        # Panels ohne Abstand + kleine Außenränder
+        fig.subplots_adjust(left=0.06, right=0.99, bottom=0.06, top=0.93, hspace=0.0, wspace=0.0)
 
         for i, panel in enumerate(page_panels):
+            ax = axes_flat[i]
             r, c = divmod(i, cols)
-            ax = axes[r, c]
 
             if panel is None:
-                ax.set_visible(False)
+                # besser als set_visible(False): komplett rausnehmen
+                fig.delaxes(ax)
                 continue
 
             group, comp = panel
@@ -343,10 +393,9 @@ def plot_overlaid_normalized_line_profiles_in_panels(
             ax.xaxis.set_major_locator(MultipleLocator(2500))
             ax.tick_params(axis="both", labelsize=9)
 
-            # --- NEU: Top-X-Achse in der ersten Row (wie in configure_line_profile_axis) ---
+            # Top-X-Achse in der ersten Row
             if r == 0:
                 add_top_velocity_axis(ax, xlim=xlim, major=2500, labelsize=9, rotation=45)
-            # ---------------------------------------------------------------------------
 
             if r == rows - 1:
                 ax.set_xlabel("Velocity (km/s)", fontsize=12)
@@ -385,6 +434,7 @@ def plot_overlaid_normalized_line_profiles_in_panels(
             line_profile=True,
             file_name=file_name,
         )
+
 
 
 
@@ -822,10 +872,10 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_Ly_O,
     #                                        title="Normalized Lyman and Oxygen Line Profiles", fig_size=(10, 5))
 
-    plot_normalized_line_profiles_in_groups(profile_data, rows=4, cols=2, key_order=key_order_all,
-                                            title="Normalized Line Profiles", fig_size=(8, 14))
+    plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_all,
+                                            safe_file_name="Normalized Line Profiles")
     plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_UV,
-                                            title="Normalized Line Profiles UV", fig_size=(8, 8))
+                                            safe_file_name="Normalized Line Profiles UV")
 
     #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_balmer,
     #                                        title="Normalized AVG Balmer Line Profiles", fig_size=(6, 8), components=("avg",))
@@ -845,7 +895,6 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
         xlim=(-9999, 10000),
         rows=3,
         cols=2,
-        fig_size=(8, 12)
     )
 
 
@@ -858,7 +907,6 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
         xlim=(-9999, 10000),
         rows=3,
         cols=2,
-        fig_size=(8, 12)
     )
 
 
