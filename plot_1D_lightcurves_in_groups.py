@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, MaxNLocator, FuncFormatter
@@ -51,13 +53,18 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
     x_key = 'timestamps [MJD]'
     y_key = 'fluxes [ergs/s/cm2/A]'
 
-
-
-
     save_folder = output_dir / campaign / "plot_1d_lightcurves"
     save_folder.mkdir(parents=True, exist_ok=True)
 
-    # Plot for lines
+    def pick_only_in_order(source_dict, key_order):
+        """Return dict with ONLY keys that appear in key_order, in that order (missing keys are skipped)."""
+        if not key_order:
+            return dict(source_dict)  # fallback: keep all
+        return {k: source_dict[k] for k in key_order if k in source_dict}
+
+    # -------------------------
+    # Plot for lines (+ compare_cont)
+    # -------------------------
     super_title = f"{campaign.split('_')[0]} Lines"
 
     try:
@@ -65,23 +72,26 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
             compare_cont_data = {compare_cont: data_dict["lines"][compare_cont]}
         else:
             compare_cont_data = {compare_cont: data_dict["continua"][compare_cont]}
+
+        # add ALL lines first (we'll filter afterwards)
         compare_cont_data.update(data_dict["lines"])
     except KeyError:
         print(f"Continuum '{compare_cont}' not found in campaign '{campaign}'. Skipping plot for lines.")
         return
 
-    def sort_keys(key, key_order):
-        for idx, prefix in enumerate(key_order):
-            if key.startswith(prefix):
-                return idx
-        return len(key_order)
+    # IMPORTANT: filter to ONLY those defined in key_order_lines
+    filtered_line_data_dict = pick_only_in_order(compare_cont_data, key_order_lines)
 
-    sorted_line_data_dict = dict(sorted(compare_cont_data.items(), key=lambda item: sort_keys(item[0], key_order_lines)))
+    plot_lightcurves_in_groups(
+        filtered_line_data_dict, x_key, y_key, compare_cont,
+        xlabel, ylabel_line, yerr_name=yerr_name, title=super_title,
+        save_only=save_only, output_dir=save_folder, line_light_curves=True,
+        file_name=file_name
+    )
 
-    plot_lightcurves_in_groups(sorted_line_data_dict, x_key, y_key, compare_cont, xlabel, ylabel_line, yerr_name=yerr_name, title=super_title,
-                           save_only=save_only, output_dir=save_folder, line_light_curves=True, file_name=file_name)
-
-    # Plot for continua (with custom color dictionary if needed)
+    # -------------------------
+    # Plot for continua
+    # -------------------------
     super_title = f"{campaign.split('_')[0]} Continua"
 
     if campaign == "NGC4593_optical_calibrated":
@@ -89,18 +99,20 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
     else:
         all_cont_dict = data_dict["continua"]
 
+    # IMPORTANT: filter to ONLY those defined in key_order_conts
+    filtered_cont_data_dict = pick_only_in_order(all_cont_dict, key_order_conts)
 
-    sorted_cont_data_dict = dict(
-        sorted(all_cont_dict.items(), key=lambda item: sort_keys(item[0], key_order_conts)))
-
-    plot_lightcurves_in_groups(sorted_cont_data_dict, x_key, y_key, compare_cont, xlabel, ylabel_cont, yerr_name=yerr_name,
-                           title=super_title, save_only=save_only, output_dir=save_folder,
-                           color_dict=COLORCODE_CONTINUA_NORMALIZED)
+    plot_lightcurves_in_groups(
+        filtered_cont_data_dict, x_key, y_key, compare_cont,
+        xlabel, ylabel_cont, yerr_name=yerr_name, title=super_title,
+        save_only=save_only, output_dir=save_folder,
+        color_dict=COLORCODE_CONTINUA_NORMALIZED
+    )
 
 
 def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
                                yerr_name=None, title=None, save_only=False,
-                               output_dir=None, color_dict=None, rows=4, cols=2, line_light_curves=False, file_name=None):
+                               output_dir=None, color_dict=None, rows=None, cols=2, line_light_curves=False, file_name=None):
     """
     Plots lightcurves grouped in subplots with optional error bars and custom layout.
 
@@ -143,22 +155,58 @@ def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis'
     -----------
     None
     """
+    # Anzahl Panels = wie viele Keys du plotten willst
+    n_panels = len(data)
+
+    # cols fest (2), rows automatisch, falls nicht explizit übergeben
+    if cols is None:
+        cols = 2
+    if rows is None:
+        rows = math.ceil(n_panels / cols)
+
+    # -------- FIXE Panel-Größe (jedes Subplot bleibt gleich groß) --------
+    panel_w = 3.2  # inch pro Panel (Breite) -> einmal einstellen
+    panel_h = 3.2  # inch pro Panel (Höhe)   -> einmal einstellen
+
+    # Extra Platz für Titel/Labels (einmal einstellen)
+    pad_w = 0.8  # links/rechts
+    pad_h = 1.4  # oben/unten
+
+    fig_w = cols * panel_w + pad_w
+    fig_h = rows * panel_h + pad_h
+    # -------------------------------------------------------------------
 
     for current_data, group_index in prepare_data(data, rows, cols):
-        fig, axes = plt.subplots(rows, cols, figsize=(8, 12), sharex=True, sharey=shared_y)
-        fig.subplots_adjust(hspace=0, wspace=0)
+        fig, axes = plt.subplots(
+            rows, cols,
+            figsize=(fig_w, fig_h),
+            sharex=True,
+            sharey=shared_y
+        )
 
+
+        if not isinstance(axes, np.ndarray):
+            axes = np.array([[axes]])
+        else:
+            axes = axes.reshape(rows, cols)
+
+        axes_flat = axes.ravel()
+
+        # Panels ohne Abstand + optional fast keine Außenränder
+        fig.subplots_adjust(
+            left=0.06, right=0.99, bottom=0.06, top=0.93,  # tweak nach Geschmack
+            wspace=0.0, hspace=0.0
+        )
+
+        # current_data ist vermutlich eine Liste von (name, dict)-Tuples
         for i, (line_name, line_data) in enumerate(current_data):
-            row, col = divmod(i, cols)
-            ax = axes[row, col]
+            ax = axes_flat[i]
 
             if line_data:
                 x_values = np.array(line_data.get(x_key, []))
                 y_values = np.array(line_data.get(y_key, []))
                 yerr_noise_values = np.array(line_data.get(yerr_name, [])) if yerr_name else None
-
                 yerr_values = calculate_standard_error_for_lightcurves(y_values, yerr_noise_values)
-
             else:
                 x_values = np.array([])
                 y_values = np.array([])
@@ -176,11 +224,23 @@ def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis'
             y_values = y_values / exponent
             yerr_values = yerr_values / exponent
 
-            configure_lightcurves_axis(ax, row, col, new_ylabel, color, x_values, y_values, yerr_values, line_name, line_light_curves)
+            row, col = divmod(i, cols)
+            configure_lightcurves_axis(
+                ax, row, col, new_ylabel, color,
+                x_values, y_values, yerr_values,
+                line_name, line_light_curves
+            )
 
-        finalize_figure(fig, axes, x_label=xlabel, title=title, group_index=group_index,
-                        save_only=save_only, output_dir=output_dir, compare_cont=compare_cont, file_name=file_name)
+        # Leere Panels ausblenden (falls rows*cols > len(current_data))
+        for j in range(len(current_data), rows * cols):
+            axes_flat[j].set_visible(False)
 
+        finalize_figure(
+            fig, axes,
+            x_label=xlabel, title=title, group_index=group_index,
+            save_only=save_only, output_dir=output_dir,
+            compare_cont=compare_cont, file_name=file_name
+        )
 
 def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
                                 line_name, line_lightcurves=False):
@@ -290,7 +350,7 @@ def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     for cont in ["UVW2"]:
         key_order_lines = [cont, 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'OI8446']
 
-        key_order_conts = ["UVW2", "Cont1150_not_optical_calibrated", "Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015"] #, "Cont8900"]
+        key_order_conts = ["UVW2", "Cont1150_not_optical_calibrated", "Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015", "Cont8900"]
         for campaign, data_dict in data.items():
             plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont=cont, key_order_lines=key_order_lines, key_order_conts=key_order_conts, save_only=save_only, file_name=f"{campaign}_{cont}_lightcurves")
     key_order_uv_lines = ["UVW2", 'LyAlpha_not_optical_calibrated', 'NV1238_not_optical_calibrated',
