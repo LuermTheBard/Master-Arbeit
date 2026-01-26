@@ -235,6 +235,9 @@ def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_labe
         else:
             fig.suptitle(f'{supertitle}', fontsize=14)
 
+    if title is None:
+        title = f'No Title'
+
     if output_dir:
         if file_name:
             save_path = output_dir / f"{file_name}_group_{group_index + 1}.pdf"

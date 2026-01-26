@@ -10,7 +10,17 @@ from general_plot import prepare_data, finalize_figure, format_relative_days, fo
 from settings import BASE_MJD, COLORCODE_CONTINUA_NORMALIZED, DEFAULT_OUTPUT_DIR, SYMBOLES_AND_COLORS_FOR_LIGHTCURVES
 
 
-def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont,
+def deep_merge(dict1, dict2):
+    result = dict1.copy()
+    for key, value in dict2.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
+def plot_all_1d_lightcurves_in_groups(data_dict, output_dir, compare_cont,
                                       key_order_lines=None, key_order_conts=None, save_only=False, file_name=None):
     """
     Plots all available 1D lightcurves (emission lines and continua) in grouped subplots.
@@ -53,7 +63,7 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
     x_key = 'timestamps [MJD]'
     y_key = 'fluxes [ergs/s/cm2/A]'
 
-    save_folder = output_dir / campaign / "plot_1d_lightcurves"
+    save_folder = output_dir /  "plot_1d_lightcurves"
     save_folder.mkdir(parents=True, exist_ok=True)
 
     def pick_only_in_order(source_dict, key_order):
@@ -65,7 +75,6 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
     # -------------------------
     # Plot for lines (+ compare_cont)
     # -------------------------
-    super_title = f"{campaign.split('_')[0]} Lines"
 
     try:
         if compare_cont == "UVW2":
@@ -76,7 +85,7 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
         # add ALL lines first (we'll filter afterwards)
         compare_cont_data.update(data_dict["lines"])
     except KeyError:
-        print(f"Continuum '{compare_cont}' not found in campaign '{campaign}'. Skipping plot for lines.")
+        print(f"Continuum '{compare_cont}' not found. Skipping plot for lines.")
         return
 
     # IMPORTANT: filter to ONLY those defined in key_order_lines
@@ -84,7 +93,7 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
 
     plot_lightcurves_in_groups(
         filtered_line_data_dict, x_key, y_key, compare_cont,
-        xlabel, ylabel_line, yerr_name=yerr_name, title=super_title,
+        xlabel, ylabel_line, yerr_name=yerr_name,
         save_only=save_only, output_dir=save_folder, line_light_curves=True,
         file_name=file_name
     )
@@ -92,22 +101,98 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
     # -------------------------
     # Plot for continua
     # -------------------------
-    super_title = f"{campaign.split('_')[0]} Continua"
 
-    if campaign == "NGC4593_optical_calibrated":
-        all_cont_dict = data_dict["continua"] | {"UVW2": data_dict["lines"]["UVW2"]}
-    else:
-        all_cont_dict = data_dict["continua"]
+    all_cont_dict = data_dict["continua"]
 
     # IMPORTANT: filter to ONLY those defined in key_order_conts
     filtered_cont_data_dict = pick_only_in_order(all_cont_dict, key_order_conts)
 
     plot_lightcurves_in_groups(
         filtered_cont_data_dict, x_key, y_key, compare_cont,
-        xlabel, ylabel_cont, yerr_name=yerr_name, title=super_title,
+        xlabel, ylabel_cont, yerr_name=yerr_name,
         save_only=save_only, output_dir=save_folder,
         color_dict=COLORCODE_CONTINUA_NORMALIZED, file_name=f"{file_name}_cont"
     )
+
+
+def plot_1d_emission_lines_in_groups(
+        data_dict, output_dir, compare_cont,
+        key_order_lines=None, save_only=False, file_name=None
+):
+    base_mjd = BASE_MJD
+
+    xlabel = f"MJD - {base_mjd:.2f}"
+    ylabel_line = (r"$F_{\lambda}$ $[\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1}]$")
+    yerr_name = 'fluxerrs [ergs/s/cm2/A]'
+
+    x_key = 'timestamps [MJD]'
+    y_key = 'fluxes [ergs/s/cm2/A]'
+
+    save_folder = output_dir / "plot_1d_lightcurves"
+    save_folder.mkdir(parents=True, exist_ok=True)
+
+    def pick_only_in_order(source_dict, key_order):
+        if not key_order:
+            return dict(source_dict)
+        return {k: source_dict[k] for k in key_order if k in source_dict}
+
+    try:
+        if compare_cont == "UVW2":
+            compare_cont_data = {compare_cont: data_dict["lines"][compare_cont]}
+        else:
+            compare_cont_data = {compare_cont: data_dict["continua"][compare_cont]}
+
+        compare_cont_data.update(data_dict["lines"])
+    except KeyError:
+        print(f"Continuum '{compare_cont}' not found. Skipping plot for lines.")
+        return
+
+    filtered_line_data_dict = pick_only_in_order(compare_cont_data, key_order_lines)
+
+    plot_lightcurves_in_groups(
+        filtered_line_data_dict, x_key, y_key, compare_cont,
+        xlabel, ylabel_line, yerr_name=yerr_name,
+        save_only=save_only, output_dir=save_folder, line_light_curves=True,
+        file_name=file_name
+    )
+
+
+def plot_1d_continua_in_groups(
+        data_dict, output_dir, compare_cont,
+        key_order_conts=None, save_only=False, file_name=None
+):
+    base_mjd = BASE_MJD
+
+    xlabel = f"MJD - {base_mjd:.2f}"
+    ylabel_cont = (r"$F_{\lambda}$ $[\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, "
+                   r"\mathrm{\AA}^{-1}]$")
+    yerr_name = 'fluxerrs [ergs/s/cm2/A]'
+
+    x_key = 'timestamps [MJD]'
+    y_key = 'fluxes [ergs/s/cm2/A]'
+
+    save_folder = output_dir / "plot_1d_lightcurves"
+    save_folder.mkdir(parents=True, exist_ok=True)
+
+    def pick_only_in_order(source_dict, key_order):
+        if not key_order:
+            return dict(source_dict)
+        return {k: source_dict[k] for k in key_order if k in source_dict}
+
+    all_cont_dict = data_dict["continua"] | {"UVW2": data_dict["lines"]["UVW2"]}
+    filtered_cont_data_dict = pick_only_in_order(all_cont_dict, key_order_conts)
+
+    plot_lightcurves_in_groups(
+        filtered_cont_data_dict, x_key, y_key, compare_cont,
+        xlabel, ylabel_cont, yerr_name=yerr_name,
+        save_only=save_only, output_dir=save_folder,
+        color_dict=COLORCODE_CONTINUA_NORMALIZED,
+        file_name=file_name
+    )
+
+
+
+
 
 
 def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
@@ -201,6 +286,9 @@ def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis'
         # current_data ist vermutlich eine Liste von (name, dict)-Tuples
         for i, (line_name, line_data) in enumerate(current_data):
             ax = axes_flat[i]
+
+            ax.grid(True, which="major", axis="both", alpha=0.35)
+            ax.grid(True, which="minor", axis="x", alpha=0.2)
 
             if line_data:
                 x_values = np.array(line_data.get(x_key, []))
@@ -339,6 +427,7 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
         ax.set_xticklabels([])
 
     ax.xaxis.set_major_locator(MultipleLocator(5))
+    ax.xaxis.set_minor_locator(MultipleLocator(1))
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
 
     if row == 0:
@@ -352,17 +441,36 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
 def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     ensure_output_dir(output_dir)
     data = import_1d_lightcurve_data()
-    for cont in ["UVW2"]:
-        key_order_lines = [cont, 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'OI8446']
 
-        key_order_conts = ["UVW2", "Cont1150_not_optical_calibrated", "Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015", "Cont8900"]
-        for campaign, data_dict in data.items():
-            plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont=cont, key_order_lines=key_order_lines, key_order_conts=key_order_conts, save_only=save_only, file_name=f"{campaign}_{cont}_lightcurves")
-    key_order_uv_lines = ["UVW2", 'LyAlpha_not_optical_calibrated',
-                          'SiIV1393_not_optical_calibrated', 'CIV1548_not_optical_calibrated',
-                          'HeII1640_not_optical_calibrated']
+    merged_dict = deep_merge(data["NGC4593_not_optical_calibrated"], data["NGC4593_optical_calibrated"])
 
-    plot_all_1d_lightcurves_in_groups(data["NGC4593_not_optical_calibrated"],"NGC4593_not_optical_calibrated", output_dir, compare_cont="UVW2", key_order_lines=key_order_uv_lines, key_order_conts=[], save_only=save_only, file_name="UV_lightcurves")
+
+
+    key_order_lines = ["UVW2", 'HAlpha', 'HBeta', 'HGamma', 'HDelta', 'LyAlpha_not_optical_calibrated', 'OI8446']
+
+    key_order_conts = ["UVW2", "Cont1150_not_optical_calibrated", "Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015", "Cont8900"]
+
+    key_order_uv_lines = ["UVW2", 'HeII1640_not_optical_calibrated', 'HeI5875', 'HeII4685',
+                          'SiIV1393_not_optical_calibrated', 'CIV1548_not_optical_calibrated']
+
+    plot_1d_emission_lines_in_groups(
+        merged_dict, output_dir, compare_cont="UVW2",
+        key_order_lines=key_order_lines, save_only=save_only,
+        file_name=f"Balmer_Lyman_and_O_lines"
+    )
+
+    plot_1d_emission_lines_in_groups(
+        merged_dict, output_dir, compare_cont="UVW2",
+        key_order_lines=key_order_uv_lines, save_only=save_only,
+        file_name=f"He_and_UV_lines"
+    )
+
+    plot_1d_continua_in_groups(
+        merged_dict, output_dir, compare_cont="UVW2",
+        key_order_conts=key_order_conts, save_only=save_only,
+        file_name=f"Continua"
+    )
+
 
 # methods to run
 
