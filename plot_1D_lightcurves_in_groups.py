@@ -106,13 +106,13 @@ def plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_c
         filtered_cont_data_dict, x_key, y_key, compare_cont,
         xlabel, ylabel_cont, yerr_name=yerr_name, title=super_title,
         save_only=save_only, output_dir=save_folder,
-        color_dict=COLORCODE_CONTINUA_NORMALIZED
+        color_dict=COLORCODE_CONTINUA_NORMALIZED, file_name=f"{file_name}_cont"
     )
 
 
 def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis', ylabel='Y-axis', shared_y=False,
                                yerr_name=None, title=None, save_only=False,
-                               output_dir=None, color_dict=None, rows=4, cols=2, line_light_curves=False, file_name=None):
+                               output_dir=None, color_dict=None, rows=5, cols=2, line_light_curves=False, file_name=None):
     """
     Plots lightcurves grouped in subplots with optional error bars and custom layout.
 
@@ -166,7 +166,7 @@ def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis'
 
     # -------- FIXE Panel-Größe (jedes Subplot bleibt gleich groß) --------
     panel_w = 2.1  # inch pro Panel (Breite) -> einmal einstellen
-    panel_h = 2.1  # inch pro Panel (Höhe)   -> einmal einstellen
+    panel_h = 1.7  # inch pro Panel (Höhe)   -> einmal einstellen
 
     # Extra Platz für Titel/Labels (einmal einstellen)
     pad_w = 0.8  # links/rechts
@@ -221,8 +221,13 @@ def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis'
             ylabel_parts = ylabel.split("[")
             new_ylabel = ylabel_parts[0] + f"[{latex_exponent} " + ylabel_parts[1]
 
-            y_values = y_values / exponent
-            yerr_values = yerr_values / exponent
+            if line_name != "UVW2":
+
+                y_values = y_values / exponent
+                yerr_values = yerr_values / exponent
+            else:
+                y_values = y_values
+                yerr_values = yerr_values
 
             row, col = divmod(i, cols)
             configure_lightcurves_axis(
@@ -320,14 +325,14 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
 
             ylabel_parts = ylabel.split("[")
             new_ylabel = ylabel_parts[0] + f"[{latex_exponent} " + ylabel_parts[1]
-            ax.set_ylabel(new_ylabel, fontsize=12)
+            ax.set_ylabel(new_ylabel, fontsize=9)
         else:
-            ax.set_ylabel(ylabel, fontsize=12)
+            ax.set_ylabel(ylabel, fontsize=9)
         ax.yaxis.set_label_coords(-0.2, 0.5)
     else:
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
-        ax.set_ylabel(ylabel, fontsize=12)
+        ax.set_ylabel(ylabel, fontsize=9)
         ax.yaxis.set_label_coords(1.2, 0.5)
 
     if row < 3:
@@ -340,7 +345,7 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
         ax_top = ax.secondary_xaxis('top')
         ax_top.xaxis.set_major_locator(MultipleLocator(5))
         ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
-        ax_top.tick_params(axis='x', rotation=45, labelsize=10)
+        ax_top.tick_params(axis='x', rotation=45, labelsize=9)
 
 
 
@@ -353,7 +358,7 @@ def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
         key_order_conts = ["UVW2", "Cont1150_not_optical_calibrated", "Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015", "Cont8900"]
         for campaign, data_dict in data.items():
             plot_all_1d_lightcurves_in_groups(data_dict, campaign, output_dir, compare_cont=cont, key_order_lines=key_order_lines, key_order_conts=key_order_conts, save_only=save_only, file_name=f"{campaign}_{cont}_lightcurves")
-    key_order_uv_lines = ["UVW2", 'LyAlpha_not_optical_calibrated', 'NV1238_not_optical_calibrated',
+    key_order_uv_lines = ["UVW2", 'LyAlpha_not_optical_calibrated',
                           'SiIV1393_not_optical_calibrated', 'CIV1548_not_optical_calibrated',
                           'HeII1640_not_optical_calibrated']
 

@@ -145,7 +145,7 @@ def check_for_empty_rows(axes, fig, x_label, line_profile=False):
                     label = per_col_labels[col] if col < len(per_col_labels) else per_col_labels[-1]
                 else:
                     label = x_label
-                ax.set_xlabel(label, fontsize=12)
+                ax.set_xlabel(label, fontsize=9)
                 ax.tick_params(axis='x', which='both', direction='out', labelbottom=True)
             else:
                 ax.set_xticklabels([])
