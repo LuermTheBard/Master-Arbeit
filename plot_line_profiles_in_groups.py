@@ -148,8 +148,8 @@ def plot_normalized_line_profiles_in_groups(
             }
 
     # -------- FIXE Panel-Größe: Panels bleiben immer gleich groß --------
-    panel_w = 3.2   # inch pro Panel (Breite) -> einmal einstellen
-    panel_h = 4.8   # inch pro Panel (Höhe)   -> einmal einstellen
+    panel_w = 2.6  # inch pro Panel (Breite) -> einmal einstellen
+    panel_h = 3.4  # inch pro Panel (Höhe)   -> einmal einstellen
     pad_w = 0.8     # extra links/rechts
     pad_h = 1.4     # extra oben/unten
 
@@ -233,7 +233,7 @@ def plot_overlaid_normalized_line_profiles_in_panels(
     output_dir=None,
     fig_size=None,                      # <- None = automatisch aus Panelgröße
     title="Overlaid normalized line profiles",
-    xlim=(-9000, 8999),
+    xlim=(-9999, 9999),
     ylim=(-0.05, 1.05),
     show_vline_zero=True,
     legend=True,
@@ -308,8 +308,8 @@ def plot_overlaid_normalized_line_profiles_in_panels(
         raise ValueError("rows * cols must be >= 1")
 
     # -------- FIXE Panel-Größe: Panels bleiben immer gleich groß --------
-    panel_w = 3.2  # inch pro Panel (Breite) -> einmal einstellen
-    panel_h = 4.8  # inch pro Panel (Höhe)   -> einmal einstellen
+    panel_w = 2.6  # inch pro Panel (Breite) -> einmal einstellen
+    panel_h = 3.4  # inch pro Panel (Höhe)   -> einmal einstellen
     pad_w = 0.8  # extra links/rechts
     pad_h = 1.4  # extra oben/unten
 
@@ -436,9 +436,6 @@ def plot_overlaid_normalized_line_profiles_in_panels(
         )
 
 
-
-
-
 def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y, line_name,
                                  line_lightcurves=False, components=("avg","rms")):
     """
@@ -478,7 +475,7 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
     ax.text(0.9, 0.97, f'{label}', transform=ax.transAxes,
             ha='right', va='top', fontsize=11)
 
-    ax.set_xlim(-9999, 10000)
+    ax.set_xlim(-9999, 9999)
     ax.set_ylim(-0.1, 1.05)
     ax.tick_params(axis='both', labelsize=9)
     ax.legend(loc='upper left')
@@ -892,7 +889,7 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
         components=("avg", "rms"),
         title="AVG and RMS overlay Balmer",
         safe_file_name="AVG_and_RMS_overlay_Balmer",
-        xlim=(-9999, 10000),
+        xlim=(-9999, 9999),
         rows=3,
         cols=2,
     )
@@ -904,7 +901,7 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
         components=("avg","rms"),
         title="AVG and RMS overlay Helium",
         safe_file_name="AVG_and_RMS_overlay_Helium",
-        xlim=(-9999, 10000),
+        xlim=(-9999, 9999),
         rows=3,
         cols=2,
     )
@@ -927,9 +924,9 @@ def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT
 
     key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', "OIII5007"]
 
-    #for line in key_order:
-    #    process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot, width_level=0.5)
-    #    process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=plot, width_level=0.5)
+    for line in key_order:
+        process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot, width_level=0.5)
+        process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=plot, width_level=0.5)
 
     uncalibrated_fits_data = import_fits_data(Path("fits") / "uncalibrated_AVG_RMS")
 
@@ -1016,6 +1013,6 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-# substract_pseudo_continua_from_spectra(plot=True)
+#substract_pseudo_continua_from_spectra(plot=True)
 
 run_normalized_profiles_together_in_groups()
