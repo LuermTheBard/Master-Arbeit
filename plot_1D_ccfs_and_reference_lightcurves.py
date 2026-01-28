@@ -1229,7 +1229,7 @@ save_1d_corr_and_lightcurves_general(
 )
 """
 OI_paper_keyorder_HAlpha = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446","HAlpha"],
-                      "UVW2": ["time shift (tau)", "HAlpha", "OI8446"],
+                      "UVW2": ["time shift (tau)", "HAlpha", "OI8446", "LyAlpha_not_optical_calibrated"],
                       #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
                       }
 
@@ -1254,7 +1254,7 @@ save_1d_corr_and_lightcurves_general(
     file_name="OI_ccfs_and_reference_lightcurves_paper HAlpha",
     final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
     combine_data=True,
-    rows=5,
+    rows=6,
     show_reference_label=True,
     format_labels_as_paper = True,
     layout_show_right_ccf_ylabel = False,
