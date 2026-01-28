@@ -5,10 +5,11 @@ import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter, MaxNLocator
+from scipy.odr import RealData, Model, ODR
 
 from import_data import load_centroid_data_by_reference, find_prime_data_folder, import_1d_lightcurve_data
 from plot_utils import format_label, ensure_output_dir, calculate_standard_error_for_lightcurves
-from settings import BASE_MJD, DEFAULT_OUTPUT_DIR, IONIZATION_POTENTIAL, FWHM_RMS, ERR_CORRECTION, ERR_SET
+from settings import BASE_MJD, DEFAULT_OUTPUT_DIR, IONIZATION_POTENTIAL, FWHM_RMS, ERR_CORRECTION, ERR_SET, FWHM_ERR
 
 matplotlib.use('Qt5Agg')
 
@@ -257,13 +258,14 @@ def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_labe
 
 
 
-def plot_ion_pot_FWHM_against_lag(output_dir=DEFAULT_OUTPUT_DIR):
+def plot_ion_pot_FWHM_against_lag(lines, output_dir=DEFAULT_OUTPUT_DIR):
     output_file_dir = output_dir / "plot_against_lag"
     ensure_output_dir(output_file_dir)
 
     time_lag_data = load_centroid_data_by_reference()
     ionization = IONIZATION_POTENTIAL
     fwhm_rms = FWHM_RMS
+    fwhm_rms_err = FWHM_ERR
 
     # Sammle Daten für Fit
     x_ip_list, y_ip_list = [], []
@@ -306,36 +308,75 @@ def plot_ion_pot_FWHM_against_lag(output_dir=DEFAULT_OUTPUT_DIR):
     plt.show()
     plt.close()
 
-    # ---------- 2. Plot: FWHM gegen Zeitverzögerung ----------
+    # ---------- 2. Plot: FWHM gegen Zeitverzögerung (mit ODR-Fit) ----------
 
-    for line in time_lag_data:
-        try:
+    # Listen frisch initialisieren (wichtig, falls der Block mehrfach läuft)
+    x_fwhm_list = []
+    y_fwhm_list = []
+    xerr_fwhm_list = []
+    yerr_sym_list = []
 
-            labels = format_label(line, as_latex=False).split(" ")[0]
-            if "$" in labels:
-                labels = labels + "$"
-            y = time_lag_data[line]["tau_cent"]
-            yerr_low = time_lag_data[line]["tau_cent_err_low"]
-            yerr_high = time_lag_data[line]["tau_cent_err_high"]
-            yerr = np.vstack((yerr_low, yerr_high))
-            x = fwhm_rms[line]
+    for line, data in time_lag_data["UVW2"].items():
+        if line in lines:
+            try:
+                labels = format_label(line, as_latex=False).split(" ")[0]
+                if "$" in labels:
+                    labels = labels + "$"
 
-            x_fwhm_list.append(x)
-            y_fwhm_list.append(y)
+                # y: Lag + asymmetrische Fehler
+                y = data["tau_cent"]
+                yerr_low = data["tau_cent_err_low"]
+                yerr_high = data["tau_cent_err_high"]
+                yerr = np.vstack((yerr_low, yerr_high))
 
-            plt.errorbar(x, y, yerr=yerr,
-                         fmt='o', label=labels,
-                         capsize=3, markersize=5)
-        except KeyError:
-            print(f"Missing data for line: {line}")
+                # x: FWHM + symmetrische Fehler
+                x = fwhm_rms[line]
+                x_err = fwhm_rms_err[line]
 
-    # Fit
-    x_fwhm_array = np.array(x_fwhm_list)
-    y_fwhm_array = np.array(y_fwhm_list)
-    coeffs_fwhm = np.polyfit(x_fwhm_array, y_fwhm_array, 1)
-    x_fit = np.linspace(min(x_fwhm_array), max(x_fwhm_array), 100)
-    y_fit = np.polyval(coeffs_fwhm, x_fit)
-    plt.plot(x_fit, y_fit, 'k--')
+                # Sammeln für ODR
+                x_fwhm_list.append(x)
+                y_fwhm_list.append(y)
+                xerr_fwhm_list.append(x_err)
+
+                # ODR braucht symmetrisches sy -> pragmatisch mitteln
+                yerr_sym_list.append(0.5 * (yerr_low + yerr_high))
+
+                # Plotten der Messpunkte mit Fehlerbalken
+                plt.errorbar(x, y, yerr=yerr, xerr=x_err,
+                             fmt='o', label=labels,
+                             capsize=3, markersize=5)
+
+            except KeyError as e:
+                print(f"Missing data for line: {line} with error: {e}")
+
+    # --- ODR Fit (Fehler in x und y) ---
+    x_fwhm_array = np.array(x_fwhm_list, dtype=float)
+    y_fwhm_array = np.array(y_fwhm_list, dtype=float)
+    sx = np.array(xerr_fwhm_list, dtype=float)
+    sy = np.array(yerr_sym_list, dtype=float)
+
+    def lin(B, x):
+        return B[0] * x + B[1]  # Steigung, Achsenabschnitt
+
+    # Startwerte aus einfachem Fit (nur als Initialisierung)
+    beta0 = np.polyfit(x_fwhm_array, y_fwhm_array, 1)
+
+    data_odr = RealData(x_fwhm_array, y_fwhm_array, sx=sx, sy=sy)
+    model = Model(lin)
+    odr = ODR(data_odr, model, beta0=beta0)
+    out = odr.run()
+
+    m, b = out.beta
+    m_err, b_err = out.sd_beta
+
+    print("ODR fit (Lag vs. FWHM):")
+    print(f"m = {m:.6e} ± {m_err:.6e}")
+    print(f"b = {b:.6f} ± {b_err:.6f}")
+
+    # Fit-Linie plotten
+    x_fit = np.linspace(x_fwhm_array.min(), x_fwhm_array.max(), 200)
+    y_fit = m * x_fit + b
+    plt.plot(x_fit, y_fit, 'k--', label='ODR fit')
 
     plt.xlabel("FWHM RMS [km/s]")
     plt.ylabel("Time Lag τ [days]")
@@ -344,6 +385,7 @@ def plot_ion_pot_FWHM_against_lag(output_dir=DEFAULT_OUTPUT_DIR):
     plt.savefig(output_file_dir / "Time_lag_vs_FWHM_with_fit.pdf")
     plt.show()
     plt.close()
+
     # ---------- 3. Vergleichsplot: normierte Fits ----------
 
     # Normiere IP-Fit
@@ -524,8 +566,7 @@ def get_f_var(
 
 
 
-
 # get_f_var(line_names=["HAlpha", "HBeta", "HGamma", "HDelta", "OI8446"])
 
-# plot_ion_pot_FWHM_against_lag()
+# plot_ion_pot_FWHM_against_lag(lines=['HAlpha', 'HBeta', 'HGamma', "HDelta",'HeI5875', 'HeII4685', 'LyAlpha_not_optical_calibrated', "LyAlpha_not_optical_calibrated", "SiIV1393_not_optical_calibrated","CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated"])
 # plot_ccfs_lags_against_angstron()
