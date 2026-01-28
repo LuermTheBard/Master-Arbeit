@@ -450,8 +450,12 @@ def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
 
     key_order_conts = ["UVW2", "Cont1150_not_optical_calibrated", "Cont4010", "Cont4440", "Cont5100", "Cont6110", "Cont6880", "Cont8015", "Cont8900"]
 
-    key_order_uv_lines = ["UVW2", 'HeII1640_not_optical_calibrated', 'HeI5875', 'HeII4685',
-                          'SiIV1393_not_optical_calibrated', 'CIV1548_not_optical_calibrated']
+    key_order_uv_lines = ["UVW2", 'HeII1640_not_optical_calibrated',
+                          'HeI5875',
+                          'HeII4685',
+                          'NV1238_not_optical_calibrated',
+                          'SiIV1393_not_optical_calibrated',
+                          'CIV1548_not_optical_calibrated']
 
     plot_1d_emission_lines_in_groups(
         merged_dict, output_dir, compare_cont="UVW2",

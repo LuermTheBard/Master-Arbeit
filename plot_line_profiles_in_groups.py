@@ -860,7 +860,7 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     key_order_helium = ['HeI5875',  'HeII4685']
     key_order_Ly_O= ["LyAlpha_not_optical_calibrated", 'OI8446']
     key_order_UV = ['LyAlpha_not_optical_calibrated',
-                   # 'NV1238_not_optical_calibrated',
+                    'NV1238_not_optical_calibrated',
                     'SiIV1393_not_optical_calibrated',
                     'CIV1548_not_optical_calibrated']
 
@@ -886,9 +886,21 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
         line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"], ["HBeta", "HGamma"], ["HAlpha", "HDelta"],["HBeta", "HDelta"], ["HGamma", "HDelta"]],
-        components=("avg", "rms"),
-        title="AVG and RMS overlay Balmer",
-        safe_file_name="AVG_and_RMS_overlay_Balmer",
+        components=("avg",),
+        title="AVG overlay Balmer",
+        safe_file_name="AVG_overlay_Balmer",
+        xlim=(-9999, 9999),
+        rows=3,
+        cols=2,
+    )
+
+    plot_overlaid_normalized_line_profiles_in_panels(
+        data=profile_data,
+        line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"], ["HBeta", "HGamma"], ["HAlpha", "HDelta"],
+                     ["HBeta", "HDelta"], ["HGamma", "HDelta"]],
+        components=("rms",),
+        title="RMS overlay Balmer",
+        safe_file_name="RMS_overlay_Balmer",
         xlim=(-9999, 9999),
         rows=3,
         cols=2,
@@ -898,11 +910,23 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
         line_groups=[['HeI5875', 'HeII4685'], ['HeI5875', 'HeII1640_not_optical_calibrated'],['HeII4685', 'HeII1640_not_optical_calibrated']],
-        components=("avg","rms"),
+        components=("avg",),
         title="AVG and RMS overlay Helium",
-        safe_file_name="AVG_and_RMS_overlay_Helium",
+        safe_file_name="AVG_overlay_Helium",
         xlim=(-9999, 9999),
-        rows=3,
+        rows=2,
+        cols=2,
+    )
+
+    plot_overlaid_normalized_line_profiles_in_panels(
+        data=profile_data,
+        line_groups=[['HeI5875', 'HeII4685'], ['HeI5875', 'HeII1640_not_optical_calibrated'],
+                     ['HeII4685', 'HeII1640_not_optical_calibrated']],
+        components=("rms",),
+        title="AVG and RMS overlay Helium",
+        safe_file_name="RMS_overlay_Helium",
+        xlim=(-9999, 9999),
+        rows=2,
         cols=2,
     )
 
@@ -937,7 +961,7 @@ def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT
     uv_lines_peak_windows = {
         "LyAlpha_not_optical_calibrated": 2000,
         "SiIV1393_not_optical_calibrated": 2000,
-        #"NV1238_not_optical_calibrated": 1000,
+        #"NV1238_not_optical_calibrated": 1000, # gecho
         "CIV1548_not_optical_calibrated": 2000,
         "HeII1640_not_optical_calibrated": 2000,
     }
