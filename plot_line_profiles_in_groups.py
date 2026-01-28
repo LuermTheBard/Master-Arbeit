@@ -15,17 +15,20 @@ matplotlib.use('Qt5Agg')
 
 
 DEFAULT_LINE_COLORS = [
-    "black",
-    "#d62728",   # rot
-    "#1f77b4",   # blau
-    "#2ca02c",   # grün
-    "#ffbf00",   # gelb/amber (besser sichtbar als reines gelb)
-    "#9467bd",   # lila
-    "#17becf",   # cyan
-    "#ff7f0e",   # orange
-    "#8c564b",   # braun
-    "#e377c2",   # pink
-    "#7f7f7f",   # grau
+    "#000000",  # black
+    "#0072B2",  # blue
+    "red",
+    "#E69F00",  # orange
+    "#009E73",  # bluish green
+    "#D55E00",  # vermillion
+    "#CC79A7",  # reddish purple
+    "#56B4E9",  # sky blue
+    "#F0E442",  # yellow (use thicker line / edge; can be weak on white)
+    # extras (still fairly distinct)
+    "#332288",  # dark indigo
+    "#88CCEE",  # light cyan
+    "#44AA99",  # teal
+    "#AA4499",  # purple
 ]
 
 
@@ -258,9 +261,9 @@ def plot_overlaid_normalized_line_profiles_in_panels(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if avg_kwargs is None:
-        avg_kwargs = dict(linestyle="-", linewidth=1)
+        avg_kwargs = dict(linestyle="-", linewidth=1.5)
     if rms_kwargs is None:
-        rms_kwargs = dict(linestyle="-", linewidth=1)
+        rms_kwargs = dict(linestyle="-", linewidth=1.5)
 
     # ------------------------------------------------------------------
     # globale Farbzuordnung pro Linie, wenn nichts übergeben wurde
@@ -854,7 +857,18 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     profile_data = import_line_profile_data(normalized=True)
 
     # key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', "LyAlpha_not_optical_calibrated", 'HeI5875', 'HeII4685', 'OI8446']
-    key_order_all = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', 'HeII1640_not_optical_calibrated', 'OI8446']
+    key_order_all = ['HAlpha',
+                     'HBeta',
+                     'HGamma',
+                     'HDelta',
+                     'LyAlpha_not_optical_calibrated',
+                     'OI8446',
+                     'HeI5875',
+                     'HeII1640_not_optical_calibrated',
+                     'HeII4685',
+                     'NV1238_not_optical_calibrated',
+                     'SiIV1393_not_optical_calibrated',
+                     'CIV1548_not_optical_calibrated']
 
     key_order_balmer = ['HAlpha', 'HBeta', 'HGamma']
     key_order_helium = ['HeI5875',  'HeII4685']
@@ -869,10 +883,11 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     #plot_normalized_line_profiles_in_groups(profile_data, rows=1, cols=2, key_order=key_order_Ly_O,
     #                                        title="Normalized Lyman and Oxygen Line Profiles", fig_size=(10, 5))
 
-    plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_all,
+    plot_normalized_line_profiles_in_groups(profile_data, rows=4, cols=3, key_order=key_order_all,
                                             safe_file_name="Normalized Line Profiles")
-    plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_UV,
-                                            safe_file_name="Normalized Line Profiles UV")
+
+    #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_UV,
+    #                                        safe_file_name="Normalized Line Profiles UV")
 
     #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_balmer,
     #                                        title="Normalized AVG Balmer Line Profiles", fig_size=(6, 8), components=("avg",))
@@ -886,14 +901,14 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
         line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"], ["HBeta", "HGamma"], ["HAlpha", "HDelta"],["HBeta", "HDelta"], ["HGamma", "HDelta"]],
-        components=("avg",),
+        components=("avg","rms"),
         title="AVG overlay Balmer",
-        safe_file_name="AVG_overlay_Balmer",
+        safe_file_name="AVG_RMS_overlay_Balmer",
         xlim=(-9999, 9999),
-        rows=3,
-        cols=2,
+        rows=4,
+        cols=3,
     )
-
+    """
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
         line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"], ["HBeta", "HGamma"], ["HAlpha", "HDelta"],
@@ -902,22 +917,22 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
         title="RMS overlay Balmer",
         safe_file_name="RMS_overlay_Balmer",
         xlim=(-9999, 9999),
-        rows=3,
-        cols=2,
+        rows=2,
+        cols=3,
     )
-
+    """
 
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
         line_groups=[['HeI5875', 'HeII4685'], ['HeI5875', 'HeII1640_not_optical_calibrated'],['HeII4685', 'HeII1640_not_optical_calibrated']],
-        components=("avg",),
+        components=("avg", "rms"),
         title="AVG and RMS overlay Helium",
-        safe_file_name="AVG_overlay_Helium",
+        safe_file_name="AVG_RMS_overlay_Helium",
         xlim=(-9999, 9999),
         rows=2,
-        cols=2,
+        cols=3,
     )
-
+    """
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
         line_groups=[['HeI5875', 'HeII4685'], ['HeI5875', 'HeII1640_not_optical_calibrated'],
@@ -929,7 +944,7 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
         rows=2,
         cols=2,
     )
-
+    """
 
 
 def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT_DIR):
