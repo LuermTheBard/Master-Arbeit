@@ -444,7 +444,10 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
                                                   show_subfigure_labels=True,
                                                   row_spacing=None,
                                                   line_style="-",
-                                                  grid=None
+                                                  grid=None,
+                                                  panel_height=1.2,          # <- NEU (inch pro Row)
+                                                  right_panel_width=1.2,     # <- NEU (inch für rechte Spalte)
+                                                  padding=(1.0, 1.6),
                                                   ):
     """
     Plots CCFs and their associated normalized lightcurves
@@ -483,7 +486,11 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
     None
     """
     if figsize is None:
-        figsize = (5, 12)
+        # width_ratios = [4,1] -> Gesamtbreite pro Row = (4+1)*right_panel_width
+        pad_w, pad_h = padding
+        fig_w = (4 + 1) * right_panel_width + pad_w
+        fig_h = rows * panel_height + pad_h
+        figsize = (fig_w, fig_h)
 
 
     x_values_ccfs = final_sorted_data_dict['time shift (tau)']
@@ -1167,7 +1174,6 @@ save_1d_corr_and_lightcurves_general(
     file_name="UVW2_ccfs_and_reference_lightcurves_not_optical",
     combine_data=True,
     rows=7,
-    figsize=(7, 8),
     show_reference_label=True,
     format_labels_as_paper = True,
     layout_show_right_ccf_ylabel = False,
@@ -1178,7 +1184,7 @@ save_1d_corr_and_lightcurves_general(
     include_extra_data = True,
     extra_data_name = "UVW2_ref_Cont1150_not_optical_calibrated",
     show_histogram = False,
-    show_subfigure_labels=True,
+    show_subfigure_labels=False,
     row_spacing=None,
     line_style="-",
     grid=(True, 0.12, 0.3, ':')
@@ -1191,7 +1197,6 @@ save_1d_corr_and_lightcurves_general(
     file_name="UVW2_ccfs_and_reference_lightcurves_optical",
     combine_data=True,
     rows=9,
-    figsize=(6, 12),
     show_reference_label=True,
     format_labels_as_paper = True,
     layout_show_right_ccf_ylabel = False,
@@ -1202,7 +1207,7 @@ save_1d_corr_and_lightcurves_general(
     include_extra_data = True,
     extra_data_name = "UVW2_ref_Cont1150_not_optical_calibrated",
     show_histogram = False,
-    show_subfigure_labels=True,
+    show_subfigure_labels=False,
     row_spacing=None,
     line_style="-",
     grid=(True, 0.12, 0.3, ':')
@@ -1250,7 +1255,6 @@ save_1d_corr_and_lightcurves_general(
     final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
     combine_data=True,
     rows=5,
-    figsize=(6, 8),
     show_reference_label=True,
     format_labels_as_paper = True,
     layout_show_right_ccf_ylabel = False,
@@ -1261,7 +1265,7 @@ save_1d_corr_and_lightcurves_general(
     include_extra_data = True,
     extra_data_name = "OI8446_ref_HAlpha",
     show_histogram = False,
-    show_subfigure_labels=True,
+    show_subfigure_labels=False,
     row_spacing=None,
     line_style="-",
     grid=(True, 0.12, 0.3, ':')
