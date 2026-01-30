@@ -555,10 +555,20 @@ pseudo_conts_for_line_rms = {
 }
 
 
+one_sided_FWHM_lines = {'NV1238_not_optical_calibrated': {"avg": "right", "rms": "right"},
+                        'HeII4685': {"avg": "right"},
+                        'HeII1640_not_optical_calibrated': {"rms": "left"},
+                        }
+
+
 DELTA_W = {
 
-'HeII4685': 10
+'HeII4685': 10,
+'NV1238_not_optical_calibrated':5
 }
+
+
+import numpy as np
 
 def compute_width_velocity_windowed_with_positions(
     velocity: np.ndarray,
@@ -568,20 +578,27 @@ def compute_width_velocity_windowed_with_positions(
     peak_search_window: float = 3000.0,
     level: float = 0.5,
     level_mode: str = "relative",  # "relative" or "absolute"
+    one_sided: str | None = None,  # None, "left", "right"
+    one_sided_ref: str = "center", # "center" or "peak"
 ):
     """
     Compute line width at a specified height in velocity space.
 
     Returns (width_kms, v_left, v_right, y_level, peak).
-    If not measurable -> (np.nan, np.nan, np.nan, np.nan, np.nan)
 
-    level_mode:
-      - "relative": y_level = level * peak  (e.g. 0.5 -> FWHM, 0.7 -> width@70%)
-      - "absolute": y_level = level        (e.g. 0.7 means flux=0.7)
+    Enforces:
+      - v_left  < center_v
+      - v_right > center_v
+    by selecting the closest level-crossings on each side of center_v.
 
-    Notes:
-      - Assumes baseline ~ 0 (continuum-subtracted). If not, use a baseline-corrected flux.
-      - Returns NaN if level is never crossed on left or right.
+    one_sided:
+      - None   : width = v_right - v_left
+      - "left" : width = 2 * |v_ref - v_left|
+      - "right": width = 2 * |v_right - v_ref|
+
+    one_sided_ref:
+      - "center": v_ref = center_v
+      - "peak"  : v_ref = v_at_peak
     """
     v = np.asarray(velocity, dtype=float)
     f = np.asarray(flux, dtype=float)
@@ -614,6 +631,7 @@ def compute_width_velocity_windowed_with_positions(
 
     peak_indices = np.where(mask_peak)[0]
     i_peak = peak_indices[i_peak_local]
+    v_peak = vw[i_peak]
 
     # define y-level
     if level_mode == "relative":
@@ -625,35 +643,79 @@ def compute_width_velocity_windowed_with_positions(
     else:
         raise ValueError("level_mode must be 'relative' or 'absolute'")
 
-    # if level is above peak, impossible
     if y_level >= peak:
         return (np.nan, np.nan, np.nan, np.nan, np.nan)
 
-    # --- left crossing: last point below y_level before the peak ---
-    left = np.where(fw[:i_peak] < y_level)[0]
-    if left.size == 0:
-        return (np.nan, np.nan, np.nan, np.nan, np.nan)
-    i1 = left[-1]
-    i2 = i1 + 1
-    if fw[i2] == fw[i1]:
-        return (np.nan, np.nan, np.nan, np.nan, np.nan)
-    v_left = vw[i1] + (y_level - fw[i1]) * (vw[i2] - vw[i1]) / (fw[i2] - fw[i1])
+    # --- find ALL crossings of (fw - y_level) via sign changes ---
+    g = fw - y_level
+    # indices where consecutive samples straddle 0 (sign change); ignore exact zeros safely
+    sgn = np.sign(g)
+    # replace zeros by nearest nonzero sign (simple fallback)
+    if np.any(sgn == 0):
+        # forward fill then backward fill
+        for k in range(1, sgn.size):
+            if sgn[k] == 0:
+                sgn[k] = sgn[k-1]
+        for k in range(sgn.size-2, -1, -1):
+            if sgn[k] == 0:
+                sgn[k] = sgn[k+1]
 
-    # --- right crossing: first point below y_level after the peak ---
-    right = np.where(fw[i_peak:] < y_level)[0]
-    if right.size == 0:
-        return (np.nan, np.nan, np.nan, np.nan, np.nan)
-    j2 = i_peak + right[0]
-    j1 = j2 - 1
-    if fw[j2] == fw[j1]:
-        return (np.nan, np.nan, np.nan, np.nan, np.nan)
-    v_right = vw[j1] + (y_level - fw[j1]) * (vw[j2] - vw[j1]) / (fw[j2] - fw[j1])
+    idx = np.where(sgn[:-1] * sgn[1:] < 0)[0]  # sign change between i and i+1
 
-    width = v_right - v_left
+    if idx.size == 0:
+        return (np.nan, np.nan, np.nan, np.nan, np.nan)
+
+    crossings = []
+    for i in idx:
+        v1, v2 = vw[i], vw[i+1]
+        g1, g2 = g[i], g[i+1]
+        if g2 == g1:
+            continue
+        vc = v1 + (0.0 - g1) * (v2 - v1) / (g2 - g1)  # linear interp to g=0
+        crossings.append(vc)
+
+    if len(crossings) == 0:
+        return (np.nan, np.nan, np.nan, np.nan, np.nan)
+
+    crossings = np.array(crossings, dtype=float)
+
+    # enforce left < center_v, right > center_v (closest to center on each side)
+    left_candidates = crossings[crossings < center_v]
+    right_candidates = crossings[crossings > center_v]
+
+    v_left = np.nan if left_candidates.size == 0 else np.max(left_candidates)
+    v_right = np.nan if right_candidates.size == 0 else np.min(right_candidates)
+
+    # choose reference for one-sided doubling
+    if one_sided_ref not in ("center", "peak"):
+        raise ValueError("one_sided_ref must be 'center' or 'peak'")
+    v_ref = center_v if one_sided_ref == "center" else v_peak
+
+    # --- width computation ---
+    if one_sided is None:
+        if not (np.isfinite(v_left) and np.isfinite(v_right)):
+            return (np.nan, np.nan, np.nan, np.nan, np.nan)
+        width = v_right - v_left
+    else:
+        one_sided = one_sided.lower()
+        if one_sided == "left":
+            if not np.isfinite(v_left):
+                return (np.nan, np.nan, np.nan, np.nan, np.nan)
+            width = 2.0 * abs(v_ref - v_left)
+        elif one_sided == "right":
+            if not np.isfinite(v_right):
+                return (np.nan, np.nan, np.nan, np.nan, np.nan)
+            width = 2.0 * abs(v_right - v_ref)
+        else:
+            raise ValueError("one_sided must be None, 'left', or 'right'")
+
     if not np.isfinite(width) or width <= 0:
         return (np.nan, np.nan, np.nan, np.nan, np.nan)
 
-    return (float(width), float(v_left), float(v_right), float(y_level), float(peak))
+    return (float(width),
+            float(v_left) if np.isfinite(v_left) else np.nan,
+            float(v_right) if np.isfinite(v_right) else np.nan,
+            float(y_level), float(peak))
 
 
 
@@ -732,6 +794,12 @@ def process_spectrum(
         corrected_intensity, velocity, [-20000, 20000]
     )
 
+    one_sided = None
+
+    if line_name in one_sided_FWHM_lines.keys():
+        if spec_type in one_sided_FWHM_lines[line_name].keys():
+            one_sided = one_sided_FWHM_lines[line_name][spec_type]
+
     # --- Width at chosen level (FWHM if width_level=0.5 & mode="relative") ---
     width_kms, v_left, v_right, y_level, peak = compute_width_velocity_windowed_with_positions(
         cut_velocity, cut_intensity,
@@ -739,7 +807,8 @@ def process_spectrum(
         window=10000.0,
         peak_search_window=peak_search_window,
         level=width_level,
-        level_mode=width_level_mode
+        level_mode=width_level_mode,
+        one_sided=one_sided,
     )
 
     if width_level_mode == "relative":
@@ -976,7 +1045,7 @@ def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT
     uv_lines_peak_windows = {
         "LyAlpha_not_optical_calibrated": 2000,
         "SiIV1393_not_optical_calibrated": 2000,
-        #"NV1238_not_optical_calibrated": 1000, # gecho
+        "NV1238_not_optical_calibrated": 2000, # gecho
         "CIV1548_not_optical_calibrated": 2000,
         "HeII1640_not_optical_calibrated": 2000,
     }
@@ -1052,6 +1121,6 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-#substract_pseudo_continua_from_spectra(plot=True)
+substract_pseudo_continua_from_spectra(plot=True)
 
 run_normalized_profiles_together_in_groups()
