@@ -92,10 +92,11 @@ def finalize_figure(fig, axes, title, group_index, save_only, output_dir, x_labe
 
 
 
-def add_top_velocity_axis(ax, xlim, major=2500, labelsize=9, rotation=45):
+def add_top_velocity_axis(ax, xlim, major=5000, labelsize=9, rotation=0):
     ax_top = ax.secondary_xaxis("top")
     ax_top.set_xlim(*xlim)
     ax_top.xaxis.set_major_locator(MultipleLocator(major))
+    ax_top.xaxis.set_minor_locator(MultipleLocator(1000))
 
     # gleiche Optik wie unten:
     ax_top.tick_params(axis="x", labelsize=labelsize, rotation=rotation,
@@ -311,8 +312,8 @@ def plot_overlaid_normalized_line_profiles_in_panels(
         raise ValueError("rows * cols must be >= 1")
 
     # -------- FIXE Panel-Größe: Panels bleiben immer gleich groß --------
-    panel_w = 2.6  # inch pro Panel (Breite) -> einmal einstellen
-    panel_h = 3.4  # inch pro Panel (Höhe)   -> einmal einstellen
+    panel_w = 2.8  # inch pro Panel (Breite) -> einmal einstellen
+    panel_h = 3.2  # inch pro Panel (Höhe)   -> einmal einstellen
     pad_w = 0.8  # extra links/rechts
     pad_h = 1.4  # extra oben/unten
 
@@ -393,12 +394,16 @@ def plot_overlaid_normalized_line_profiles_in_panels(
 
             ax.set_xlim(*xlim)
             ax.set_ylim(*ylim)
-            ax.xaxis.set_major_locator(MultipleLocator(2500))
+            ax.xaxis.set_major_locator(MultipleLocator(5000))
+            ax.xaxis.set_minor_locator(MultipleLocator(1000))
+            ax.yaxis.set_major_locator(MultipleLocator(0.1))
             ax.tick_params(axis="both", labelsize=9)
+            ax.grid(True, which="major", axis="both", alpha=0.35)
+            ax.grid(True, which="minor", axis="x", alpha=0.2)
 
             # Top-X-Achse in der ersten Row
             if r == 0:
-                add_top_velocity_axis(ax, xlim=xlim, major=2500, labelsize=9, rotation=45)
+                add_top_velocity_axis(ax, xlim=xlim, major=5000, labelsize=9, rotation=0)
 
             if r == rows - 1:
                 ax.set_xlabel("Velocity (km/s)", fontsize=12)
@@ -478,8 +483,8 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
     ax.text(0.9, 0.97, f'{label}', transform=ax.transAxes,
             ha='right', va='top', fontsize=11)
 
-    ax.set_xlim(-9999, 9999)
-    ax.set_ylim(-0.1, 1.05)
+    ax.set_xlim(-9999, 10000)
+    ax.set_ylim(-0.02, 1.05)
     ax.tick_params(axis='both', labelsize=9)
     ax.legend(loc='upper left')
 
@@ -502,14 +507,17 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
     if row < 3:
         ax.set_xticklabels([])
 
-    ax.xaxis.set_major_locator(MultipleLocator(2500))
-    #ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+    ax.xaxis.set_major_locator(MultipleLocator(5000))
+    ax.xaxis.set_minor_locator(MultipleLocator(1000))
+    ax.yaxis.set_major_locator(MultipleLocator(0.1))
+    ax.tick_params(axis='x', rotation=0, labelsize=9)
 
     if row == 0:
         ax_top = ax.secondary_xaxis('top')
-        ax_top.xaxis.set_major_locator(MultipleLocator(2500))
+        ax_top.xaxis.set_major_locator(MultipleLocator(5000))
+        ax_top.xaxis.set_minor_locator(MultipleLocator(1000))
         #ax_top.xaxis.set_major_formatter(FuncFormatter(format_month_day))
-        ax_top.tick_params(axis='x', rotation=45, labelsize=9)
+        ax_top.tick_params(axis='x', rotation=0, labelsize=9)
 
 
 pseudo_conts_for_line_avg = {
@@ -567,8 +575,6 @@ DELTA_W = {
 'NV1238_not_optical_calibrated':5
 }
 
-
-import numpy as np
 
 def compute_width_velocity_windowed_with_positions(
     velocity: np.ndarray,
@@ -969,12 +975,12 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
-        line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"], ["HBeta", "HGamma"], ["HAlpha", "HDelta"],["HBeta", "HDelta"], ["HGamma", "HDelta"]],
-        components=("avg","rms"),
-        title="AVG overlay Balmer",
-        safe_file_name="AVG_RMS_overlay_Balmer",
-        xlim=(-9999, 9999),
-        rows=4,
+        line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"],["HAlpha", "HDelta"], ["HBeta", "HGamma"], ["HBeta", "HDelta"], ["HGamma", "HDelta"]],
+        components=("rms",),
+        title="RMS overlay Balmer",
+        safe_file_name="RMS_overlay_Balmer",
+        xlim=(-9999, 10000),
+        rows=2,
         cols=3,
     )
     """
@@ -993,14 +999,27 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
-        line_groups=[['HeI5875', 'HeII4685'], ['HeI5875', 'HeII1640_not_optical_calibrated'],['HeII4685', 'HeII1640_not_optical_calibrated']],
-        components=("avg", "rms"),
-        title="AVG and RMS overlay Helium",
-        safe_file_name="AVG_RMS_overlay_Helium",
-        xlim=(-9999, 9999),
+        line_groups=[['HeI5875'],['HeII4685'],['HeII1640_not_optical_calibrated'],['HeI5875', 'HeII4685'],['HeI5875',  'HeII1640_not_optical_calibrated'],['HeII4685', 'HeII1640_not_optical_calibrated']],
+        components=("rms",),
+        title="RMS overlay Helium",
+        safe_file_name="RMS_overlay_Helium",
+        xlim=(-9999, 10000),
         rows=2,
         cols=3,
     )
+
+    plot_overlaid_normalized_line_profiles_in_panels(
+        data=profile_data,
+        line_groups=[['LyAlpha_not_optical_calibrated'],['NV1238_not_optical_calibrated'],['SiIV1393_not_optical_calibrated'],['CIV1548_not_optical_calibrated']],
+        components=("rms",),
+        title="UV Lines",
+        safe_file_name="UV_Lines",
+        xlim=(-9999, 10000),
+        rows=2,
+        cols=2,
+    )
+
+
     """
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
@@ -1121,6 +1140,6 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-substract_pseudo_continua_from_spectra(plot=True)
+substract_pseudo_continua_from_spectra()
 
 run_normalized_profiles_together_in_groups()
