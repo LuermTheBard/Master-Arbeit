@@ -177,6 +177,7 @@ def mean_bh_mass(reference="UVW2"):
                  'HeI5875',
                  'HeII4685',
                  'LyAlpha_not_optical_calibrated',
+                 'NV1238_not_optical_calibrated',
                  "CIV1548_not_optical_calibrated",
                  "HeII1640_not_optical_calibrated"]
 
@@ -194,7 +195,7 @@ def mean_bh_mass(reference="UVW2"):
 
 
 
-    res = weighted_mean_asym_errors(m, err_minus, err_plus, symmetrize="mean")
+    res = weighted_mean_asym_errors(m, err_minus, err_plus, symmetrize="max")
 
 
     print(f"Weighted mean = {res['mean']*3.77:.3f} ± {res['err']*3.77:.3f}  (in units of 1e7 Msun)")
