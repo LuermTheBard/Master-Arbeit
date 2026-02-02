@@ -247,6 +247,7 @@ def plot_overlaid_normalized_line_profiles_in_panels(
     safe_file_name="overlay_groups",
     rows=1,
     cols=None,
+    for_paper=False,
 ):
     x_key = "velocity space (km/s)"
     y_key = "normalized flux"
@@ -363,7 +364,7 @@ def plot_overlaid_normalized_line_profiles_in_panels(
                 x = np.asarray(data[comp][line]["data_dict"][x_key])
                 y = np.asarray(data[comp][line]["data_dict"][y_key])
 
-                tmp = format_label(line, as_latex=False)
+                tmp = format_label(line, as_latex=False, for_paper=for_paper)
                 line_label = tmp.split("  ")[0] if "  " in tmp else tmp
 
                 kwargs = avg_kwargs if comp == "avg" else rms_kwargs
@@ -380,13 +381,6 @@ def plot_overlaid_normalized_line_profiles_in_panels(
                         kwargs = {**kwargs, "color": auto_color_map[line]}
 
                 ax.plot(x, y, label=line_label, **kwargs)
-
-            ax.text(
-                0.90, 0.98, comp.upper(),
-                transform=ax.transAxes,
-                ha="right", va="top",
-                fontsize=11,
-            )
 
             if show_vline_zero:
                 ax.vlines(0, ylim[0], ylim[1], linestyles="dashed", color="black", linewidth=0.5)
@@ -479,8 +473,8 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
         ax.plot(rms_x, rms_y, label=f'RMS', color='red')
     ax.vlines(0,-0.1, 1.5, linestyles="dashed", color="black", linewidth=0.5)
     ax.hlines(0, -10000, 10000, linestyles="dashed", color="black", linewidth=0.5)
-    label = format_label(line_name, as_latex=False).split("  ")[0] if "  " in format_label(line_name, as_latex=False) else format_label(line_name, as_latex=False)
-    ax.text(0.9, 0.97, f'{label}', transform=ax.transAxes,
+    label = format_label(line_name, as_latex=False).split("  ")[0] if "  " in format_label(line_name, as_latex=False, for_paper=True) else format_label(line_name, as_latex=False, for_paper=True)
+    ax.text(0.85, 0.97, f'{label}', transform=ax.transAxes,
             ha='right', va='top', fontsize=11)
 
     ax.set_xlim(-9999, 10000)
@@ -1006,6 +1000,7 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
         xlim=(-9999, 10000),
         rows=2,
         cols=3,
+        for_paper=True
     )
 
     plot_overlaid_normalized_line_profiles_in_panels(
@@ -1017,6 +1012,7 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
         xlim=(-9999, 10000),
         rows=2,
         cols=2,
+        for_paper=True
     )
 
 
@@ -1140,6 +1136,6 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-substract_pseudo_continua_from_spectra()
+# substract_pseudo_continua_from_spectra()
 
 run_normalized_profiles_together_in_groups()

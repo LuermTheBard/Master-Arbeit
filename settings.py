@@ -61,143 +61,147 @@ def normalize_color_values(colorcode_dict):
 
 COLORCODE_CONTINUA_NORMALIZED = normalize_color_values(COLORCODE_CONTINUA)
 All_LINES = {
-    #UV
-    "Lyα": {"position": 1215.67, "text_vertical_shift": -10, "slanted": False, "show_no_tick_avg": True, "text_shift": -15,  "tick_shift_rms": 3},
-    #"N V 1238": {"position": 1238.82, "text_vertical_shift": 3, "slanted": False, "text_shift": 0, "tick_shift_rms": 1},
-    #"N V  $\lambda\lambda$ 1238, 1242": {"position": 1242.8, "text_vertical_shift": 3, "slanted": False, "text_shift": 0, "tick_shift_rms": 1},
-    #"Si IV 1393": {"position": 1393.75, "text_vertical_shift": 3, "slanted": False, "text_shift": 0,  "tick_shift_rms": 1},
-    #"Si IV $\lambda\lambda$ 1393, 1402, O IV]": {"position": 1402.7, "text_vertical_shift": 3, "slanted": False, "text_shift": 0,
-                  # "tick_shift_rms": 1},
-    "N IV] $\lambda$ 1486": {"position": 1486.49, "text_vertical_shift": 3, "slanted": False,  "tick_shift_avg": 1.5, "text_shift": 0,  "tick_shift_rms": 1},
-    #"C IV 1548": {"position": 1548.19, "text_vertical_shift": -10, "slanted": False, "show_no_tick_avg": True, "text_shift": -15,  "tick_shift_rms": 1},
-    #"C IV $\lambda\lambda$ 1550, 1548": {"position": 1550.77, "text_vertical_shift": -10, "slanted": False, "show_no_tick_avg": True,
-    #              "text_shift": -15, "tick_shift_rms": 1},
-    "He II $\lambda$ 1640": {"position": 1640.42, "text_vertical_shift": 3, "slanted": False, "tick_shift_avg": 2.5, "text_shift": 0,  "tick_shift_rms": 3},
-    #"O III] 1660": {"position": 1660.80, "text_vertical_shift": 3, "slanted": False, "text_shift": 0,  "tick_shift_rms": 1},
-    #"O III] $\lambda\lambda$ 1660, 1666": {"position": 1666.15, "text_vertical_shift": 3, "slanted": False, "text_shift": 0,
-     #               "tick_shift_rms": 1},
+    # UV
+    r"$\mathrm{Ly}\alpha$": {
+        "position": 1215.67, "text_vertical_shift": -10, "slanted": False,
+        "show_no_tick_avg": True, "text_shift": -15, "tick_shift_rms": 3
+    },
 
+    r"$\mathrm{N\,IV]}\,\lambda\,1486$": {
+        "position": 1486.49, "text_vertical_shift": 3, "slanted": False,
+        "tick_shift_avg": 1.5, "text_shift": 0, "tick_shift_rms": 1
+    },
 
+    r"$\mathrm{He\,II}\,\lambda\,1640$": {
+        "position": 1640.42, "text_vertical_shift": 3, "slanted": False,
+        "tick_shift_avg": 2.5, "text_shift": 0, "tick_shift_rms": 3
+    },
 
+    # Balmer
+    r"$\mathrm{H}\alpha$": {
+        "position": 6562.82, "text_vertical_shift": -10, "slanted": False,
+        "text_shift": 90, "show_no_tick_avg": True, "tick_shift_rms": 1
+    },
+    r"$\mathrm{H}\beta$": {
+        "position": 4861.33, "text_vertical_shift": -0.7, "slanted": False,
+        "show_no_tick_avg": True, "tick_shift_rms": 0.6
+    },
+    r"$\mathrm{H}\gamma$": {
+        "position": 4340.47, "text_vertical_shift": 0.1, "tick_shift_avg": 0.31,
+        "text_shift": -30, "slanted": False, "tick_shift_rms": 0.57
+    },
+    r"$\mathrm{H}\delta$": {"position": 4101.74, "text_vertical_shift": 0.1, "slanted": False},
+    r"$\mathrm{H}\epsilon$": {"position": 3970.08, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.6},
 
+    # Forbidden / nebular etc.
+    r"$[\mathrm{Ne\,III}]\,\lambda\,3868$": {
+        "position": 3868.76, "text_vertical_shift": 0.1, "slanted": False,
+        "show_no_tick_rms": True
+    },
 
-    "Hα": {"position": 6562.82, "text_vertical_shift": -10, "slanted": False, "text_shift": 90, "show_no_tick_avg": True, "tick_shift_rms": 1},
-    "Hβ": {"position": 4861.33, "text_vertical_shift": -0.7, "slanted": False, "show_no_tick_avg": True, "tick_shift_rms": 0.6},
-    "Hγ": {"position": 4340.47, "text_vertical_shift": 0.1, "tick_shift_avg": 0.31, "text_shift": -30, "slanted": False, "tick_shift_rms": 0.57},
-    "Hδ": {"position": 4101.74, "text_vertical_shift": 0.1, "slanted": False},
-    "Hε": {"position": 3970.08, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.6},
+    # He I series
+    r"$\mathrm{He\,I}\,\lambda\,4471$": {"position": 4471.48, "text_vertical_shift": 0.1, "slanted": False, "text_shift": -20},
+    r"$\mathrm{He\,I}\,\lambda\,5876$": {"position": 5875.6, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.3},
+    r"$\mathrm{He\,I}\,\lambda\,5016$": {"position": 5015.67, "text_vertical_shift": -1, "slanted": False, "tick_shift_avg": 1, "text_shift": 70, "show_no_tick_rms": True},
+    r"$\mathrm{He\,I}\,\lambda\,7065$": {"position": 7065.2, "text_vertical_shift": 0.1, "slanted": False, "text_shift": -20},
 
-    # "[Ne V] 3345": {"position": 3345.82, "text_vertical_shift": 0.01, "slanted": False},
-    # "[Ne V] 3425": {"position": 3425.88, "text_vertical_shift": 0.01, "slanted": False},
-    "[Ne III] $\lambda$ 3868": {"position": 3868.76, "text_vertical_shift": 0.1, "slanted": False, "show_no_tick_rms": True},
+    # He II optical
+    r"$\mathrm{He\,II}\,\lambda\,4686$": {"position": 4685.7, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.4},
 
-    # "He I 3487": {"position": 3487.72, "text_vertical_shift": 0.1, "slanted": True},
-    "He I $\lambda$ 4471": {"position": 4471.48, "text_vertical_shift": 0.1, "slanted": False, "text_shift": -20},
-    "He I $\lambda$ 5876": {"position": 5875.6, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.3},
-    "He I $\lambda$ 5015": {"position": 5015.67, "text_vertical_shift": -1, "slanted": False, "tick_shift_avg": 1,"text_shift": 70, "show_no_tick_rms": True},
-    "He I $\lambda$ 7065": {"position": 7065.2, "text_vertical_shift": 0.1, "slanted": False, "text_shift": -20},
-    "He II $\lambda$ 4686": {"position": 4685.7, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.4},
-    # "He I 3187": {"position": 3187.74, "text_vertical_shift": 0.2, "slanted": True},
-    # "He II 3203": {"position": 3203.1, "text_vertical_shift": 0.1, "slanted": True},
+    # Oxygen
+    r"$[\mathrm{O\,III}]\,\lambda\,4363$": {"position": 4363.21, "text_vertical_shift": 0.1, "slanted": False, "text_shift": 40},
+    r"$[\mathrm{O\,III}]\,\lambda\,4958$": {"position": 4958.91, "text_vertical_shift": 0.1, "slanted": False, "show_no_tick_rms": True},
+    r"$[\mathrm{O\,III}]\,\lambda\,5006$": {
+        "position": 5006.84, "text_vertical_shift": -2.5, "text_shift": 80, "slanted": False,
+        "show_no_tick_avg": True, "show_no_tick_rms": True
+    },
 
-    #"Fe II $\lambda$ 4233": {"position": 4233.17, "text_vertical_shift": 0.1, "slanted": False, "text_shift": 0},
-    # "[Fe V] $\lambda$ 4227": {"position": 4227.19, "text_vertical_shift": 0.1, "slanted": False, "text_shift": 0},
-    #"[Fe II] $\lambda$ 4287": {"position": 4287.39, "text_vertical_shift": -0.2, "slanted": False, "text_shift": 0, "show_no_tick_rms": True},
+    r"$[\mathrm{O\,II}]\,\lambda\,7320,7330$": {
+        "position": 7325, "slanted": False, "show_no_tick_rms": True
+    },
 
-    "Fe II $\lambda$ 4303": {"position": 4303.18, "text_vertical_shift": 0.2, "slanted": False, "text_shift": -10},
+    # Iron high-ionization
+    r"$[\mathrm{Fe\,VII}]\,\lambda\,5721$": {"position": 5721.7, "text_vertical_shift": 0.1, "slanted": False, "show_no_tick_rms": True},
+    r"$[\mathrm{Fe\,VII}]\,\lambda\,6087$": {"position": 6087, "text_vertical_shift": 0.1, "slanted": False, "show_no_tick_rms": True},
+    r"$[\mathrm{Fe\,XI}]\,\lambda\,7892$": {"position": 7892, "text_vertical_shift": 0.1, "text_shift": 20, "tick_shift_avg": 0.37, "slanted": False, "show_no_tick_rms": True},
 
-    # "O II $\lambda$ 4317": {"position": 4317.13, "text_vertical_shift": 0.1, "slanted": False, "text_shift": 0},
+    # Argon
+    r"$[\mathrm{Ar\,III}]\,\lambda\,7135$": {"position": 7135.79, "text_vertical_shift": 0.1, "text_shift": 20, "tick_shift_avg": 0.37, "slanted": False, "show_no_tick_rms": True},
+    r"$[\mathrm{Ar\,III}]\,\lambda\,7751$": {"position": 7751, "text_vertical_shift": 0.1, "text_shift": 20, "tick_shift_avg": 0.37, "slanted": False, "show_no_tick_rms": True},
 
-
-
-    "[O III] $\lambda$ 4363": {"position": 4363.21, "text_vertical_shift": 0.1, "slanted": False, "text_shift": 40},
-    "[O III] $\lambda$ 4958": {"position": 4958.91, "text_vertical_shift": 0.1, "slanted": False, "show_no_tick_rms": True},
-    "[O III] $\lambda$ 5006": {"position": 5006.84, "text_vertical_shift": -2.5, "text_shift": 80, "slanted": False, "show_no_tick_avg": True, "show_no_tick_rms": True},
-
-    # "[O I] 6364": {"position": 6363.77, "text_vertical_shift": 0.1, "slanted": False},
-    # "[Fe X] 6375": {"position": 6374.51, "text_vertical_shift": 0.1, "slanted": False},
-    "Fe II $\lambda$ 6516": {"position": 6516.08, "text_vertical_shift": 0.1, "slanted": False, "text_shift": -30, "show_no_tick_rms": True, "tick_shift_avg": 3},
-    "[Fe VII] $\lambda$ 5721": {"position": 5721.7, "text_vertical_shift": 0.1, "slanted": False, "show_no_tick_rms": True},
-    "[Fe VII] $\lambda$ 6087": {"position": 6087, "text_vertical_shift": 0.1, "slanted": False, "show_no_tick_rms": True},
-    # "[Fe VII] 3586": {"position": 3586.32, "text_vertical_shift": 0.1, "slanted": True},
-
-    # "[S II] 6716": {"position": 6716.44, "text_vertical_shift": 0.1, "slanted": False},
-    # "[S II] 6731": {"position": 6730.81, "text_vertical_shift": 0.1, "slanted": False},
-
-    # "[N II] 6548": {"position": 6548.05, "text_vertical_shift": 0.1, "slanted": False, "text_shift": -40},
-    # "[N II] 6584": {"position": 6583.46, "text_vertical_shift": 0.1, "slanted": False, "text_shift": 40},
-
-    "[Ar III] $\lambda$ 7135": {"position": 7135.79, "text_vertical_shift": 0.1,  "text_shift": 20, "tick_shift_avg": 0.37, "slanted": False, "show_no_tick_rms": True},
-
-    # "O III 3132": {"position": 3132.79, "text_vertical_shift": 0.1, "slanted": True},
-    "O I $\lambda$ 8446": {"position": 8446.35, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.29},
-    "[O I] $\lambda$ 6300": {"position": 6300.30, "text_vertical_shift": 0.1, "tick_shift_avg": 0.43, "slanted": False, "show_no_tick_rms": True},
-
-    # "Ca II 8498": {"position": 8498.02, "text_vertical_shift": 0.5, "slanted": False},
-    # "Ca II 8542": {"position": 8542.09, "text_vertical_shift": 0, "slanted": False},
-    # "Ca II 8662": {"position": 8662.14, "text_vertical_shift": 0.1, "slanted": False},
+    # Oxygen I lines
+    r"$\mathrm{O\,I}\,\lambda\,8446$": {"position": 8446.35, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.29},
+    r"$[\mathrm{O\,I}]\,\lambda\,6300$": {"position": 6300.30, "text_vertical_shift": 0.1, "tick_shift_avg": 0.43, "slanted": False, "show_no_tick_rms": True},
 }
+
+
 All_LINE_GROUPS = {
-    "N V  $\lambda\lambda$ 1238, 1242": {"position": [1238.82,
-                                                      1242.8],
-                                         "tick_vertical_shift_avg": 2,
-                                         "tick_vertical_shift_rms": 7,
-                                         "show_in_rms": True,
-                                         "text_vertical_shift": 2},
-    "Si IV $\lambda\lambda$ 1393, 1402, O IV]": {"position": [1393.75,
-                                                              1402.7],
-                                         "tick_vertical_shift_avg": 2,
-                                         "tick_vertical_shift_rms": 2.5,
-                                         "show_in_rms": True,
-                                         "text_vertical_shift": 2},
-    "C IV $\lambda\lambda$ 1550, 1548": {"position": [1548.19,
-                                                      1550.77],
-                                         "tick_vertical_shift_avg": 2,
-                                         "tick_vertical_shift_rms": 10,
-                                         "show_in_rms": True,
-                                         "show_in_avg": False,
-                                         "text_vertical_shift": -15,
-                                         "text_horizontal_shift": -15},
-    "O III] $\lambda\lambda$ 1660, 1666": {"position": [1660.80,
-                                                        1666.15],
-                                         "tick_vertical_shift_avg": 1,
-                                         "tick_vertical_shift_rms": 1,
-                                         "show_in_rms": True,
-                                         "text_vertical_shift": 2},
+    r"$\mathrm{N\,V}\,\lambda\lambda\,1238,\,1242$": {
+        "position": [1238.82, 1242.8],
+        "tick_vertical_shift_avg": 2,
+        "tick_vertical_shift_rms": 7,
+        "show_in_rms": True,
+        "text_vertical_shift": 2
+    },
 
+    r"$\mathrm{Si\,IV}\,\lambda\lambda\,1393,\,1402,\,\mathrm{O\,IV]}$": {
+        "position": [1393.75, 1402.7],
+        "tick_vertical_shift_avg": 2,
+        "tick_vertical_shift_rms": 2.5,
+        "show_in_rms": True,
+        "text_vertical_shift": 2
+    },
 
+    r"$\mathrm{C\,IV}\,\lambda\lambda\,1548,\,1550$": {
+        "position": [1548.19, 1550.77],
+        "tick_vertical_shift_avg": 2,
+        "tick_vertical_shift_rms": 10,
+        "show_in_rms": True,
+        "show_in_avg": False,
+        "text_vertical_shift": -15,
+        "text_horizontal_shift": -15
+    },
 
-    "Fe II": {"position": [4489,
-                           4629.33],
-              "tick_vertical_shift_avg": 0.8},
+    r"$\mathrm{O\,III]}\,\lambda\lambda\,1660,\,1666$": {
+        "position": [1660.80, 1666.15],
+        "tick_vertical_shift_avg": 1,
+        "tick_vertical_shift_rms": 1,
+        "show_in_rms": True,
+        "text_vertical_shift": 2
+    },
 
-    "Fe II ": {"position": [5169.03,
-                            5336.18],
-               "tick_vertical_shift_avg": 0.5},
+    r"$\mathrm{Fe\,II}$": {
+        "position": [4489, 4629.33],
+        "tick_vertical_shift_avg": 0.8
+    },
 
-    #"Fe II  ": {"position": [4233.1,
-    #                         4303.17],
-    #           "tick_vertical_shift_avg": 1.5},
+    r"$\mathrm{Fe\,II}\,$": {
+        "position": [5169.03, 5336.18],
+        "tick_vertical_shift_avg": 0.5
+    },
 
-    "[S II] 6716,6730 ": {"position": [6716.44,
-                                       6730.81],
-                          "tick_vertical_shift_avg": 0.1,
-                          "show_in_rms": False},
+    r"$[\mathrm{S\,II}]\,6716,\,6730$": {
+        "position": [6716.44, 6730.81],
+        "tick_vertical_shift_avg": 0.1,
+        "show_in_rms": False
+    },
 
-    "[O I] 6364, [Fe X] 6375": {"position": [6363.77,
-                                             6374.51],
-                                "tick_vertical_shift_avg": 0.2,
-                                "show_in_rms": False,
-                                "text_horizontal_shift": 15},
-    "Ca II": {"position": [8498.02,
-                           8542.09,
-                           8662.14],
-              "tick_vertical_shift_avg": 0.34,
-              "tick_vertical_shift_rms": 0.23,
-              "all_lines": True,
-              "show_in_rms": True},
+    r"$[\mathrm{O\,I}]\,6364,\,[\mathrm{Fe\,X}]\,6375$": {
+        "position": [6363.77, 6374.51],
+        "tick_vertical_shift_avg": 0.2,
+        "show_in_rms": False,
+        "text_horizontal_shift": 15
+    },
 
+    r"$\mathrm{Ca\,II}$": {
+        "position": [8498.02, 8542.09, 8662.14],
+        "tick_vertical_shift_avg": 0.34,
+        "tick_vertical_shift_rms": 0.23,
+        "all_lines": True,
+        "show_in_rms": True
+    },
 }
+
 def calculate_velocity_errors(lines_wavelengths):
     """
     Gibt ein Dictionary mit Liniennamen und geschätztem Fehler im Velocity Space (km/s) zurück.

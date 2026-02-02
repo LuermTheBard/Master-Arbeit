@@ -351,7 +351,7 @@ def format_label(name, as_latex=True, for_paper=False):
         "SiIV1393": r"$\text{Si}\thinspace\text{IV}$",
         "NV1238": r"$\text{N}\thinspace\text{V}$",
         "CIV1548": r"$\text{C}\thinspace\text{IV}$ ",
-        "HeII1640": r"$\text{He}\thinspace\text{II}$",
+        "HeII1640": r"$\text{He}\thinspace\text{II}$ UV",
     }
 
 

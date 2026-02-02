@@ -243,7 +243,7 @@ def plot_avg_rms_spectra(
             ax.plot([pos, pos], [y_pos1, y_pos1 + line_length], color="black", linewidth=0.5)
         if not show_no_tick_rms:
             ax.plot([pos, pos], [y_pos2, y_pos2 + line_length], color="black", linewidth=0.5)
-        ax.text(pos + text_shift, y_pos1 + line_length + text_vertical_shift, label, fontsize=8, color="black", rotation=rotation_angle,
+        ax.text(pos + text_shift, y_pos1 + line_length + text_vertical_shift, label, fontsize=10, color="black", rotation=rotation_angle,
                 ha="left" if slanted else "center",
                 va="bottom")
 
@@ -369,7 +369,7 @@ def plot_line_group(
                 y=line_ymax_avg + text_vertical_shift,
                 s=group,
                 ha='center',
-                fontsize=8,
+                fontsize=10,
                 rotation=90,
                 va="bottom")
     # Horizontale Verbindungslinie
@@ -706,6 +706,6 @@ def get_line_flux(line_window: tuple,cont_windows: tuple):
 #get_line_flux((4995.66, 5021.75), ((4762, 4774),(5085, 5112)))
 
 plot_avg_rms_spec(file_name='avg_rms_spec.pdf')
-#plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1800), ylim=(3, 70), scale_factor=5, shift_factor=(10, 0), line_length=3)
+plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1800), ylim=(3, 70), scale_factor=5, shift_factor=(10, 0), line_length=3)
 #plot_avg_rms_together()
 #plot_calibrated_and_uncalibrated_spectra_together()
