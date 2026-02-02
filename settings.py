@@ -246,9 +246,9 @@ CENTRAL_WAVELENGTH = {
     'OI8446': 8446.35,
     'OIII5007': 5006.84,
     'LyAlpha_not_optical_calibrated': 1215.67,
-    "SiIV1393_not_optical_calibrated": 1393.76,
-    'NV1238_not_optical_calibrated': 1244,
-    'CIV1548_not_optical_calibrated': 1548.19,
+    "SiIV1393_not_optical_calibrated": 1402,
+    'NV1238_not_optical_calibrated': 1242,
+    'CIV1548_not_optical_calibrated': 1550,
     'HeII1640_not_optical_calibrated': 1640.42,
     'LyAlpha': 1215.67
 }
@@ -286,10 +286,10 @@ FWHM_RMS = {
     'HeII4685': 5971,
     'OI8446': 3800,
     "LyAlpha_not_optical_calibrated": 4566,
-    "NV1238_not_optical_calibrated": 2525,
+    "NV1238_not_optical_calibrated": 3383,
     "SiIV1393_not_optical_calibrated": 10005,
     "CIV1548_not_optical_calibrated":  8428,
-    "HeII1640_not_optical_calibrated": 7996
+    "HeII1640_not_optical_calibrated": 6891
 }
 
 #DELTA_V = calculate_velocity_errors(CENTRAL_WAVELENGTH)
@@ -321,7 +321,7 @@ FWHM_ERR = {
     'HeI5875': 400,
     'HeII4685': 400.0,
     'OI8446': 400.0,
-    'HeII1640_not_optical_calibrated':1000,
+    'HeII1640_not_optical_calibrated':600,
     'SiIV1393_not_optical_calibrated': 1000,
     'CIV1548_not_optical_calibrated': 500,
     'LyAlpha_not_optical_calibrated': 350,
