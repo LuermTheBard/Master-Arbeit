@@ -762,24 +762,21 @@ def configure_ccfs_and_reference_axis(ax,
         ax.plot(x_values_ccfs, line_data["ccfs"], color=color)
 
         try:
-            _, mc_correlation_data_optical_calibrated = import_centroid_and_mc_data("NGC4593_optical_calibrated", reference_name, [line_name])
-            merged_mc_correlation_data = mc_correlation_data_optical_calibrated
+            if "not_optical" not in line_name:
+                _, mc_correlation_data = import_centroid_and_mc_data("NGC4593_optical_calibrated", reference_name, [line_name])
+            else:
+                _, mc_correlation_data = import_centroid_and_mc_data("NGC4593_not_optical_calibrated", reference_name, [line_name])
+            merged_mc_correlation_data = mc_correlation_data
+
         except Exception as e:
             print(f"{e}")
 
-            try:
-                _, mc_correlation_data_not_optical_calibrated = import_centroid_and_mc_data("NGC4593_not_optical_calibrated",
-                                                                                        reference_name, [line_name])
-                merged_mc_correlation_data = mc_correlation_data_not_optical_calibrated
-            except Exception as e:
-                print(f"{e}")
-                merged_mc_correlation_data = {}
 
 
         if centroid_data:
 
             try:
-                tau = math.ceil(abs(centroid_data[reference_name][line_name]["tau_cent"])*10)/10
+                tau = abs(centroid_data[reference_name][line_name]["tau_cent"])
                 err_h = math.ceil(abs(centroid_data[reference_name][line_name]["tau_cent_err_high"])*10)/10
                 err_l = math.ceil(abs(centroid_data[reference_name][line_name]["tau_cent_err_low"])*10)/10
 
@@ -798,6 +795,8 @@ def configure_ccfs_and_reference_axis(ax,
                                 color="grey")
                 except KeyError:
                     print(f"No centroid data found for line {line_name}")
+                except Exception as e:
+                    print(f"{e}")
             except KeyError:
                 print(f"No centroid data found for line {line_name}")
 
@@ -1150,8 +1149,7 @@ uvw2_keyorders_optical = {"UVW2":
                                "HBeta",
                                "HGamma",
                                "HDelta",
-                               "HeI5875",
-                               "HeII4685",
+                               "LyAlpha_not_optical_calibrated",
                                "OI8446"]}
 
 UV_keyorders_not_optical = {"Cont1150_not_optical_calibrated": ["time shift (tau)",
@@ -1162,41 +1160,20 @@ UV_keyorders_not_optical = {"Cont1150_not_optical_calibrated": ["time shift (tau
 
 uvw2_keyorders_not_optical = { "UVW2": ["time shift (tau)",
                                         "UVW2",
-                                        "LyAlpha_not_optical_calibrated",
+                                        "HeI5875",
+                                        "HeII1640_not_optical_calibrated",
+                                        "HeII4685",
                                         "NV1238_not_optical_calibrated",
                                         "SiIV1393_not_optical_calibrated",
-                                        "CIV1548_not_optical_calibrated",
-                                        "HeII1640_not_optical_calibrated"]}
-                                        
-save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],
-    keyorders_dict=uvw2_keyorders_not_optical,
-    file_name="UVW2_ccfs_and_reference_lightcurves_not_optical",
-    combine_data=True,
-    rows=7,
-    show_reference_label=True,
-    format_labels_as_paper = True,
-    layout_show_right_ccf_ylabel = False,
-    layout_show_top_secondary_labels = False,
-    lightcurve_hide_yticklabels = False,
-    ccf_show_inline_label_text = False,
-    adjust_last_row_gap_inch = -0.2,
-    include_extra_data = True,
-    extra_data_name = "UVW2_ref_Cont1150_not_optical_calibrated",
-    show_histogram = False,
-    show_subfigure_labels=False,
-    row_spacing=None,
-    line_style="-",
-    grid=(True, 0.12, 0.3, ':')
-)
+                                        "CIV1548_not_optical_calibrated"]}
 
 
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=uvw2_keyorders_optical,
-    file_name="UVW2_ccfs_and_reference_lightcurves_optical",
+    file_name="UVW2_ccfs_Balmer_Ly_O",
     combine_data=True,
-    rows=9,
+    rows=8,
     show_reference_label=True,
     format_labels_as_paper = True,
     layout_show_right_ccf_ylabel = False,
@@ -1206,12 +1183,39 @@ save_1d_corr_and_lightcurves_general(
     adjust_last_row_gap_inch = -0.2,
     include_extra_data = True,
     extra_data_name = "UVW2_ref_Cont1150_not_optical_calibrated",
-    show_histogram = False,
+    show_histogram = True,
     show_subfigure_labels=False,
     row_spacing=None,
     line_style="-",
     grid=(True, 0.12, 0.3, ':')
 )
+
+
+                                        
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[],
+    keyorders_dict=uvw2_keyorders_not_optical,
+    file_name="UVW2_ccfs_Helium_UV",
+    combine_data=True,
+    rows=8,
+    show_reference_label=True,
+    format_labels_as_paper = True,
+    layout_show_right_ccf_ylabel = False,
+    layout_show_top_secondary_labels = False,
+    lightcurve_hide_yticklabels = False,
+    ccf_show_inline_label_text = False,
+    adjust_last_row_gap_inch = -0.2,
+    include_extra_data = True,
+    extra_data_name = "UVW2_ref_Cont1150_not_optical_calibrated",
+    show_histogram = True,
+    show_subfigure_labels=False,
+    row_spacing=None,
+    line_style="-",
+    grid=(True, 0.12, 0.3, ':')
+)
+
+
+
 
 OI_keyorder = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
                 "HAlpha": ["time shift (tau)", "OI8446"],
@@ -1264,7 +1268,7 @@ save_1d_corr_and_lightcurves_general(
     adjust_last_row_gap_inch = -0.2,
     include_extra_data = True,
     extra_data_name = "OI8446_ref_HAlpha",
-    show_histogram = False,
+    show_histogram = True,
     show_subfigure_labels=False,
     row_spacing=None,
     line_style="-",
