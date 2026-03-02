@@ -1,3 +1,4 @@
+import math
 from typing import Union, Iterable, Dict
 
 import numpy as np
@@ -8,7 +9,7 @@ from import_data import import_centroid_and_mc_data, load_centroid_data_by_refer
 from settings import FWHM_RMS, FWHM_ERR
 
 
-def calc_centroid_malte_code(campaign, continuum, lines, include_mass=True, create_tex_file=True, top_percent=0.8):
+def calc_centroid_malte_code(campaign, continuum, lines, include_mass=True, create_tex_file=True, top_percent=0.8, cont_shift=0):
 
 
     correlation_data_dict, mc_data = import_centroid_and_mc_data(campaign, continuum, lines=lines)
@@ -25,6 +26,7 @@ def calc_centroid_malte_code(campaign, continuum, lines, include_mass=True, crea
                 mc_data[line]["centroids"],
                 mc_data[line]["peaks"],
                 top_percent=top_percent,
+                cont_shift=cont_shift   # Shift between used continua to more blue continua e.g. Swift UVW2 and HST Cont. 1150 A
             )
             line_objects.append(line_obj)
 
@@ -165,21 +167,47 @@ def weighted_mean_asym_errors(
     return {"mean": float(mean), "err": float(err), "weights_sum": float(wsum)}
 
 
-def mean_bh_mass(reference="UVW2"):
+def rescale_mass_with_shift(M, tau, tau_err_low, tau_err_high, shift=0.5):
+    """
+    Rescale BH mass when R changes from tau to tau+shift (in light-days).
+    Returns: (M_new, M_new_err_low, M_new_err_high)
+    Error propagation uses asymmetric tau errors only.
+    """
+    if tau <= 0:
+        raise ValueError(f"tau must be > 0, got {tau}")
 
+    # central scaling
+    fac = (tau + shift) / tau
+    M_new = M * fac
+
+    # asymmetric tau bounds
+    tau_low = max(tau - tau_err_low, 1e-12)   # avoid <=0
+    tau_high = tau + tau_err_high
+
+    # propagate via tau bounds (only through scaling factor)
+    M_low_new = M * (tau_low + shift) / tau
+    M_high_new = M * (tau_high + shift) / tau
+
+    err_low_new = M_new - M_low_new
+    err_high_new = M_high_new - M_new
+
+    return M_new, err_low_new, err_high_new
+
+
+def mean_bh_mass(reference="UVW2", shift_ld=0.5):
     centroid_and_masses = load_centroid_data_by_reference()
-    # --- Example: your Table  (units: 1e7 Msun) ---
 
-    mass_lines =['HAlpha',
-                 'HBeta',
-                 'HGamma',
-                 "HDelta",
-                 'HeI5875',
-                 'HeII4685',
-                 'LyAlpha_not_optical_calibrated',
-                 'NV1238_not_optical_calibrated',
-                 "CIV1548_not_optical_calibrated",
-                 "HeII1640_not_optical_calibrated"]
+    mass_lines = [
+        'HAlpha',
+        'HBeta',
+        'HGamma',
+        "HDelta",
+        'HeI5875',
+        "HeII1640_not_optical_calibrated",
+        'HeII4685',
+        'LyAlpha_not_optical_calibrated',
+        "CIV1548_not_optical_calibrated",
+    ]
 
     m = []
     err_minus = []
@@ -188,35 +216,58 @@ def mean_bh_mass(reference="UVW2"):
     reference_data = centroid_and_masses[reference]
 
     for line in mass_lines:
-        m.append(reference_data[line]["M_Mo"])
-        err_minus.append(reference_data[line]['M_Mo_err_low'])
-        err_plus.append(reference_data[line]['M_Mo_err_high'])
+        d = reference_data[line]
 
 
+        M = d["M_Mo"]
+        # original mass uncertainties
+        # M_err_low_orig = d["M_Mo_err_low"]
+        # M_err_high_orig = d["M_Mo_err_high"]
 
+        # --- lag values & asymmetric errors (ADAPT THESE KEY NAMES) ---
+        tau = d["tau_cent"]
+        tau_err_low = d["tau_cent_err_low"]
+        tau_err_high = d["tau_cent_err_high"]
+
+
+        M_new, M_err_low_new, M_err_high_new = rescale_mass_with_shift(
+            M, tau, tau_err_low, tau_err_high, shift=shift_ld
+        )
+
+        def round_up_2(x: float) -> float:
+            return math.ceil(x * 10) / 10
+
+        print(
+            f"{line}: {round_up_2(M_new):.1f}+{round_up_2(M_err_high_new):.1f}-{round_up_2(M_err_low_new):.1f}"
+        )
+
+        m.append(M_new)
+        err_minus.append(M_err_low_new)
+        err_plus.append(M_err_high_new)
 
     res = weighted_mean_asym_errors(m, err_minus, err_plus, symmetrize="max")
 
-
-    print(f"Weighted mean = {res['mean']*3.77:.3f} ± {res['err']*3.77:.3f}  (in units of 1e7 Msun)")
+    # your factor 3.77 stays as you had it
+    print(f"Weighted mean = {res['mean']:.3f} ± {res['err']:.3f}  (in units of 1e7 Msun)")
+    print(f"Weighted corr mean = {res['mean']*3.77:.3f} ± {res['err']*3.77:.3f}  (in units of 1e7 Msun)")
     print(f"=> ({res['mean']*3.77:.2f} ± {res['err']*3.77:.2f}) × 1e7 Msun")
 
 
-#mean_bh_mass()
+mean_bh_mass()
 
 #calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1150_not_optical_calibrated", lines=["HBeta", "LyAlpha", "OI8446", "HBeta_not_optical_calibrated", "LyAlpha_not_optical_calibrated", "OI8446_not_optical_calibrated"], include_mass=True)
 #calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1450_not_optical_calibrated", lines=["HBeta", "LyAlpha", "OI8446", "HBeta_not_optical_calibrated", "LyAlpha_not_optical_calibrated", "OI8446_not_optical_calibrated"], include_mass=True)
-calc_centroid_malte_code("NGC4593_optical_calibrated", "LyAlpha_not_optical_calibrated", lines=['HAlpha', "HBeta", "OI8446"], include_mass=False, create_tex_file=True, top_percent=0.8)
+#calc_centroid_malte_code("NGC4593_optical_calibrated", "LyAlpha_not_optical_calibrated", lines=['HAlpha', "HBeta", "OI8446"], include_mass=False, create_tex_file=True, top_percent=0.8)
 #calc_centroid_malte_code("NGC4593_optical_calibrated", "LyAlpha", lines=["HBeta", "OI8446"], include_mass=False)
 #calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1150", lines=['HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685'], include_mass=True)
-calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1150_not_optical_calibrated", lines=["UVW2"], include_mass=False, create_tex_file=True)
+#calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1150_not_optical_calibrated", lines=["UVW2"], include_mass=False, create_tex_file=True)
 #calc_centroid_malte_code("NGC4593_optical_calibrated", "HBeta", lines=["OI8446", "OI8446_not_optical_calibrated"], include_mass=True, create_tex_file=True)
-calc_centroid_malte_code("NGC4593_optical_calibrated", "HAlpha", lines=["OI8446"], include_mass=True, create_tex_file=True, top_percent=0.8)
-calc_centroid_malte_code("NGC4593_optical_calibrated", "HBeta", lines=["OI8446"], include_mass=True, create_tex_file=True, top_percent=0.8)
-calc_centroid_malte_code("NGC4593_optical_calibrated", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', "HDelta",'HeI5875', 'HeII4685', 'LyAlpha_not_optical_calibrated', "OI8446"], include_mass=True, create_tex_file=True, top_percent=0.8)
-calc_centroid_malte_code("NGC4593_not_optical_calibrated", "UVW2",
-                         lines=["LyAlpha_not_optical_calibrated", "SiIV1393_not_optical_calibrated",  "NV1238_not_optical_calibrated",
-                                "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated"], include_mass=True, create_tex_file=True)
+#calc_centroid_malte_code("NGC4593_optical_calibrated", "HAlpha", lines=["OI8446"], include_mass=False, create_tex_file=True, top_percent=0.8)
+#calc_centroid_malte_code("NGC4593_optical_calibrated", "HBeta", lines=["OI8446"], include_mass=False, create_tex_file=True, top_percent=0.8)
+#calc_centroid_malte_code("NGC4593_optical_calibrated", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', "HDelta",'HeI5875', 'HeII4685', 'LyAlpha_not_optical_calibrated', "OI8446"], include_mass=True, create_tex_file=True, top_percent=0.8)
+#calc_centroid_malte_code("NGC4593_not_optical_calibrated", "UVW2",
+#                         lines=["LyAlpha_not_optical_calibrated", "SiIV1393_not_optical_calibrated",  "NV1238_not_optical_calibrated",
+ #                               "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated"], include_mass=True, create_tex_file=True)
 
 
 #get_fluoreszenz_table(top_percent=0.8)

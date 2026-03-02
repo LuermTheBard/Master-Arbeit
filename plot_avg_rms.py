@@ -40,7 +40,7 @@ def validate_fits_data(fits_data):
             raise ValueError(f"'data' in key '{key}' must be a list or numpy array.")
 
 
-def plot_avg_rms(fits_data, save_path=None, file_name=None, log_scale=False, xlim=None, ylim=None, no_description=False, ax=None, show_ylabel=True, scale_factor=None, shift_factor=None, line_length=0.75):
+def plot_avg_rms(fits_data, save_path=None, file_name=None, log_scale=False, xlim=None, ylim=None, no_description=False, ax=None, show_ylabel=True, scale_factor=None, shift_factor=None, line_length=0.75, figsize=None, show_only_label=False, selected_broad_lines=None):
     """
     Extracts and plots AVG and RMS spectra from FITS-like data.
     Also saves the flux data and plot if a save path is provided.
@@ -86,12 +86,15 @@ def plot_avg_rms(fits_data, save_path=None, file_name=None, log_scale=False, xli
     label = (r"$F_\lambda \, [\mathrm{erg} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, "
              r"\mathrm{\AA}^{-1}]$")
     wavelengths_label = r"Rest Wavelength $[\mathrm{\AA}]$"
-    avg_title = "AVG"
-    rms_title = "RMS"
+    avg_title = "mean"
+    rms_title = "rms"
 
     if no_description:
         lines = dict()
         groups = dict()
+    elif selected_broad_lines is not None:
+        lines = selected_broad_lines[0]
+        groups = selected_broad_lines[1]
     else:
         lines = All_LINES
         groups = All_LINE_GROUPS
@@ -118,6 +121,8 @@ def plot_avg_rms(fits_data, save_path=None, file_name=None, log_scale=False, xli
         scale_factor=scale_factor,
         shift_factor=shift_factor,
         line_length=line_length,
+        figsize=figsize,
+        show_only_label=show_only_label
     )
 
     if save_path:
@@ -136,7 +141,7 @@ def plot_avg_rms(fits_data, save_path=None, file_name=None, log_scale=False, xli
 def plot_avg_rms_spectra(
     x, y1, y2, xlabel, ylabel, title1, title2, super_title,
     lines, groups, save_path=None, log_scale=False, xlim=None, ylim=None,
-    ax=None, show_ylable=True, scale_factor=None, shift_factor=None, line_length = 0.75
+    ax=None, show_ylable=True, scale_factor=None, shift_factor=None, line_length = 0.75, figsize=None, show_only_label=False
 ):
     """
     Plots the AVG and RMS spectra in one figure with custom scaling and line annotations.
@@ -193,16 +198,31 @@ def plot_avg_rms_spectra(
 
     # Falls kein ax übergeben wurde → neue Figure erzeugen
     if ax is None:
-        fig, ax = plt.subplots(figsize=(11, 7))
+        if figsize is None:
+            figure_size = (10, 6)
+        else:
+            figure_size = figsize
+        fig, ax = plt.subplots(figsize=figure_size)
+        fig.tight_layout(rect=[0.04, 0.04, 1, 1])
     else:
         fig = ax.figure  # Hole Figure aus dem vorhandenen ax
 
-    ax.plot(x_filtered, y1_filtered, label=f"{title1} (shifted by {shift_factor_1:.1f})", linestyle="-", color="blue")
-    ax.plot(x_filtered, y2_scaled, label=f"{title2} (scaled by {scale_factor:.1f}, shifted by {shift_factor_2:.1f})", linestyle="-", color="orange")
+    if show_only_label:
+        label1 = f"{title1}"
+        label2 = f"{title2} (scaled by {scale_factor:.1f}, shifted by {shift_factor_2:.1f})"
+    else:
+        label1 = f"{title1} (shifted by {shift_factor_1:.1f})"
+        label2 = f"{title2} (scaled by {scale_factor:.1f}, shifted by {shift_factor_2:.1f})"
+
+    ax.plot(x_filtered, y1_filtered, label=label1, linestyle="-", color="blue")
+    ax.plot(x_filtered, y2_scaled, label=label2, linestyle="-", color="orange")
 
     ax.set_xlabel(xlabel, fontsize=12)
     if show_ylable:
-        ax.set_ylabel(f"{new_ylabel} + const.", fontsize=12)
+        if show_only_label:
+            ax.set_ylabel(new_ylabel, fontsize=12)
+        else:
+            ax.set_ylabel(f"{new_ylabel} + const.", fontsize=12)
 
     if log_scale:
         ax.set_yscale("log")
@@ -254,11 +274,11 @@ def plot_avg_rms_spectra(
     # plt.title(super_title, fontsize=20)
 
     if save_path:
-        fig.savefig(save_path, dpi=300)
-        fig.savefig(f"{save_path}.png", dpi=300)
+        fig.savefig(save_path)
+        fig.savefig(f"{save_path}.png")
         print(f"Plot saved to {save_path}")
 
-    plt.show()
+    # plt.show()
 
     return fig, ax, new_ylabel
 
@@ -380,7 +400,7 @@ def plot_line_group(
 
 def plot_avg_rms_spec(input_dir=None, file_name=None,
                       output_dir=DEFAULT_OUTPUT_DIR,
-                      no_description=False, xlim=None, ylim=None, ax=None, show_ylabel=True, scale_factor=None, shift_factor=None, line_length=0.75):
+                      no_description=False, xlim=None, ylim=None, ax=None, show_ylabel=True, scale_factor=None, shift_factor=None, line_length=0.75, figsize=None, show_only_label=False, selected_broad_lines=None):
     avg_rms_spec_dir = output_dir / "avg_rms_spec"
     avg_rms_spec_dir.mkdir(parents=True, exist_ok=True)
 
@@ -394,7 +414,10 @@ def plot_avg_rms_spec(input_dir=None, file_name=None,
                         show_ylabel=show_ylabel,
                         scale_factor=scale_factor,
                         shift_factor=shift_factor,
-                        line_length=line_length
+                        line_length=line_length,
+                        figsize=figsize,
+                        show_only_label=show_only_label,
+                        selected_broad_lines=selected_broad_lines
 
                         )  # NEU
 
@@ -491,7 +514,7 @@ def plot_avg_rms_together(output_dir=DEFAULT_OUTPUT_DIR):
     )
 
     xlim=(3800, 8900)
-    ylim = (0, 7.999)
+    ylim = (-2, 5.999)
 
     data_path = find_prime_data_folder()
 
@@ -499,12 +522,12 @@ def plot_avg_rms_together(output_dir=DEFAULT_OUTPUT_DIR):
     calibrate_avg_rms_data_path = data_path / "fits"
 
     # Oberer Plot
-    _,_,ylabel = plot_avg_rms_spec(input_dir=uncalibrate_avg_rms_data_path, xlim=xlim, ylim=ylim, no_description=True, ax=ax1, show_ylabel=False)
+    _,_,ylabel = plot_avg_rms_spec(input_dir=uncalibrate_avg_rms_data_path, xlim=xlim, ylim=ylim, no_description=True, ax=ax1, show_ylabel=False, scale_factor=8, shift_factor=(0, -3), show_only_label=True)
     ax1.text(0.3, 0.95, "Original",
              transform=ax1.transAxes, ha="left", va="top", fontsize=18)
 
     # Unterer Plot
-    plot_avg_rms_spec(input_dir=calibrate_avg_rms_data_path, xlim=xlim, ylim=ylim, no_description=True, ax=ax2, show_ylabel=False)
+    plot_avg_rms_spec(input_dir=calibrate_avg_rms_data_path, xlim=xlim, ylim=ylim, no_description=True, ax=ax2, show_ylabel=False, scale_factor=8, shift_factor=(0, -3), show_only_label=True)
     ax2.text(0.3, 0.95, "Intercalibrated",
              transform=ax2.transAxes, ha="left", va="top", fontsize=18)
 
@@ -515,7 +538,7 @@ def plot_avg_rms_together(output_dir=DEFAULT_OUTPUT_DIR):
 
     # Zentrale Y-Achsenbeschriftung (für beide Plots gemeinsam)
     fig.text(0.02, 0.5,
-             f"{ylabel} + const.",
+             f"{ylabel}",
              va="center", rotation="vertical", fontsize=18)
 
     plt.tight_layout(rect=[0.05, 0, 1, 1])  # Platz für Y-Label lassen
@@ -705,7 +728,88 @@ def get_line_flux(line_window: tuple,cont_windows: tuple):
 
 #get_line_flux((4995.66, 5021.75), ((4762, 4774),(5085, 5112)))
 
-plot_avg_rms_spec(file_name='avg_rms_spec.pdf')
-plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1800), ylim=(3, 70), scale_factor=5, shift_factor=(10, 0), line_length=3)
-#plot_avg_rms_together()
-#plot_calibrated_and_uncalibrated_spectra_together()
+plot_avg_rms_spec(file_name='avg_rms_spec.pdf',shift_factor=(0, -3), ylim=(-2.5, 13), show_only_label=True)
+
+plot_avg_rms_spec(file_name='avg_rms_spec_OI.pdf', scale_factor=20, shift_factor=(0, -2.5), ylim=(-0.5, 3), xlim=(8300,8700), figsize=(4,3.5), no_description=True, show_only_label=True)
+
+
+plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1710), ylim=(-10, 70), scale_factor=5, shift_factor=(0, -10), line_length=3, show_only_label=True)
+
+
+selected_lines = {
+    # UV
+    r"$\mathrm{Ly}\alpha$": {
+        "position": 1215.67, "text_vertical_shift": -10, "slanted": False,
+        "show_no_tick_avg": True, "text_shift": -15, "tick_shift_rms": 3
+    },
+
+
+    r"$\mathrm{He\,II}\,\lambda\,1640$": {
+        "position": 1640.42, "text_vertical_shift": 3, "slanted": False,
+        "tick_shift_avg": 2.5, "text_shift": 0, "tick_shift_rms": 3
+    },
+
+    # Balmer
+    r"$\mathrm{H}\alpha$": {
+        "position": 6562.82, "text_vertical_shift": -10, "slanted": False,
+        "text_shift": 90, "show_no_tick_avg": True, "tick_shift_rms": 1
+    },
+    r"$\mathrm{H}\beta$": {
+        "position": 4861.33, "text_vertical_shift": -0.7, "slanted": False,
+        "show_no_tick_avg": True, "tick_shift_rms": 0.6
+    },
+    r"$\mathrm{H}\gamma$": {
+        "position": 4340.47, "text_vertical_shift": 0.1, "tick_shift_avg": 0.31,
+        "text_shift": -30, "slanted": False, "tick_shift_rms": 0.57
+    },
+    r"$\mathrm{H}\delta$": {"position": 4101.74, "text_vertical_shift": 0.1, "slanted": False},
+
+
+    r"$\mathrm{He\,I}\,\lambda\,5876$": {"position": 5875.6, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.3},
+
+    # He II optical
+    r"$\mathrm{He\,II}\,\lambda\,4686$": {"position": 4685.7, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.4},
+
+
+
+    r"$\mathrm{O\,I}\,\lambda\,8446$": {"position": 8446.35, "text_vertical_shift": 0.1, "slanted": False,  "show_no_tick_rms": True, "tick_shift_rms": 0.29},
+}
+
+
+selected_groups = {
+    r"$\mathrm{N\,V}\,\lambda\lambda\,1238,\,1242$": {
+        "position": [1238.82, 1242.8],
+        "tick_vertical_shift_avg": 2,
+        "tick_vertical_shift_rms": 7,
+        "show_in_rms": False,
+        "text_vertical_shift": 2
+    },
+
+    r"$\mathrm{Si\,IV}\,\lambda\lambda\,1393,\,1402,\,\mathrm{O\,IV]\,\lambda\lambda\,1397,\,1399}$": {
+        "position": [1393.75, 1402.7],
+        "tick_vertical_shift_avg": 2,
+        "tick_vertical_shift_rms": 2.5,
+        "show_in_rms": True,
+        "text_vertical_shift": 2
+    },
+
+    r"$\mathrm{C\,IV}\,\lambda\lambda\,1548,\,1550$": {
+        "position": [1548.19, 1550.77],
+        "tick_vertical_shift_avg": 2,
+        "tick_vertical_shift_rms": 10,
+        "show_in_rms": True,
+        "show_in_avg": False,
+        "text_vertical_shift": -15,
+        "text_horizontal_shift": -15
+    },
+
+}
+
+#selected = (selected_lines, selected_groups)
+
+#plot_avg_rms_spec(file_name='avg_rms_spec_selected_lines.pdf',shift_factor=(0, -3), ylim=(-2.5, 13), selected_broad_lines=selected, show_only_label=True)
+
+#plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS_selected_lines.pdf',xlim=(1130, 1710), ylim=(-10, 70), scale_factor=5, shift_factor=(0, -10), line_length=3, selected_broad_lines=selected, show_only_label=True)
+
+plot_avg_rms_together()
+plot_calibrated_and_uncalibrated_spectra_together()

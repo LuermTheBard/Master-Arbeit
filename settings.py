@@ -69,7 +69,7 @@ All_LINES = {
 
     r"$\mathrm{N\,IV]}\,\lambda\,1486$": {
         "position": 1486.49, "text_vertical_shift": 3, "slanted": False,
-        "tick_shift_avg": 1.5, "text_shift": 0, "tick_shift_rms": 1
+        "tick_shift_avg": 1.5, "text_shift": 0, "tick_shift_rms": 1, "show_no_tick_rms": True
     },
 
     r"$\mathrm{He\,II}\,\lambda\,1640$": {
@@ -130,7 +130,7 @@ All_LINES = {
     r"$[\mathrm{Ar\,III}]\,\lambda\,7751$": {"position": 7751, "text_vertical_shift": 0.1, "text_shift": 20, "tick_shift_avg": 0.37, "slanted": False, "show_no_tick_rms": True},
 
     # Oxygen I lines
-    r"$\mathrm{O\,I}\,\lambda\,8446$": {"position": 8446.35, "text_vertical_shift": 0.1, "slanted": False, "tick_shift_rms": 0.29},
+    r"$\mathrm{O\,I}\,\lambda\,8446$": {"position": 8446.35, "text_vertical_shift": 0.1, "slanted": False, "show_no_tick_avg": True, "show_no_tick_rms": True, "tick_shift_rms": 0.29},
     r"$[\mathrm{O\,I}]\,\lambda\,6300$": {"position": 6300.30, "text_vertical_shift": 0.1, "tick_shift_avg": 0.43, "slanted": False, "show_no_tick_rms": True},
 }
 
@@ -140,11 +140,11 @@ All_LINE_GROUPS = {
         "position": [1238.82, 1242.8],
         "tick_vertical_shift_avg": 2,
         "tick_vertical_shift_rms": 7,
-        "show_in_rms": True,
+        "show_in_rms": False,
         "text_vertical_shift": 2
     },
 
-    r"$\mathrm{Si\,IV}\,\lambda\lambda\,1393,\,1402,\,\mathrm{O\,IV]}$": {
+    r"$\mathrm{Si\,IV}\,\lambda\lambda\,1393,\,1402,\,\mathrm{O\,IV]\,\lambda\lambda\,1397,\,1399}$": {
         "position": [1393.75, 1402.7],
         "tick_vertical_shift_avg": 2,
         "tick_vertical_shift_rms": 2.5,
@@ -166,8 +166,8 @@ All_LINE_GROUPS = {
         "position": [1660.80, 1666.15],
         "tick_vertical_shift_avg": 1,
         "tick_vertical_shift_rms": 1,
-        "show_in_rms": True,
-        "text_vertical_shift": 2
+        "show_in_rms": False,
+        "text_vertical_shift": 2,
     },
 
     r"$\mathrm{Fe\,II}$": {
@@ -197,8 +197,8 @@ All_LINE_GROUPS = {
         "position": [8498.02, 8542.09, 8662.14],
         "tick_vertical_shift_avg": 0.34,
         "tick_vertical_shift_rms": 0.23,
-        "all_lines": True,
-        "show_in_rms": True
+        "all_lines": False,
+        "show_in_rms": False
     },
 }
 
@@ -343,8 +343,8 @@ DISPERSION_SIGMA_RMS = {
 
 
 SYMBOLES_AND_COLORS_FOR_LIGHTCURVES = {
-    "UVW2": {"symbole": ".", "color": "darkblue", "markersize": 3, "alpha": 0.6},
-    #"Cont1150_not_optical_calibrated": {"symbole": ".", "color": "#1f77b4", "markersize": 6},
+    "UVW2": {"symbole": ".", "color": "darkblue", "markersize": 3, "alpha": 0.5},
+    "Cont1150_not_optical_calibrated": {"symbole": ".", "color": "purple", "markersize": 6},
 
     "HAlpha": {"symbole": "^", "color": "#d62728", "markersize": 4},
     "HBeta": {"symbole": ">", "color": "darkgoldenrod", "markersize": 3},

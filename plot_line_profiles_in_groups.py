@@ -19,9 +19,10 @@ DEFAULT_LINE_COLORS = [
     "#0072B2",  # blue
     "red",
     "#E69F00",  # orange
+    "#CC79A7",  # reddish purple
     "#009E73",  # bluish green
     "#D55E00",  # vermillion
-    "#CC79A7",  # reddish purple
+
     "#56B4E9",  # sky blue
     "#F0E442",  # yellow (use thicker line / edge; can be weak on white)
     # extras (still fairly distinct)
@@ -468,9 +469,9 @@ def configure_line_profile_axis(ax, row, col, ylabel, avg_x, avg_y, rms_x, rms_y
     """
 
     if "avg" in components:
-        ax.plot(avg_x, avg_y, label=f'AVG', color='black')
+        ax.plot(avg_x, avg_y, label=f'mean', color='black')
     if "rms" in components:
-        ax.plot(rms_x, rms_y, label=f'RMS', color='red')
+        ax.plot(rms_x, rms_y, label=f'rms', color='red')
     ax.vlines(0,-0.1, 1.5, linestyles="dashed", color="black", linewidth=0.5)
     ax.hlines(0, -10000, 10000, linestyles="dashed", color="black", linewidth=0.5)
     label = format_label(line_name, as_latex=False).split("  ")[0] if "  " in format_label(line_name, as_latex=False, for_paper=True) else format_label(line_name, as_latex=False, for_paper=True)
@@ -939,6 +940,14 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
                      'SiIV1393_not_optical_calibrated',
                      'CIV1548_not_optical_calibrated']
 
+    key_order_talk = ['HAlpha',
+                     'HBeta',
+                     'HGamma',
+                     'HeI5875',
+                     'HeII1640_not_optical_calibrated',
+                     'HeII4685',
+                     ]
+
     key_order_balmer = ['HAlpha', 'HBeta', 'HGamma']
     key_order_helium = ['HeI5875',  'HeII4685']
     key_order_Ly_O= ["LyAlpha_not_optical_calibrated", 'OI8446']
@@ -954,7 +963,8 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
     plot_normalized_line_profiles_in_groups(profile_data, rows=4, cols=3, key_order=key_order_all,
                                             safe_file_name="Normalized Line Profiles")
-
+    plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=3, key_order=key_order_talk,
+                                            safe_file_name="Normalized Line Profiles talk")
     #plot_normalized_line_profiles_in_groups(profile_data, rows=2, cols=2, key_order=key_order_UV,
     #                                        safe_file_name="Normalized Line Profiles UV")
 
@@ -969,7 +979,11 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
-        line_groups=[["HAlpha", "HBeta"], ["HAlpha", "HGamma"],["HAlpha", "HDelta"], ["HBeta", "HGamma"], ["HBeta", "HDelta"], ["HGamma", "HDelta"]],
+        line_groups=[["HAlpha", "HBeta"],
+                     ["HAlpha", "HGamma"],
+                     ["HAlpha", "HDelta"],
+                     ["HBeta", "HGamma"],
+                     ["HBeta", "HDelta"], ["HGamma", "HDelta"],],
         components=("rms",),
         title="RMS overlay Balmer",
         safe_file_name="RMS_overlay_Balmer",
@@ -993,24 +1007,38 @@ def run_normalized_profiles_together_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
-        line_groups=[['HeI5875'],['HeII4685'],['HeII1640_not_optical_calibrated'],['HeI5875', 'HeII4685'],['HeI5875',  'HeII1640_not_optical_calibrated'],['HeII4685', 'HeII1640_not_optical_calibrated']],
+        line_groups=[['HeI5875', 'HeII4685'],['HeI5875',  'HeII1640_not_optical_calibrated'],['HeII4685', 'HeII1640_not_optical_calibrated']],
         components=("rms",),
         title="RMS overlay Helium",
         safe_file_name="RMS_overlay_Helium",
         xlim=(-9999, 10000),
-        rows=2,
+        rows=1,
         cols=3,
         for_paper=True
     )
 
     plot_overlaid_normalized_line_profiles_in_panels(
         data=profile_data,
-        line_groups=[['LyAlpha_not_optical_calibrated'],['NV1238_not_optical_calibrated'],['SiIV1393_not_optical_calibrated'],['CIV1548_not_optical_calibrated']],
+        line_groups=[["HAlpha", "HBeta"],["HGamma", "HDelta"],['HeI5875', 'HeII4685']],
+        components=("rms",),
+        title="RMS overlay Helium",
+        safe_file_name="RMS_talk",
+        xlim=(-9999, 10000),
+        rows=1,
+        cols=3,
+        for_paper=True
+    )
+
+
+
+    plot_overlaid_normalized_line_profiles_in_panels(
+        data=profile_data,
+        line_groups=[['LyAlpha_not_optical_calibrated'],['CIV1548_not_optical_calibrated']],
         components=("rms",),
         title="UV Lines",
         safe_file_name="UV_Lines",
         xlim=(-9999, 10000),
-        rows=2,
+        rows=1,
         cols=2,
         for_paper=True
     )

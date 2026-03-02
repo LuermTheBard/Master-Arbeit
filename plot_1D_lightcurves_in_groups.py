@@ -117,7 +117,7 @@ def plot_all_1d_lightcurves_in_groups(data_dict, output_dir, compare_cont,
 
 def plot_1d_emission_lines_in_groups(
         data_dict, output_dir, compare_cont,
-        key_order_lines=None, save_only=False, file_name=None
+        key_order_lines=None, save_only=False, file_name=None, rows=5, cols=2, normalize_to_mean=False
 ):
     base_mjd = BASE_MJD
 
@@ -153,13 +153,13 @@ def plot_1d_emission_lines_in_groups(
         filtered_line_data_dict, x_key, y_key, compare_cont,
         xlabel, ylabel_line, yerr_name=yerr_name,
         save_only=save_only, output_dir=save_folder, line_light_curves=True,
-        file_name=file_name
+        file_name=file_name, rows=rows, cols=cols
     )
 
 
 def plot_1d_continua_in_groups(
         data_dict, output_dir, compare_cont,
-        key_order_conts=None, save_only=False, file_name=None
+        key_order_conts=None, save_only=False, file_name=None, rows=5, cols=2,
 ):
     base_mjd = BASE_MJD
 
@@ -187,7 +187,8 @@ def plot_1d_continua_in_groups(
         xlabel, ylabel_cont, yerr_name=yerr_name,
         save_only=save_only, output_dir=save_folder,
         color_dict=COLORCODE_CONTINUA_NORMALIZED,
-        file_name=file_name
+        file_name=file_name,
+        rows=rows, cols=cols
     )
 
 
@@ -457,6 +458,8 @@ def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
                           'SiIV1393_not_optical_calibrated',
                           'CIV1548_not_optical_calibrated']
 
+    key_order_lines_talk = ["UVW2", 'HAlpha', 'HBeta', 'LyAlpha_not_optical_calibrated', 'HeI5875', 'SiIV1393_not_optical_calibrated', 'CIV1548_not_optical_calibrated', 'HeII4685', 'SiIV1393_not_optical_calibrated','CIV1548_not_optical_calibrated']
+
     plot_1d_emission_lines_in_groups(
         merged_dict, output_dir, compare_cont="UVW2",
         key_order_lines=key_order_lines, save_only=save_only,
@@ -473,6 +476,12 @@ def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
         merged_dict, output_dir, compare_cont="UVW2",
         key_order_conts=key_order_conts, save_only=save_only,
         file_name=f"Continua"
+    )
+
+    plot_1d_emission_lines_in_groups(
+        merged_dict, output_dir, compare_cont="UVW2",
+        key_order_lines=key_order_lines_talk, save_only=save_only,
+        file_name=f"Lines_talk", cols=2, rows=3
     )
 
 

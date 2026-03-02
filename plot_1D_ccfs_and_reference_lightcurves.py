@@ -787,6 +787,7 @@ def configure_ccfs_and_reference_axis(ax,
                     va='top',
                     fontsize=7.5
                 )
+
                 try:
 
                     ax.axvline(tau, color="grey", linestyle="--", linewidth=1)
@@ -1214,6 +1215,95 @@ save_1d_corr_and_lightcurves_general(
     grid=(True, 0.12, 0.3, ':')
 )
 
+uvw2_keyorders_optical_talk1 = {"UVW2":
+                              ["time shift (tau)",
+                               'HAlpha',
+                               'HBeta',
+                               'LyAlpha_not_optical_calibrated',
+                               'HeI5875',]}
+
+uvw2_keyorders_optical_talk2 = {"UVW2":
+                              ["time shift (tau)",
+                               'HeI5875',
+                               'HeII4685',
+                               'SiIV1393_not_optical_calibrated',
+                               'CIV1548_not_optical_calibrated']}
+
+
+uvw2_keyorders_not_optical_talk = {"UVW2": ["time shift (tau)",
+                                       "HeI5875",
+                                       "HeII1640_not_optical_calibrated",
+                                       "HeII4685",
+                                       "NV1238_not_optical_calibrated",
+                                       "SiIV1393_not_optical_calibrated",
+                                       "CIV1548_not_optical_calibrated"]}
+
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[],
+    keyorders_dict=uvw2_keyorders_optical_talk1,
+    file_name="UVW2_talk1",
+    combine_data=True,
+    rows=4,
+    show_reference_label=True,
+    format_labels_as_paper=True,
+    layout_show_right_ccf_ylabel=False,
+    layout_show_top_secondary_labels=False,
+    lightcurve_hide_yticklabels=False,
+    ccf_show_inline_label_text=False,
+    adjust_last_row_gap_inch=-0.0,
+    include_extra_data=False,
+    show_histogram=False,
+    show_subfigure_labels=False,
+    row_spacing=None,
+    line_style="-",
+    grid=(True, 0.12, 0.3, ':')
+)
+
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[],
+    keyorders_dict=uvw2_keyorders_optical_talk2,
+    file_name="UVW2_talk2",
+    combine_data=True,
+    rows=4,
+    show_reference_label=True,
+    format_labels_as_paper=True,
+    layout_show_right_ccf_ylabel=False,
+    layout_show_top_secondary_labels=False,
+    lightcurve_hide_yticklabels=False,
+    ccf_show_inline_label_text=False,
+    adjust_last_row_gap_inch=-0.0,
+    include_extra_data=False,
+    show_histogram=False,
+    show_subfigure_labels=False,
+    row_spacing=None,
+    line_style="-",
+    grid=(True, 0.12, 0.3, ':')
+)
+
+
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[],
+    keyorders_dict=uvw2_keyorders_not_optical_talk,
+    file_name="UVW2_ccfs_Helium_UV_talk",
+    combine_data=True,
+    rows=6,
+    show_reference_label=True,
+    format_labels_as_paper=True,
+    layout_show_right_ccf_ylabel=False,
+    layout_show_top_secondary_labels=False,
+    lightcurve_hide_yticklabels=False,
+    ccf_show_inline_label_text=False,
+    adjust_last_row_gap_inch=-0.0,
+    include_extra_data=False,
+    show_histogram=False,
+    show_subfigure_labels=False,
+    row_spacing=None,
+    line_style="-",
+    grid=(True, 0.12, 0.3, ':')
+)
+
+
+
 
 
 
@@ -1268,12 +1358,43 @@ save_1d_corr_and_lightcurves_general(
     adjust_last_row_gap_inch = -0.2,
     include_extra_data = True,
     extra_data_name = "OI8446_ref_HAlpha",
-    show_histogram = True,
+    show_histogram = False,
     show_subfigure_labels=False,
     row_spacing=None,
     line_style="-",
     grid=(True, 0.12, 0.3, ':')
 )
+
+
+
+OI_paper_keyorder_HAlpha_talk = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446",],
+                      "UVW2": ["time shift (tau)", "HAlpha", "OI8446", "LyAlpha_not_optical_calibrated"],
+                      #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
+                      }
+
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[],
+    keyorders_dict=OI_paper_keyorder_HAlpha_talk,
+    file_name="OI_ccfs_and_reference_lightcurves_paper HAlpha talk",
+    final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
+    combine_data=True,
+    rows=5,
+    show_reference_label=True,
+    format_labels_as_paper = True,
+    layout_show_right_ccf_ylabel = False,
+    layout_show_top_secondary_labels = False,
+    lightcurve_hide_yticklabels = False,
+    ccf_show_inline_label_text = False,
+    adjust_last_row_gap_inch = -0.2,
+    include_extra_data = True,
+    extra_data_name = "OI8446_ref_HAlpha",
+    show_histogram = False,
+    show_subfigure_labels=False,
+    row_spacing=None,
+    line_style="-",
+    grid=(True, 0.12, 0.3, ':')
+)
+
 """
 
 OI_paper_keyorder_second_paper_HAlpha = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
