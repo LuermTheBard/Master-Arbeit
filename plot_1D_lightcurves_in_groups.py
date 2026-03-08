@@ -1,4 +1,5 @@
 import math
+from pathlib import Path
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -336,6 +337,13 @@ def plot_lightcurves_in_groups(data, x_key, y_key, compare_cont, xlabel='X-axis'
             compare_cont=compare_cont, file_name=file_name
         )
 
+def one_decimal_max(x, pos):
+    s = f"{x:.1f}"          # immer 1 Nachkommastelle
+    return s.rstrip("0").rstrip(".")  # .0 entfernen
+
+
+
+
 def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, yerr_values,
                                 line_name, line_lightcurves=False):
     """
@@ -429,7 +437,8 @@ def configure_lightcurves_axis(ax, row, col, ylabel, color, x_values, y_values, 
 
     ax.xaxis.set_major_locator(MultipleLocator(5))
     ax.xaxis.set_minor_locator(MultipleLocator(1))
-    ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=4))
+    ax.yaxis.set_major_formatter(FuncFormatter(one_decimal_max))
 
     if row == 0:
         ax_top = ax.secondary_xaxis('top')
@@ -485,6 +494,154 @@ def run_1d_lightcurves_groups(output_dir=DEFAULT_OUTPUT_DIR, save_only=False):
     )
 
 
+def build_latex_table(rows, sorted_mjds, key_order, caption, label, scale=1e-15):
+    """Build a LaTeX table string for a given set of line/cont keys."""
+
+    # Remove UVW2 from data columns (it's just used for ordering/reference)
+    data_keys = [k for k in key_order if k != "UVW2"]
+
+    # Clean display names for column headers
+    def clean_name(k):
+        return format_label(k, as_latex=True)
+
+    col_format = "l" + "c" * len(data_keys)
+
+    header_entries = [r"Mod. Julian Date"] + [clean_name(k) for k in data_keys]
+    col_headers = " & ".join(header_entries) + r" \\"
+
+    lines_latex = []
+    lines_latex.append(r"\begin{table*}")
+    lines_latex.append(r"\centering")
+    lines_latex.append(
+        r"\caption{" + caption + r" Integrated line fluxes in units of "
+                                 r"$10^{-15}$\,erg\,cm$^{-2}$\,s$^{-1}$.}"
+    )
+    lines_latex.append(r"\begin{tabular}{" + col_format + "}")
+    lines_latex.append(r"\hline\hline")
+    lines_latex.append(col_headers)
+    lines_latex.append(r"\hline")
+
+    for mjd in sorted_mjds:
+        row_data = rows[mjd]
+        row_entries = [f"{mjd:.2f}"]
+        for key in data_keys:
+            if key in row_data:
+                flux, err = row_data[key]
+                # Scale flux and error
+                flux_scaled = flux / scale
+                err_scaled = err / scale
+                row_entries.append(f"${flux_scaled:.2f} \\pm {err_scaled:.2f}$")
+            else:
+                row_entries.append(r"$\cdots$")
+        lines_latex.append(" & ".join(row_entries) + r" \\")
+
+    lines_latex.append(r"\hline")
+    lines_latex.append(r"\end{tabular}")
+    lines_latex.append(r"\label{" + label + "}")
+    lines_latex.append(r"\end{table*}")
+
+    return "\n".join(lines_latex)
+
+
+def print_tables(output_dir=DEFAULT_OUTPUT_DIR):
+    ensure_output_dir(output_dir)
+    data = import_1d_lightcurve_data()
+
+    merged_dict = deep_merge(
+        data["NGC4593_not_optical_calibrated"],
+        data["NGC4593_optical_calibrated"]
+    )
+
+    x_key     = 'timestamps [MJD]'
+    y_key     = 'fluxes [ergs/s/cm2/A]'
+    yerr_name = 'fluxerrs [ergs/s/cm2/A]'
+
+    #key_order_Balmer_lines = ['HAlpha', 'HBeta', 'HGamma', 'HDelta']
+    #key_order_LyO_lines    = ['LyAlpha_not_optical_calibrated', 'OI8446']
+    key_order_conts        = [
+        "Cont1150_not_optical_calibrated", "Cont4010", "Cont4440",
+        "Cont5100", "Cont6110", "Cont6880", "Cont8015", "Cont8900"
+    ]
+    #key_order_Helium_lines = ['HeI5875', 'HeII1640_not_optical_calibrated', 'HeII4685']
+    #key_order_UV_lines     = [
+    #    'NV1238_not_optical_calibrated',
+    #    'SiIV1393_not_optical_calibrated',
+    #    'CIV1548_not_optical_calibrated'
+    #]
+
+    key_order_lines = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'LyAlpha_not_optical_calibrated', 'OI8446', 'HeI5875', 'HeII1640_not_optical_calibrated', 'HeII4685', 'NV1238_not_optical_calibrated','SiIV1393_not_optical_calibrated','CIV1548_not_optical_calibrated']
+
+    # ------------------------------------------------------------------ #
+    # Map each key -> correct sub-dict ("lines" or "continua")
+    # ------------------------------------------------------------------ #
+    #all_line_keys = (
+    #    key_order_Balmer_lines +
+    #    key_order_LyO_lines    +
+    #    key_order_Helium_lines +
+    #    key_order_UV_lines
+    #)
+    all_line_keys = (
+        key_order_lines
+    )
+
+    all_cont_keys = key_order_conts
+
+    key_to_subdict = {}
+    for key in all_line_keys:
+        if key in merged_dict.get("lines", {}):
+            key_to_subdict[key] = merged_dict["lines"][key]
+        else:
+            print(f"Warning: '{key}' not found in merged_dict['lines']")
+
+    for key in all_cont_keys:
+        if key in merged_dict.get("continua", {}):
+            key_to_subdict[key] = merged_dict["continua"][key]
+        else:
+            print(f"Warning: '{key}' not found in merged_dict['continua']")
+
+    # ------------------------------------------------------------------ #
+    # Build rows dict:  mjd -> { key: (flux, err) }
+    # ------------------------------------------------------------------ #
+    rows = {}
+    for key, line_data in key_to_subdict.items():
+        x_values    = np.array(line_data.get(x_key,     []))
+        y_values    = np.array(line_data.get(y_key,     []))
+        yerr_noise  = np.array(line_data.get(yerr_name, []))
+
+        # Correct uncertainties
+        yerr_values = calculate_standard_error_for_lightcurves(y_values, yerr_noise)
+
+        for mjd, flux, err in zip(x_values, y_values, yerr_values):
+            rows.setdefault(mjd, {})[key] = (flux, err)
+
+    sorted_mjds = sorted(rows.keys())
+
+    # ------------------------------------------------------------------ #
+    # Build & save the five tables
+    # ------------------------------------------------------------------ #
+    #table_configs = [
+    #    (key_order_Balmer_lines, "Balmer emission lines.",  "tab:balmer", "balmer_lines_table.tex"),
+    #    (key_order_LyO_lines,    "Ly$\\alpha$ and OI lines.", "tab:lyo",  "lyo_lines_table.tex"),
+    #    (key_order_conts,        "Continuum fluxes.",       "tab:conts",  "cont_flux_table.tex"),
+    #    (key_order_Helium_lines, "Helium emission lines.",  "tab:helium", "helium_lines_table.tex"),
+    #    (key_order_UV_lines,     "UV emission lines.",      "tab:uv",     "uv_lines_table.tex"),
+    #]
+
+    table_configs = [
+        (key_order_lines, "Emission lines.", "tab:emission-lines", "emission_lines_table.tex"),
+        (key_order_conts, "Continuum fluxes.", "tab:conts", "cont_flux_table.tex"),
+
+    ]
+
+    for key_order, caption, label, filename in table_configs:
+        latex_str = build_latex_table(rows, sorted_mjds, key_order, caption, label)
+        out_path  = Path(output_dir) / "lightcurve_table" / filename
+        with open(out_path, "w") as f:
+            f.write(latex_str)
+        print(f"Saved: {out_path}")
+
+
+
 # methods to run
 
 
@@ -498,3 +655,5 @@ def save_1d_lightcurves_in_groups(output_dir=DEFAULT_OUTPUT_DIR):
 
 #plot_1d_lightcurves_in_groups()
 save_1d_lightcurves_in_groups()
+
+#print_tables()
