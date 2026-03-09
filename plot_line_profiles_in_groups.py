@@ -719,6 +719,125 @@ def compute_width_velocity_windowed_with_positions(
             float(y_level), float(peak))
 
 
+def compute_hwhm_wings(
+    velocity: np.ndarray,
+    flux: np.ndarray,
+    center_v: float = 0.0,
+    window: float = 15000.0,
+    peak_search_window: float = 3000.0,
+) -> dict:
+    """
+    Computes HWHM separately for the blue (left) and red (right) wing
+    of a normalized line profile, reusing the same logic as
+    compute_width_velocity_windowed_with_positions.
+
+    Parameters
+    ----------
+    velocity : np.ndarray
+    flux : np.ndarray
+    center_v : float
+        Expected line center in km/s (default 0).
+    window : float
+        Half-window around center_v to consider (km/s).
+    peak_search_window : float
+        Half-window around center_v for peak search (km/s).
+
+    Returns
+    -------
+    dict with keys:
+        'peak'      – peak flux value
+        'half_max'  – 0.5 * peak
+        'v_blue'    – velocity of blue-wing half-max crossing (km/s)
+        'v_red'     – velocity of red-wing half-max crossing (km/s)
+        'hwhm_blue' – |center_v - v_blue| (km/s)
+        'hwhm_red'  – |v_red - center_v|  (km/s)
+        'fwhm_asym' – hwhm_blue + hwhm_red
+    All values are np.nan if no valid crossing is found.
+    """
+    nan_result = dict(
+        peak=np.nan, half_max=np.nan,
+        v_blue=np.nan, v_red=np.nan,
+        hwhm_blue=np.nan, hwhm_red=np.nan,
+        fwhm_asym=np.nan,
+    )
+
+    v = np.asarray(velocity, dtype=float)
+    f = np.asarray(flux,     dtype=float)
+
+    if v.size < 5 or f.size != v.size:
+        return nan_result
+
+    # --- sort ---
+    if np.any(np.diff(v) < 0):
+        s = np.argsort(v)
+        v, f = v[s], f[s]
+
+    # --- restrict to window ---
+    mask = (v >= center_v - window) & (v <= center_v + window)
+    if np.count_nonzero(mask) < 10:
+        return nan_result
+    vw = v[mask]
+    fw = f[mask]
+
+    # --- peak ---
+    mask_peak = (vw >= center_v - peak_search_window) & \
+                (vw <= center_v + peak_search_window)
+    if np.count_nonzero(mask_peak) < 5:
+        return nan_result
+
+    i_peak_local = np.nanargmax(fw[mask_peak])
+    peak = fw[mask_peak][i_peak_local]
+    if not np.isfinite(peak) or peak <= 0:
+        return nan_result
+
+    i_peak = np.where(mask_peak)[0][i_peak_local]
+    v_peak = vw[i_peak]
+
+    half_max = 0.5 * peak
+
+    # --- crossings at half_max ---
+    g = fw - half_max
+    sgn = np.sign(g)
+    if np.any(sgn == 0):
+        for k in range(1, sgn.size):
+            if sgn[k] == 0: sgn[k] = sgn[k - 1]
+        for k in range(sgn.size - 2, -1, -1):
+            if sgn[k] == 0: sgn[k] = sgn[k + 1]
+
+    idx = np.where(sgn[:-1] * sgn[1:] < 0)[0]
+    crossings = []
+    for i in idx:
+        v1, v2 = vw[i], vw[i + 1]
+        g1, g2 = g[i],  g[i + 1]
+        if g2 != g1:
+            crossings.append(v1 + (0.0 - g1) * (v2 - v1) / (g2 - g1))
+
+    if len(crossings) < 2:
+        return nan_result
+
+    crossings = np.array(crossings)
+
+    # --- blue: closest crossing left of peak, red: closest right of peak ---
+    left_c  = crossings[crossings < v_peak]
+    right_c = crossings[crossings > v_peak]
+
+    v_blue = float(np.max(left_c))  if left_c.size  > 0 else np.nan
+    v_red  = float(np.min(right_c)) if right_c.size > 0 else np.nan
+
+    hwhm_blue = abs(center_v - v_blue) if np.isfinite(v_blue) else np.nan
+    hwhm_red  = abs(v_red - center_v)  if np.isfinite(v_red)  else np.nan
+    fwhm_asym = (hwhm_blue + hwhm_red) \
+                if (np.isfinite(hwhm_blue) and np.isfinite(hwhm_red)) else np.nan
+
+    return dict(
+        peak=peak,
+        half_max=half_max,
+        v_blue=v_blue,
+        v_red=v_red,
+        hwhm_blue=hwhm_blue,
+        hwhm_red=hwhm_red,
+        fwhm_asym=fwhm_asym,
+    )
 
 
 def process_spectrum(
@@ -730,7 +849,8 @@ def process_spectrum(
     plot=False,
     width_level=0.5,               # <- neu: z.B. 0.7 oder 0.8
     width_level_mode="relative",   # <- "relative" (0..1 vom Peak) oder "absolute"
-    peak_search_window=1000.0
+    peak_search_window=1000.0,
+    HWHM=False
 ):
     """
     Processes a spectrum: subtracts pseudo-continuum, normalizes the line,
@@ -817,7 +937,22 @@ def process_spectrum(
     else:
         label = f"W@flux={width_level:.2f}"
 
-    print(f"[{line_name} | {spec_type}] {label} (km/s) = {width_kms}")
+    #print(f"[{line_name} | {spec_type}] {label} (km/s) = {width_kms}")
+
+    if HWHM:
+        hwhm_dict = compute_hwhm_wings(cut_velocity, cut_intensity, center_v=0.0,
+        window=10000.0,
+        peak_search_window=peak_search_window,)
+
+        print(
+            f"[{line_name} | {spec_type}] "
+            f"HWHM_blue = {hwhm_dict['hwhm_blue']:.0f} km/s  "
+            f"(v_blue = {hwhm_dict['v_blue']:.0f} km/s)  |  "
+            f"HWHM_red = {hwhm_dict['hwhm_red']:.0f} km/s  "
+            f"(v_red = {hwhm_dict['v_red']:.0f} km/s)  |  "
+            f"FWHM_asym = {hwhm_dict['fwhm_asym']:.0f} km/s"
+        )
+
 
     np.savetxt(
         str(output_dir / f"{line_name}_{spec_type}_corrected_spectrum.txt"),
@@ -1076,8 +1211,8 @@ def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT
     key_order = ['HAlpha', 'HBeta', 'HGamma', 'HDelta', 'HeI5875', 'HeII4685', "OIII5007"]
 
     for line in key_order:
-        process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot, width_level=0.5)
-        process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=plot, width_level=0.5)
+        process_spectrum(wavelenghts, avg_data, line, spec_type="avg", output_dir=output_dir, plot=plot, width_level=0.5, HWHM=True)
+        process_spectrum(wavelenghts, rms_data, line, spec_type="rms", output_dir=output_dir, plot=plot, width_level=0.5, HWHM=True)
 
     uncalibrated_fits_data = import_fits_data(Path("fits") / "uncalibrated_AVG_RMS")
 
@@ -1097,12 +1232,12 @@ def substract_pseudo_continua_from_spectra(plot=False, output_dir=DEFAULT_OUTPUT
         process_spectrum(
             uncalibrated_wavelenghts, uncalibrated_avg_data, line,
             spec_type="avg", output_dir=output_dir, plot=plot,
-            peak_search_window=peak_window
+            peak_search_window=peak_window, HWHM = True
         )
         process_spectrum(
             uncalibrated_wavelenghts, uncalibrated_rms_data, line,
             spec_type="rms", output_dir=output_dir, plot=plot,
-            peak_search_window=peak_window
+            peak_search_window=peak_window, HWHM = True
         )
 
 
@@ -1164,6 +1299,6 @@ def cut_line_profile(
         output_path, plot, velocity_avg, velocity_rms
     )
 
-# substract_pseudo_continua_from_spectra()
+substract_pseudo_continua_from_spectra()
 
-run_normalized_profiles_together_in_groups()
+#run_normalized_profiles_together_in_groups()
