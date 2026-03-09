@@ -507,6 +507,47 @@ def plot_calibrated_and_uncalibrated_spectra_together(output_dir=DEFAULT_OUTPUT_
     return fig, (ax1, ax2)
 
 
+
+def plot_calibrated_and_uncalibrated_spectra_separately(xlim=None, ylim=None, file_name=None, output_dir=DEFAULT_OUTPUT_DIR):
+    uncalibrated_fits_data = import_fits_data(Path("fits") / "uncalibrated_fits")
+    calibrated_fits_data   = import_fits_data(Path("fits") / "intercalibrated_fits")
+
+    validate_fits_data(uncalibrated_fits_data)
+    validate_fits_data(calibrated_fits_data)
+
+    if xlim is None:
+        xlim = (3800, 8900)
+    if ylim is None:
+        ylim = (0, 13.999)
+
+    if file_name is None:
+        file_name = "optical_NIR"
+
+    datasets = [
+        (uncalibrated_fits_data, f"comparison_spectra_{file_name}_original.pdf"),
+        (calibrated_fits_data, f"comparison_spectra_{file_name}_intercalibrated.pdf"),
+    ]
+
+    figs = []
+    for fits_data, filename in datasets:
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        _, _, ylabel = plot_spectra(fits_data, xlim=xlim, ylim=ylim,
+                                    ax=ax, show_ylabel=False)
+        ax.set_xlabel(r"Rest Wavelength $[\mathrm{\AA}]$", fontsize=18)
+        ax.set_ylabel(ylabel, fontsize=18)
+
+        plt.tight_layout()
+        out_path = output_dir / "avg_rms_spec" / filename
+        fig.savefig(out_path, dpi=300)
+        print(f"Plot saved to {out_path}")
+        plt.show()
+        figs.append((fig, ax))
+
+    return figs
+
+
+
 def plot_avg_rms_together(output_dir=DEFAULT_OUTPUT_DIR):
     fig, (ax1, ax2) = plt.subplots(
         2, 1, sharex=True, figsize=(10, 6),
@@ -728,12 +769,12 @@ def get_line_flux(line_window: tuple,cont_windows: tuple):
 
 #get_line_flux((4995.66, 5021.75), ((4762, 4774),(5085, 5112)))
 
-plot_avg_rms_spec(file_name='avg_rms_spec.pdf',shift_factor=(0, -3), ylim=(-2.5, 13), show_only_label=True)
+#plot_avg_rms_spec(file_name='avg_rms_spec.pdf',shift_factor=(0, -3), ylim=(-2.5, 13), show_only_label=True)
 
-plot_avg_rms_spec(file_name='avg_rms_spec_OI.pdf', scale_factor=20, shift_factor=(0, -2.5), ylim=(-0.5, 3), xlim=(8300,8700), figsize=(4,3.5), no_description=True, show_only_label=True)
+#plot_avg_rms_spec(file_name='avg_rms_spec_OI.pdf', scale_factor=20, shift_factor=(0, -2.5), ylim=(-0.5, 3), xlim=(8300,8700), figsize=(4,3.5), no_description=True, show_only_label=True)
 
 
-plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1710), ylim=(-10, 70), scale_factor=5, shift_factor=(0, -10), line_length=3, show_only_label=True)
+#plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS.pdf',xlim=(1130, 1710), ylim=(-10, 70), scale_factor=5, shift_factor=(0, -10), line_length=3, show_only_label=True)
 
 
 selected_lines = {
@@ -811,5 +852,7 @@ selected_groups = {
 
 #plot_avg_rms_spec(input_dir=Path("fits") / "uncalibrated_AVG_RMS", file_name='UV_uncalibrated_AVG_RMS_selected_lines.pdf',xlim=(1130, 1710), ylim=(-10, 70), scale_factor=5, shift_factor=(0, -10), line_length=3, selected_broad_lines=selected, show_only_label=True)
 
-plot_avg_rms_together()
-plot_calibrated_and_uncalibrated_spectra_together()
+#plot_avg_rms_together()
+#plot_calibrated_and_uncalibrated_spectra_together()
+#plot_calibrated_and_uncalibrated_spectra_separately()
+#plot_calibrated_and_uncalibrated_spectra_separately(xlim=(1130, 1710), ylim=(-2, 80), file_name= "UV", output_dir=DEFAULT_OUTPUT_DIR)
