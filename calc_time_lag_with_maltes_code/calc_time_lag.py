@@ -255,19 +255,13 @@ def mean_bh_mass(reference="UVW2", shift_ld=0.5):
 
 mean_bh_mass()
 
-#calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1150_not_optical_calibrated", lines=["HBeta", "LyAlpha", "OI8446", "HBeta_not_optical_calibrated", "LyAlpha_not_optical_calibrated", "OI8446_not_optical_calibrated"], include_mass=True)
-#calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1450_not_optical_calibrated", lines=["HBeta", "LyAlpha", "OI8446", "HBeta_not_optical_calibrated", "LyAlpha_not_optical_calibrated", "OI8446_not_optical_calibrated"], include_mass=True)
-#calc_centroid_malte_code("NGC4593_optical_calibrated", "LyAlpha_not_optical_calibrated", lines=['HAlpha', "HBeta", "OI8446"], include_mass=False, create_tex_file=True, top_percent=0.8)
-#calc_centroid_malte_code("NGC4593_optical_calibrated", "LyAlpha", lines=["HBeta", "OI8446"], include_mass=False)
-#calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1150", lines=['HeI5875', 'HeI7065', 'HeI4471', 'HeI5015', 'HeII4685'], include_mass=True)
-#calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1150_not_optical_calibrated", lines=["UVW2"], include_mass=False, create_tex_file=True)
-#calc_centroid_malte_code("NGC4593_optical_calibrated", "HBeta", lines=["OI8446", "OI8446_not_optical_calibrated"], include_mass=True, create_tex_file=True)
-#calc_centroid_malte_code("NGC4593_optical_calibrated", "HAlpha", lines=["OI8446"], include_mass=False, create_tex_file=True, top_percent=0.8)
-#calc_centroid_malte_code("NGC4593_optical_calibrated", "HBeta", lines=["OI8446"], include_mass=False, create_tex_file=True, top_percent=0.8)
-#calc_centroid_malte_code("NGC4593_optical_calibrated", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', "HDelta",'HeI5875', 'HeII4685', 'LyAlpha_not_optical_calibrated', "OI8446"], include_mass=True, create_tex_file=True, top_percent=0.8)
-#calc_centroid_malte_code("NGC4593_not_optical_calibrated", "UVW2",
-#                         lines=["LyAlpha_not_optical_calibrated", "SiIV1393_not_optical_calibrated",  "NV1238_not_optical_calibrated",
- #                               "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated"], include_mass=True, create_tex_file=True)
+calc_centroid_malte_code("NGC4593_optical_calibrated", "LyAlpha_not_optical_calibrated", lines=['HAlpha', "HBeta", "OI8446"], include_mass=False, create_tex_file=True)
+calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1150_not_optical_calibrated", lines=["UVW2"], include_mass=False, create_tex_file=True)
+calc_centroid_malte_code("NGC4593_optical_calibrated", "HAlpha", lines=["OI8446"], include_mass=False, create_tex_file=True)
+calc_centroid_malte_code("NGC4593_optical_calibrated", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', "HDelta",'HeI5875', 'HeII4685', 'LyAlpha_not_optical_calibrated', "OI8446"], include_mass=True, create_tex_file=True)
+calc_centroid_malte_code("NGC4593_not_optical_calibrated", "UVW2",
+                         lines=["LyAlpha_not_optical_calibrated", "SiIV1393_not_optical_calibrated",  "NV1238_not_optical_calibrated",
+                                "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated"], include_mass=True, create_tex_file=True)
 
 
 #get_fluoreszenz_table(top_percent=0.8)
