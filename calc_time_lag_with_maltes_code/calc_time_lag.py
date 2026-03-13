@@ -9,7 +9,7 @@ from import_data import import_centroid_and_mc_data, load_centroid_data_by_refer
 from settings import FWHM_RMS, FWHM_ERR
 
 
-def calc_centroid_malte_code(campaign, continuum, lines, include_mass=True, create_tex_file=True, top_percent=0.8, cont_shift=0):
+def calc_centroid_malte_code(campaign, continuum, lines, include_mass=True, create_tex_file=True):
 
 
     correlation_data_dict, mc_data = import_centroid_and_mc_data(campaign, continuum, lines=lines)
@@ -25,8 +25,6 @@ def calc_centroid_malte_code(campaign, continuum, lines, include_mass=True, crea
                 np.vstack((correlation_data_dict['time shift (tau)'], correlation_data_dict[line])).T,
                 mc_data[line]["centroids"],
                 mc_data[line]["peaks"],
-                top_percent=top_percent,
-                cont_shift=cont_shift   # Shift between used continua to more blue continua e.g. Swift UVW2 and HST Cont. 1150 A
             )
             line_objects.append(line_obj)
 

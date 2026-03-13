@@ -8,14 +8,14 @@ Created on Wed May 29 16:47:15 2024
 import numpy as np
 
 class Line():
-    def __init__(self, name, FWHM_rms, FWHM_rms_errs, correlation, tau_cents, tau_peaks, which='cent', top_percent=0.8, **kwargs):
+    def __init__(self, name, FWHM_rms, FWHM_rms_errs, correlation, tau_cents, tau_peaks, which='cent', **kwargs):
         self.name = name
         self.FWHM_rms = FWHM_rms
         self.FWHM_rms_errs = FWHM_rms_errs
         self.correlation = correlation
         self.tau_cents = tau_cents
         self.tau_peaks = tau_peaks
-        self.tau_cent, self.tau_cent_err = self.getTauCent(self.correlation, self.tau_cents, top_percent=top_percent)
+        self.tau_cent, self.tau_cent_err = self.getTauCent(self.correlation, self.tau_cents)
         self.R_cent, self.R_cent_err = self.resizeSI(self.tau_cent, self.tau_cent_err)
         self.r_max, self.tau_peak, self.tau_peak_err = self.getTauPeak(self.correlation, self.tau_peaks)
         self.R_peak, self.R_peak_err = self.resizeSI(self.tau_peak, self.tau_peak_err)
@@ -23,8 +23,8 @@ class Line():
 
         
     
-    def getTauCent(self, correlation, tau_cents, top_percent, **kwargs):
-        threshold = top_percent * np.amax(correlation[:,1])
+    def getTauCent(self, correlation, tau_cents, **kwargs):
+        threshold = 0.8 * np.amax(correlation[:,1])
         mask = correlation[:,1] >= threshold
         tau_cent = np.sum(correlation[mask,1] * correlation[mask,0]) / np.sum(correlation[mask,1])
         sortedCentroids = np.sort(tau_cents)
