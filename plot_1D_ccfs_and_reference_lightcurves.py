@@ -1111,38 +1111,6 @@ def _apply_grid(ax, grid):
 #   METHODENAUFRUFE
 # =======================
 
-"""
-uv_to_halpha_keyorder = ["time shift (tau)",
-                         "UVW2",
-                         "LyAlpha_not_optical_calibrated",
-                         "NV1238_not_optical_calibrated",
-                         "SiIV1393_not_optical_calibrated",
-                         "CIV1548_not_optical_calibrated",
-                         "HeII1640_not_optical_calibrated",
-                         "HDelta",
-                         "HGamma",
-                         "HeII4685",
-                         "HBeta",
-                         "HeI5875",
-                         "HAlpha"]
-
-
-
-
-
-save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],  # Nicht erforderlich bei combine_data=True
-    keyorders_dict={"UVW2": uv_to_halpha_keyorder},
-    file_name="UV_to_HAlpha_ccfs_and_reference_lightcurves",
-    final_key_order=uv_to_halpha_keyorder,
-    rows=len(uv_to_halpha_keyorder) - 1,
-    cols=2,
-    combine_data=True,
-    campaign_label="NGC4593_Combined"
-)
-
-
-"""
 uvw2_keyorders_optical = {"UVW2":
                               ["time shift (tau)",
                                "UVW2",
@@ -1303,25 +1271,6 @@ save_1d_corr_and_lightcurves_general(
 )
 
 
-
-
-
-
-OI_keyorder = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
-                "HAlpha": ["time shift (tau)", "OI8446"],
-                "UVW2": ["time shift (tau)", "HAlpha", "OI8446"],}
-"""
-save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],
-    keyorders_dict=OI_keyorder,
-    file_name="OI_ccfs_and_reference_lightcurves",
-    final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
-    combine_data=True,
-    rows=4,
-    figsize=(6, 4),
-    show_reference_label=True
-)
-"""
 OI_paper_keyorder_HAlpha = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446","HAlpha"],
                       "UVW2": ["time shift (tau)", "HAlpha", "OI8446", "LyAlpha_not_optical_calibrated"],
                       #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
@@ -1485,30 +1434,4 @@ save_1d_corr_and_lightcurves_general(
     include_extra_data=True,
     extra_data_name="OI8446_ref_HBeta"
 )
-"""
-
-
-"""
-
-bowen_keyorders = {
-    "NGC4593_optical_calibrated": {
-        "Cont1150_not_optical_calibrated": ["time shift (tau)", "HAlpha", "HBeta", "LyAlpha_not_optical_calibrated", "OI8446"],
-        "LyAlpha_not_optical_calibrated": ["time shift (tau)", "HAlpha", "HBeta", "OI8446"],
-        "HAlpha": ["time shift (tau)", "OI8446"],
-        "HBeta": ["time shift (tau)", "OI8446"]
-    }
-}
-
-
-
-save_1d_corr_and_lightcurves_general(
-    campaign_keys=["NGC4593_optical_calibrated"],
-    keyorders_dict=bowen_keyorders,
-    file_name="bowen_fluorescence_ccfs_and_reference_lightcurves",
-    final_key_order=["time shift (tau)", "OI8446", "LyAlpha_not_optical_calibrated", "HBeta", "HAlpha"],
-    rows=9,
-    figsize=(6, 11),
-    show_reference_label=True
-)
-
 """
