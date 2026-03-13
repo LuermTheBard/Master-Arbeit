@@ -1,3 +1,0 @@
-name tau_cent tau_cent_err_low tau_cent_err_high M_Mo M_Mo_err_low M_Mo_err_high
-HAlpha 3.2550 0.5048 1.0486 1.0668 0.3070 0.5840
-OI8446 4.6580 1.1762 2.3481 2.3635 0.9492 1.9793
