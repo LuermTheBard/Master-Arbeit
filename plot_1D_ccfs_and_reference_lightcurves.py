@@ -568,7 +568,16 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
 
         check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs), adjust_last_row_gap_inch=adjust_last_row_gap_inch)
 
-        finalize_figure_ccfs_and_reference(fig, file_name, save_only=save_only, output_dir=output_dir)
+        save_path = output_dir / f"{file_name}.pdf"
+        plt.savefig(save_path, bbox_inches='tight')
+        save_path = output_dir / f"{file_name}.png"
+        plt.savefig(save_path, bbox_inches='tight')
+
+        print(f"Figure saved to {save_path}")
+
+        if not save_only:
+            plt.show()
+        plt.close(fig)
 
 
 
@@ -802,11 +811,6 @@ def configure_ccfs_and_reference_axis(ax,
                 print(f"No centroid data found for line {line_name}")
 
 
-
-
-
-
-
         ccfs_labels = format_label(line_name, as_latex=False).split(" ")[0]
         if "$" in ccfs_labels:
             ccfs_labels = ccfs_labels + "$"
@@ -986,44 +990,6 @@ def check_for_empty_rows_ccfs_and_reference(
             # verschiebe leicht nach oben (verkleinert Abstand nach oben)
             ax_last.set_position([x0, y0 + dy_rel, w, h])
 
-
-def finalize_figure_ccfs_and_reference(fig, filename, save_only, output_dir):
-    """
-    Finalizes the layout of a Matplotlib figure: removes empty subplot rows, sets title,
-    saves the figure as PDF and PNG, and optionally displays it.
-
-    Parameters:
-    -----------
-    fig : matplotlib.figure.Figure
-        The figure to finalize.
-    axes : numpy.ndarray
-        2D array of Matplotlib Axes objects.
-    title : str
-        Title of the figure.
-    group_index : int
-        Index of the current group (used in filenames).
-    save_only : bool
-        If True, the figure will only be saved (not shown).
-    output_dir : str or pathlib.Path
-        Directory where the figure will be saved.
-    x_label : str or tuple of str
-        Label(s) for the x-axis. Tuple assigns different labels per column.
-
-    Returns:
-    -----------
-    None
-    """
-
-    save_path = output_dir / f"{filename}.pdf"
-    plt.savefig(save_path, bbox_inches='tight')
-    save_path = output_dir / f"{filename}.png"
-    plt.savefig(save_path, bbox_inches='tight')
-
-    print(f"Figure saved to {save_path}")
-
-    if not save_only:
-        plt.show()
-    plt.close(fig)
 
 # =======================
 #   HILFSFUNKTIONEN

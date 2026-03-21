@@ -4,7 +4,7 @@ from typing import Union, Iterable, Dict
 import numpy as np
 
 from Malte_get_BH_mass import Line
-from plot_utils import print_table_for_one_reference, print_table_for_multiple_reference, save_centroid_as_txt
+from plot_utils import print_table_for_one_reference, save_centroid_as_txt
 from import_data import import_centroid_and_mc_data, load_centroid_data_by_reference
 from settings import FWHM_RMS, FWHM_ERR
 
@@ -35,73 +35,6 @@ def calc_centroid_malte_code(campaign, continuum, lines, include_mass=True, crea
         save_centroid_as_txt(line_objects, f"CCF_lags_{campaign}_{continuum}.txt")
         print_table_for_one_reference(output_filename, line_objects, continuum, include_mass=include_mass)
     return line_objects
-
-
-def get_fluoreszenz_table(top_percent=None):
-    output_filename = f'CCF_lags_fluoreszenz.tex'
-
-    campaign = "NGC4593_optical_calibrated"
-    reference_light_curve_lines_dict = {
-        #"Cont1150": ["HAlpha",
-        #             "HBeta",
-        #             "LyAlpha",
-        #             "OI8446",
-        #             "HBeta_not_optical_calibrated",
-        #             "LyAlpha_not_optical_calibrated",
-                     # "OI8446_not_optical_calibrated"
-         #            ],
-        "Cont1150_not_optical_calibrated": ["HAlpha",
-                                            "HBeta",
-                                            #"LyAlpha",
-                                            "OI8446",
-                                            #"HBeta_not_optical_calibrated",
-                                            "LyAlpha_not_optical_calibrated",
-                                            # "OI8446_not_optical_calibrated"
-                                            ],
-       # "Cont1460": ["HAlpha",
-       #              "HBeta",
-       #              "LyAlpha",
-       #              "OI8446",
-                     #"HBeta_not_optical_calibrated",
-        #             "LyAlpha_not_optical_calibrated",
-                     #"OI8446_not_optical_calibrated"
-        #             ],
-        #"Cont1460_not_optical_calibrated": ["HAlpha",
-        #                                    "HBeta",
-                                            #"LyAlpha",
-        #                                   "OI8446",
-                                            #"HBeta_not_optical_calibrated",
-        #                                    "LyAlpha_not_optical_calibrated",
-                                            #"OI8446_not_optical_calibrated"
-        #                                    ],
-        #"LyAlpha": ["HAlpha",
-        #            "HBeta",
-        #            "OI8446",
-        #            "HBeta_not_optical_calibrated",
-                    # "OI8446_not_optical_calibrated"
-        #            ],
-        "LyAlpha_not_optical_calibrated": ["HAlpha",
-                                           "HBeta",
-                                           "OI8446",
-                                           # "HBeta_not_optical_calibrated",
-                                           # "OI8446_not_optical_calibrated"
-                                           ],
-        "HBeta": ["OI8446",
-                  #"OI8446_not_optical_calibrated"
-                  ],
-        "HAlpha": ["OI8446",
-                   ]
-        #"HBeta_not_optical_calibrated": ["OI8446",
-                                         #"OI8446_not_optical_calibrated"
-         #                                ]
-    }
-
-    data_light_curve_lines_dict = {}
-
-    for reference, lines in reference_light_curve_lines_dict.items():
-        data_light_curve_lines_dict[reference] = calc_centroid_malte_code(campaign, reference, lines, include_mass=False, create_tex_file=True, top_percent=top_percent)
-
-    print_table_for_multiple_reference(output_filename, data_light_curve_lines_dict, include_mass=False)
 
 
 
@@ -260,6 +193,3 @@ calc_centroid_malte_code("NGC4593_optical_calibrated", "UVW2", lines=['HAlpha', 
 calc_centroid_malte_code("NGC4593_not_optical_calibrated", "UVW2",
                          lines=["LyAlpha_not_optical_calibrated", "SiIV1393_not_optical_calibrated",  "NV1238_not_optical_calibrated",
                                 "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated"], include_mass=True, create_tex_file=True)
-
-
-#get_fluoreszenz_table(top_percent=0.8)
