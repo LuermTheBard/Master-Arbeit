@@ -1,6 +1,5 @@
 import math
-from typing import Union, Iterable, Dict
-
+import typing
 import numpy as np
 
 from Malte_get_BH_mass import Line
@@ -9,8 +8,25 @@ from import_data import import_centroid_and_mc_data, load_centroid_data_by_refer
 from settings import FWHM_RMS, FWHM_ERR
 
 
-def calc_centroid_malte_code(campaign, continuum, lines, include_mass=True, create_tex_file=True):
+ArrayLike = typing.Union[typing.Iterable[float], np.ndarray]
 
+MASS_LINES = [
+        'HAlpha',
+        'HBeta',
+        'HGamma',
+        "HDelta",
+        'HeI5875',
+        "HeII1640_not_optical_calibrated",
+        'HeII4685',
+        'LyAlpha_not_optical_calibrated',
+        "CIV1548_not_optical_calibrated",
+    ]
+
+
+
+
+
+def calc_centroid_malte_code(campaign, continuum, lines, include_mass=True, create_tex_file=True):
 
     correlation_data_dict, mc_data = import_centroid_and_mc_data(campaign, continuum, lines=lines)
 
@@ -38,15 +54,14 @@ def calc_centroid_malte_code(campaign, continuum, lines, include_mass=True, crea
 
 
 
-ArrayLike = Union[Iterable[float], np.ndarray]
+
 
 def weighted_mean_asym_errors(
     m: ArrayLike,
     err_minus: ArrayLike,
     err_plus: ArrayLike,
     symmetrize: str = "mean",   # "mean" or "max"
-    ddof: int = 0,
-) -> Dict[str, float]:
+) -> typing.Dict[str, float]:
     """
     Inverse-variance weighted mean for measurements with asymmetric 1σ errors.
 
@@ -125,51 +140,30 @@ def rescale_mass_with_shift(M, tau, tau_err_low, tau_err_high, shift=0.5):
     return M_new, err_low_new, err_high_new
 
 
-def mean_bh_mass(reference="UVW2", shift_ld=0.5):
+def mean_bh_mass(reference="UVW2", shift_ld=0.5, mass_lines=None):
     centroid_and_masses = load_centroid_data_by_reference()
-
-    mass_lines = [
-        'HAlpha',
-        'HBeta',
-        'HGamma',
-        "HDelta",
-        'HeI5875',
-        "HeII1640_not_optical_calibrated",
-        'HeII4685',
-        'LyAlpha_not_optical_calibrated',
-        "CIV1548_not_optical_calibrated",
-    ]
 
     m = []
     err_minus = []
     err_plus = []
 
+    if mass_lines is None:
+        mass_lines = MASS_LINES
+
     reference_data = centroid_and_masses[reference]
 
     for line in mass_lines:
-        d = reference_data[line]
+        data = reference_data[line]
 
 
-        M = d["M_Mo"]
-        # original mass uncertainties
-        # M_err_low_orig = d["M_Mo_err_low"]
-        # M_err_high_orig = d["M_Mo_err_high"]
-
-        # --- lag values & asymmetric errors (ADAPT THESE KEY NAMES) ---
-        tau = d["tau_cent"]
-        tau_err_low = d["tau_cent_err_low"]
-        tau_err_high = d["tau_cent_err_high"]
+        M = data["M_Mo"]
+        tau = data["tau_cent"]
+        tau_err_low = data["tau_cent_err_low"]
+        tau_err_high = data["tau_cent_err_high"]
 
 
         M_new, M_err_low_new, M_err_high_new = rescale_mass_with_shift(
             M, tau, tau_err_low, tau_err_high, shift=shift_ld
-        )
-
-        def round_up_2(x: float) -> float:
-            return math.ceil(x * 10) / 10
-
-        print(
-            f"{line}: {round_up_2(M_new):.1f}+{round_up_2(M_err_high_new):.1f}-{round_up_2(M_err_low_new):.1f}"
         )
 
         m.append(M_new)
@@ -178,10 +172,7 @@ def mean_bh_mass(reference="UVW2", shift_ld=0.5):
 
     res = weighted_mean_asym_errors(m, err_minus, err_plus, symmetrize="max")
 
-    # your factor 3.77 stays as you had it
     print(f"Weighted mean = {res['mean']:.3f} ± {res['err']:.3f}  (in units of 1e7 Msun)")
-    print(f"Weighted corr mean = {res['mean']*3.77:.3f} ± {res['err']*3.77:.3f}  (in units of 1e7 Msun)")
-    print(f"=> ({res['mean']*3.77:.2f} ± {res['err']*3.77:.2f}) × 1e7 Msun")
 
 
 mean_bh_mass()

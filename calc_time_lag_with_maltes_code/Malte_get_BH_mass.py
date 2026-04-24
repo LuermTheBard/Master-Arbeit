@@ -74,7 +74,7 @@ class Line():
 
         
     def calcBHMass(self, which):
-        self.f = 1.8 #(Graham, Peterson)
+        self.f = 1.8 * 3.77  #(Graham, Peterson: 1.8; 3.77 scale to 6.8 due to inclination of NGC4593 of i ~ 11° (Krolik, Ochmann))
         self.G = 6.67430e-20 #km^3 / kg s^2
         if which == 'cent':
             R = self.R_cent

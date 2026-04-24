@@ -234,9 +234,6 @@ def calculate_velocity_errors(lines_wavelengths):
 
 
 
-
-
-
 CENTRAL_WAVELENGTH = {
     'HAlpha': 6562.82,
     'HBeta': 4861.33,
