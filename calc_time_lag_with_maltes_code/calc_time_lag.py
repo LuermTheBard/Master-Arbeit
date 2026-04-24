@@ -24,8 +24,6 @@ MASS_LINES = [
 
 
 
-
-
 def calc_centroid_malte_code(campaign, continuum, lines, include_mass=True, create_tex_file=True):
 
     correlation_data_dict, mc_data = import_centroid_and_mc_data(campaign, continuum, lines=lines)
@@ -175,12 +173,17 @@ def mean_bh_mass(reference="UVW2", shift_ld=0.5, mass_lines=None):
     print(f"Weighted mean = {res['mean']:.3f} ± {res['err']:.3f}  (in units of 1e7 Msun)")
 
 
-mean_bh_mass()
+def main():
 
-calc_centroid_malte_code("NGC4593_optical_calibrated", "LyAlpha_not_optical_calibrated", lines=['HAlpha', "HBeta", "OI8446"], include_mass=False, create_tex_file=True)
-calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1150_not_optical_calibrated", lines=["UVW2"], include_mass=False, create_tex_file=True)
-calc_centroid_malte_code("NGC4593_optical_calibrated", "HAlpha", lines=["OI8446"], include_mass=False, create_tex_file=True)
-calc_centroid_malte_code("NGC4593_optical_calibrated", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', "HDelta",'HeI5875', 'HeII4685', 'LyAlpha_not_optical_calibrated', "OI8446"], include_mass=True, create_tex_file=True)
-calc_centroid_malte_code("NGC4593_not_optical_calibrated", "UVW2",
-                         lines=["LyAlpha_not_optical_calibrated", "SiIV1393_not_optical_calibrated",  "NV1238_not_optical_calibrated",
-                                "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated"], include_mass=True, create_tex_file=True)
+    calc_centroid_malte_code("NGC4593_optical_calibrated", "LyAlpha_not_optical_calibrated", lines=['HAlpha', "HBeta", "OI8446"], include_mass=False, create_tex_file=True)
+    calc_centroid_malte_code("NGC4593_optical_calibrated", "Cont1150_not_optical_calibrated", lines=["UVW2"], include_mass=False, create_tex_file=True)
+    calc_centroid_malte_code("NGC4593_optical_calibrated", "HAlpha", lines=["OI8446"], include_mass=False, create_tex_file=True)
+    calc_centroid_malte_code("NGC4593_optical_calibrated", "UVW2", lines=['HAlpha', 'HBeta', 'HGamma', "HDelta",'HeI5875', 'HeII4685', 'LyAlpha_not_optical_calibrated', "OI8446"], include_mass=True, create_tex_file=True)
+    calc_centroid_malte_code("NGC4593_not_optical_calibrated", "UVW2",
+                             lines=["LyAlpha_not_optical_calibrated", "SiIV1393_not_optical_calibrated",  "NV1238_not_optical_calibrated",
+                                    "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated"], include_mass=True, create_tex_file=True)
+    mean_bh_mass()
+
+
+if __name__ == "__main__":
+    main()
