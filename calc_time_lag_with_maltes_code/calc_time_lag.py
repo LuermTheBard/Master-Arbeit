@@ -110,7 +110,7 @@ def weighted_mean_asym_errors(
     return {"mean": float(mean), "err": float(err), "weights_sum": float(wsum)}
 
 
-def rescale_mass_with_shift(M, tau, tau_err_low, tau_err_high, shift=0.5):
+def rescale_mass_with_shift(m, tau, tau_err_low, tau_err_high, shift=0.5):
     """
     Rescale BH mass when R changes from tau to tau+shift (in light-days).
     Returns: (M_new, M_new_err_low, M_new_err_high)
@@ -121,15 +121,15 @@ def rescale_mass_with_shift(M, tau, tau_err_low, tau_err_high, shift=0.5):
 
     # central scaling
     fac = (tau + shift) / tau
-    M_new = M * fac
+    M_new = m * fac
 
     # asymmetric tau bounds
     tau_low = max(tau - tau_err_low, 1e-12)   # avoid <=0
     tau_high = tau + tau_err_high
 
     # propagate via tau bounds (only through scaling factor)
-    M_low_new = M * (tau_low + shift) / tau
-    M_high_new = M * (tau_high + shift) / tau
+    M_low_new = m * (tau_low + shift) / tau
+    M_high_new = m * (tau_high + shift) / tau
 
     err_low_new = M_new - M_low_new
     err_high_new = M_high_new - M_new
