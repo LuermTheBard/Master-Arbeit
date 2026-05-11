@@ -1,6 +1,8 @@
 import datetime
 import math
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Optional, Tuple
 
 import matplotlib
 import numpy as np
@@ -13,7 +15,7 @@ from plot_utils import format_label, calculate_standard_error_for_lightcurves, e
 from settings import SYMBOLES_AND_COLORS_FOR_LIGHTCURVES, NUMBER_MAPPING, ERR_CORRECTION, ERR_SET
 
 # =======================
-#   KONSTANTEN & EINSTELLUNGEN
+#   CONSTANTS & SETTINGS
 # =======================
 
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "default_output"
@@ -21,7 +23,78 @@ matplotlib.use('Qt5Agg')
 
 
 # =======================
-#   DATENIMPORT & VORBEREITUNG
+#   PLOT CONFIGURATION (PlotConfig)
+# =======================
+
+@dataclass
+class PlotConfig:
+    """
+    Controls the layout and appearance of CCF/lightcurve figures.
+
+    Fields
+    ------
+    rows : int
+        Number of subplot rows per figure.
+    cols : int
+        Number of subplot columns (default: 2 = lightcurve + CCF).
+    figsize : tuple or None
+        Figure size in inches (width, height). None = calculated automatically.
+    combine_data : bool
+        If True, merge optically and non-optically calibrated datasets.
+    show_reference_label : bool
+        If True, the reference lightcurve is labelled in the legend.
+    format_labels_as_paper : bool
+        If True, use LaTeX formatting for axis labels (for publications).
+    layout_show_right_ccf_ylabel : bool
+        If True, show the y-axis label on the right side of the CCF panels.
+    layout_show_top_secondary_labels : bool
+        If True, show date labels on the secondary top x-axis.
+    lightcurve_hide_yticklabels : bool
+        If True, hide y-axis tick labels on lightcurve panels.
+    ccf_show_inline_label_text : bool
+        If True, show the line/reference name as inline text inside the CCF panel.
+    adjust_last_row_gap_inch : float
+        Vertical offset (in inches) of the last row. A negative value reduces
+        the gap to the second-to-last row (e.g. -0.2 for paper layout).
+    include_extra_data : bool
+        If True, an additional dataset (extra_data_name) is appended to the plot.
+    extra_data_name : str or None
+        Key of the extra dataset, formatted as "<line>_ref_<reference>".
+    show_histogram : bool or None
+        Controls histogram display inside the CCF panel (True / False / None).
+    show_subfigure_labels : bool
+        If True, sub-figure labels (a), b), ...) are shown.
+    row_spacing : float or None
+        Vertical spacing between rows (hspace). None = no spacing.
+    line_style : str
+        Matplotlib line style, e.g. "-" (solid) or ":" (dotted).
+    grid : tuple or None
+        Grid settings as (show_minor, alpha, linewidth, linestyle),
+        e.g. (True, 0.12, 0.3, ':'). None = no grid.
+    """
+    rows: int = 8
+    cols: int = 2
+    figsize: Optional[Tuple] = None
+    combine_data: bool = False
+    show_reference_label: bool = False
+    format_labels_as_paper: bool = False
+    layout_show_right_ccf_ylabel: bool = True
+    layout_show_top_secondary_labels: bool = True
+    lightcurve_hide_yticklabels: bool = True
+    ccf_show_inline_label_text: bool = True
+    adjust_last_row_gap_inch: float = 0.0
+    include_extra_data: bool = False
+    extra_data_name: Optional[str] = None
+    show_histogram: Optional[bool] = None
+    show_subfigure_labels: bool = True
+    row_spacing: Optional[float] = None
+    line_style: str = "-"
+    grid: Optional[Tuple] = None
+
+
+
+# =======================
+#   DATA IMPORT & PREPARATION
 # =======================
 
 def deep_merge(dict1, dict2):
@@ -150,8 +223,9 @@ def save_1d_corr_and_lightcurves_general(
 
 
 # =======================
-#   DATENVERARBEITUNG / SORTIERUNG
+#   DATA PROCESSING / SORTING
 # =======================
+
 
 
 def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
@@ -417,7 +491,7 @@ def normalize_lightcurve(y, yerr_vals, err_correction=None, err_set=None):
     return y_norm, yerr_norm
 
 # =======================
-#   PLOT-ERSTELLUNG
+#   PLOT CREATION
 # =======================
 
 def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
@@ -992,7 +1066,7 @@ def check_for_empty_rows_ccfs_and_reference(
 
 
 # =======================
-#   HILFSFUNKTIONEN
+#   HELPER FUNCTIONS
 # =======================
 
 def is_valid_axis(ax, fig):
@@ -1074,7 +1148,7 @@ def _apply_grid(ax, grid):
                 linestyle=grid_linestyle)
 
 # =======================
-#   METHODENAUFRUFE
+#   FIGURE CALLS
 # =======================
 
 uvw2_keyorders_optical = {"UVW2":
