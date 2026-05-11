@@ -171,25 +171,9 @@ def save_1d_corr_and_lightcurves_general(
             keyorders_dict,
             file_name=file_name,
             final_key_order=final_key_order or list(keyorders_dict["UVW2"]),
-            rows=config.rows,
-            cols=config.cols,
-            figsize=config.figsize,
             centroid_data=centroid_data,
             only_one_label=True,
-            show_reference_label=config.show_reference_label,
-            format_labels_as_paper=config.format_labels_as_paper,
-            layout_show_right_ccf_ylabel=config.layout_show_right_ccf_ylabel,
-            layout_show_top_secondary_labels=config.layout_show_top_secondary_labels,
-            lightcurve_hide_yticklabels=config.lightcurve_hide_yticklabels,
-            ccf_show_inline_label_text=config.ccf_show_inline_label_text,
-            adjust_last_row_gap_inch=config.adjust_last_row_gap_inch,
-            include_extra_data=config.include_extra_data,
-            extra_data_name=config.extra_data_name,
-            show_histogram=config.show_histogram,
-            show_subfigure_labels=config.show_subfigure_labels,
-            row_spacing=config.row_spacing,
-            line_style=config.line_style,
-            grid=config.grid
+            config=config,
         )
 
     else:
@@ -206,24 +190,9 @@ def save_1d_corr_and_lightcurves_general(
                 keyorders_dict[campaign],
                 file_name=file_name,
                 final_key_order=final_key_order or keyorders_dict[campaign],
-                rows=config.rows,
-                cols=config.cols,
-                figsize=config.figsize,
                 centroid_data=centroid_data,
                 only_one_label=True,
-                show_reference_label=config.show_reference_label,
-                format_labels_as_paper=config.format_labels_as_paper,
-                layout_show_right_ccf_ylabel=config.layout_show_right_ccf_ylabel,
-                layout_show_top_secondary_labels=config.layout_show_top_secondary_labels,
-                lightcurve_hide_yticklabels=config.lightcurve_hide_yticklabels,
-                ccf_show_inline_label_text=config.ccf_show_inline_label_text,
-                adjust_last_row_gap_inch=config.adjust_last_row_gap_inch,
-                include_extra_data=config.include_extra_data,
-                show_histogram=config.show_histogram,
-                show_subfigure_labels=config.show_subfigure_labels,
-                row_spacing=config.row_spacing,
-                line_style=config.line_style,
-                grid=config.grid
+                config=config,
             )
 
 
@@ -241,28 +210,12 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
                                            save_only=False,
                                            file_name=None,
                                            final_key_order=None,
-                                           rows=4,
-                                           cols=2,
-                                           figsize=None,
                                            only_one_label=False,
                                            centroid_data=None,
-                                           show_reference_label=False,
-                                           format_labels_as_paper=False,
-                                           layout_show_right_ccf_ylabel=True,
-                                           layout_show_top_secondary_labels=True,
-                                           lightcurve_hide_yticklabels=True,
-                                           ccf_show_inline_label_text=True,
-                                           adjust_last_row_gap_inch=0.0,
-                                           include_extra_data=False,
-                                           extra_data_name=None,
-                                           show_histogram=None,
-                                           show_subfigure_labels=True,
-                                           row_spacing=None,
-                                           line_style="-",
-                                           grid=None
+                                           config: PlotConfig = None,
                                            ):
     """
-    Organizes and plots CFFs and their corresponding lightcurves
+    Organizes and plots CCFs and their corresponding lightcurves
     in subplot groups, based on specified key orders.
 
     Parameters:
@@ -282,17 +235,18 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
         Optional base name for output files. If None, a default name is generated from the title.
     final_key_order : list of str, optional
         Final desired order of plotted keys (e.g., lines), used for sorting.
-    rows : int, optional
-        Number of subplot rows per figure. Default is 4.
-    cols : int, optional
-        Number of subplot columns per figure. Default is 2.
     only_one_label : bool, optional
         If True, only one y-axis label per figure is shown. Default is False.
+    config : PlotConfig, optional
+        Layout and appearance settings. Defaults to PlotConfig() if None.
 
     Returns:
     -----------
     None
     """
+
+    if config is None:
+        config = PlotConfig()
 
     xlabel_ccfs = "Time Lag $\\tau$ [d]"
     ylabel_ccfs = "Correlation Coefficient"
@@ -369,9 +323,9 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
         sorted(final_sorted_data_dict.items(),
                key=lambda item: final_sort_keys(item[0])))
 
-    if include_extra_data and extra_data_name:
+    if config.include_extra_data and config.extra_data_name:
 
-        line, reference = extra_data_name.split("_ref_")
+        line, reference = config.extra_data_name.split("_ref_")
 
         if "Cont" in reference:
             lightcurve_reference_data = lightcurves_ccf_data_dict["lightcurves"]["continua"][reference]
@@ -383,7 +337,7 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
         else:
             lightcurve_data = lightcurves_ccf_data_dict["lightcurves"]["lines"][line]
 
-        extra_data = {extra_data_name:{"ccfs":lightcurves_ccf_data_dict["ccfs"][reference][line],"lightcurves":lightcurve_data,"lightcurves_ref":lightcurve_reference_data}}
+        extra_data = {config.extra_data_name:{"ccfs":lightcurves_ccf_data_dict["ccfs"][reference][line],"lightcurves":lightcurve_data,"lightcurves_ref":lightcurve_reference_data}}
         final_sorted_data_dict.update(extra_data)
 
 
@@ -396,22 +350,8 @@ def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
                                                   output_dir=save_folder,
                                                   shared_y=False,
                                                   file_name=file_name + " " + campaign,
-                                                  rows=rows,
-                                                  cols=cols,
-                                                  figsize=figsize,
                                                   only_one_label=only_one_label,
-                                                  show_reference_label=show_reference_label,
-                                                  format_labels_as_paper=format_labels_as_paper,
-                                                  layout_show_right_ccf_ylabel = layout_show_right_ccf_ylabel,
-                                                  layout_show_top_secondary_labels = layout_show_top_secondary_labels,
-                                                  lightcurve_hide_yticklabels = lightcurve_hide_yticklabels,
-                                                  ccf_show_inline_label_text = ccf_show_inline_label_text,
-                                                  adjust_last_row_gap_inch = adjust_last_row_gap_inch,
-                                                  show_histogram=show_histogram,
-                                                  show_subfigure_labels=show_subfigure_labels,
-                                                  row_spacing=row_spacing,
-                                                  line_style=line_style,
-                                                  grid=grid
+                                                  config=config,
                                                   )
 
 
@@ -509,22 +449,8 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
                                                   shared_y,
                                                   file_name,
                                                   centroid_data=None,
-                                                  rows=4,
-                                                  cols=2,
-                                                  figsize=None,
                                                   only_one_label=False,
-                                                  show_reference_label=False,
-                                                  format_labels_as_paper=False,
-                                                  layout_show_right_ccf_ylabel=True,
-                                                  layout_show_top_secondary_labels=True,
-                                                  lightcurve_hide_yticklabels=True,
-                                                  ccf_show_inline_label_text=True,
-                                                  adjust_last_row_gap_inch=0.0,
-                                                  show_histogram=None,
-                                                  show_subfigure_labels=True,
-                                                  row_spacing=None,
-                                                  line_style="-",
-                                                  grid=None,
+                                                  config: PlotConfig = None,
                                                   panel_height=1.2,          # inches per row
                                                   right_panel_width=1.2,     # inches for right column (CCF)
                                                   padding=(1.0, 1.6),
@@ -544,8 +470,6 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
         Y-axis label for CCF subplots.
     xlabel_lightcurves : str
         X-axis label for lightcurve subplots (left column).
-    title : str
-        Title for the entire figure or plot group.
     save_only : bool
         If True, plots are saved to disk only; if False, they are also displayed.
     output_dir : str or pathlib.Path
@@ -553,61 +477,64 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
     shared_y : bool
         Whether subplots should share the same y-axis limits.
     file_name : str
-        Optional base name for the saved files (PDF and PNG).
-    rows : int, optional
-        Number of subplot rows per figure. Default is 4.
-    cols : int, optional
-        Number of subplot columns per figure. Default is 2.
+        Base name for the saved files (PDF and PNG).
+    centroid_data : dict or None
+        Centroid and MC correlation data for tau annotations on CCF panels.
     only_one_label : bool, optional
         If True, only one label per y-axis (left/right) is shown to avoid clutter.
+    config : PlotConfig, optional
+        Layout and appearance settings. Defaults to PlotConfig() if None.
+    panel_height : float, optional
+        Height per subplot row in inches. Default is 1.2.
+    right_panel_width : float, optional
+        Width of the right (CCF) column in inches. Default is 1.2.
+    padding : tuple, optional
+        Extra (width, height) padding in inches added to the figure size.
 
     Returns:
     -----------
     None
     """
+
+    if config is None:
+        config = PlotConfig()
+
+    figsize = config.figsize
     if figsize is None:
         # width_ratios = [4,1] -> total width per row = (4+1) * right_panel_width
         pad_w, pad_h = padding
         fig_w = (4 + 1) * right_panel_width + pad_w
-        fig_h = rows * panel_height + pad_h
+        fig_h = config.rows * panel_height + pad_h
         figsize = (fig_w, fig_h)
-
 
     x_values_ccfs = final_sorted_data_dict['time shift (tau)']
     final_sorted_data_dict.pop('time shift (tau)')
 
-    for current_data, group_index in prepare_ccfs_references_data(final_sorted_data_dict, rows, cols):
-        fig, axes = plt.subplots(rows, cols, figsize=figsize, sharex=False, sharey=shared_y,
+    for current_data, group_index in prepare_ccfs_references_data(final_sorted_data_dict, config.rows, config.cols):
+        fig, axes = plt.subplots(config.rows, config.cols, figsize=figsize, sharex=False, sharey=shared_y,
                                  gridspec_kw={'width_ratios': [4, 1]})
 
         # Share x-axis within each column
         # Left column (column 0)
-        for i in range(1, rows):
+        for i in range(1, config.rows):
             axes[i, 0].sharex(axes[0, 0])
 
         # Right column (column 1)
-        for i in range(1, rows):
+        for i in range(1, config.rows):
             axes[i, 1].sharex(axes[0, 1])
 
-            fig.subplots_adjust(hspace=(0 if row_spacing is None else float(row_spacing)), wspace=0)
-        #fig.tight_layout()
+            fig.subplots_adjust(hspace=(0 if config.row_spacing is None else float(config.row_spacing)), wspace=0)
+
         if only_one_label is True:
             # Left side (y-axis): shared "Normalized Flux" label
             fig.text(0.06, 0.5, "Normalized Flux", va='center', ha='left', rotation='vertical', fontsize=12)
 
-            if layout_show_right_ccf_ylabel:
-                fig.text(1.0,
-                         0.5,
-                         ylabel_ccfs,
-                         va='center',
-                         ha='right',
-                         rotation='vertical',
-                         fontsize=12)
+            if config.layout_show_right_ccf_ylabel:
+                fig.text(1.0, 0.5, ylabel_ccfs, va='center', ha='right', rotation='vertical', fontsize=12)
 
         for i, (line_name, line_data) in enumerate(current_data):
 
-            row, col = divmod(i, cols)
-
+            row, col = divmod(i, config.cols)
             ax = axes[row, col]
 
             if line_data is not None:
@@ -622,10 +549,9 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
                 line_data = np.array([])
                 color = "black"
 
-
             configure_ccfs_and_reference_axis(ax,
                                               row,
-                                              rows,
+                                              config.rows,
                                               col,
                                               ylabel_ccfs,
                                               color,
@@ -635,18 +561,10 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
                                               line_name_and_ref_name=line_name,
                                               centroid_data=centroid_data,
                                               only_one_label=only_one_label,
-                                              show_reference_label=show_reference_label,
-                                              format_labels_as_paper = format_labels_as_paper,
-                                              layout_show_top_secondary_labels = layout_show_top_secondary_labels,
-                                              lightcurve_hide_yticklabels = lightcurve_hide_yticklabels,
-                                              ccf_show_inline_label_text = ccf_show_inline_label_text,
-                                              show_histogram=show_histogram,
-                                              show_subfigure_labels=show_subfigure_labels,
-                                              line_style=line_style,
-                                              grid=grid,
-                                              row_spacing=row_spacing)
+                                              config=config)
 
-        check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs), adjust_last_row_gap_inch=adjust_last_row_gap_inch)
+        check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs),
+                                                adjust_last_row_gap_inch=config.adjust_last_row_gap_inch)
 
         finalize_figure_ccfs_and_reference(fig, file_name, save_only=save_only, output_dir=output_dir)
 
@@ -664,16 +582,7 @@ def configure_ccfs_and_reference_axis(ax,
                                       line_name_and_ref_name,
                                       centroid_data=None,
                                       only_one_label=False,
-                                      show_reference_label=False,
-                                      format_labels_as_paper=False,
-                                      layout_show_top_secondary_labels=True,
-                                      lightcurve_hide_yticklabels=True,
-                                      ccf_show_inline_label_text=True,
-                                      show_histogram=None,
-                                      row_spacing=None,
-                                      show_subfigure_labels=True,
-                                      line_style="-",
-                                      grid=None):
+                                      config: PlotConfig = None):
     """
     Configures a single subplot axis to display either a normalized lightcurve pair
     or a CCF, depending on the data provided.
@@ -684,8 +593,10 @@ def configure_ccfs_and_reference_axis(ax,
         The subplot axis to configure.
     row : int
         Row index within the subplot grid.
+    rows : int
+        Total number of rows in the subplot grid.
     col : int
-        Column index within the subplot grid.
+        Column index within the subplot grid (0 = lightcurve, 1 = CCF).
     ylabel_ccfs : str
         Y-axis label for the CCFs (used for the right column).
     color : tuple or str
@@ -698,13 +609,20 @@ def configure_ccfs_and_reference_axis(ax,
         Whether to include error bars (used for lightcurve plots).
     line_name_and_ref_name : str
         Name of the line and its reference, formatted as "<line>_ref_<reference>".
+    centroid_data : dict or None
+        Centroid lag data for tau annotations.
     only_one_label : bool, optional
         If True, y-axis labels are minimized to reduce clutter.
+    config : PlotConfig, optional
+        Layout and appearance settings. Defaults to PlotConfig() if None.
 
     Returns:
     -----------
     None
     """
+
+    if config is None:
+        config = PlotConfig()
 
     if "_ref_" in line_name_and_ref_name:
 
@@ -730,25 +648,18 @@ def configure_ccfs_and_reference_axis(ax,
         x_key = 'timestamps [MJD]'
         y_key = 'fluxes [ergs/s/cm2/A]'
         yerr_key = 'fluxerrs [ergs/s/cm2/A]'
-        #print(f"Line name: {line_name}")
 
         y_norm, yerr_norm = normalize_lightcurve(line_data["lightcurves"][y_key],
                                                  line_data["lightcurves"][yerr_key],
                                                  err_correction=err_corr,
                                                  err_set=err_set)
 
-        #print_lightcurves_with_final_errors(line_name, line_data["lightcurves"][x_key], line_data["lightcurves"][y_key], line_data["lightcurves"][yerr_key], err_correction=err_corr, err_set=err_set)
-
-        #print(f"Ref-line name: {reference_name}")
         y_ref_norm, yerr_ref_norm = normalize_lightcurve(line_data["lightcurves_ref"][y_key],
                                                           line_data["lightcurves_ref"][yerr_key],
                                                          err_correction=ref_err_corr,
                                                          err_set=ref_err_set)
-        #print_lightcurves_with_final_errors(reference_name, line_data["lightcurves_ref"][x_key], line_data["lightcurves_ref"][y_key],
-        #                                    line_data["lightcurves_ref"][yerr_key], err_correction=err_corr,
-        #                                    err_set=err_set)
 
-        if show_subfigure_labels:
+        if config.show_subfigure_labels:
             ax.text(
                 57582, 2.5,  # Position
                 f"{NUMBER_MAPPING[row + 1]})",
@@ -761,35 +672,33 @@ def configure_ccfs_and_reference_axis(ax,
 
         if line_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
             line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"]
-            fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}{line_style}"
+            fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}{config.line_style}"
             markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["markersize"]
             alpha = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name].get("alpha", 1.0)
         else:
             line_color = color[0]
-            fmt = f".{line_style}"
+            fmt = f".{config.line_style}"
             markersize = 3
             alpha = 1.0
 
         if reference_name in SYMBOLES_AND_COLORS_FOR_LIGHTCURVES.keys():
             ref_line_color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["color"]
-            ref_fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]['symbole']}{line_style}"
+            ref_fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]['symbole']}{config.line_style}"
             ref_markersize = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name]["markersize"]
             ref_alpha = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[reference_name].get("alpha", 1.0)
         else:
             ref_line_color = color[0]
-            ref_fmt = f".{line_style}"
+            ref_fmt = f".{config.line_style}"
             ref_markersize = 3
             ref_alpha = 1.0
 
         if line_name != "UVW2":
-
-
             ax.errorbar(line_data["lightcurves"][x_key],
                         y_norm,
                         yerr=yerr_norm,
                         label = format_label(line_name,
                                              as_latex=False,
-                                             for_paper=format_labels_as_paper),
+                                             for_paper=config.format_labels_as_paper),
                         color = line_color,
                         fmt = fmt,
                         capsize = 2,
@@ -797,11 +706,14 @@ def configure_ccfs_and_reference_axis(ax,
                         alpha=alpha,
                         linewidth=0.5,
                         elinewidth=0.5)
-            if show_reference_label:
-
-                ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, label=format_label(reference_name, as_latex=False, for_paper=format_labels_as_paper), color=ref_line_color, fmt=ref_fmt, capsize=2, markersize=ref_markersize, alpha=ref_alpha, linewidth=0.5, elinewidth=0.5)
+            if config.show_reference_label:
+                ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm,
+                            label=format_label(reference_name, as_latex=False, for_paper=config.format_labels_as_paper),
+                            color=ref_line_color, fmt=ref_fmt, capsize=2,
+                            markersize=ref_markersize, alpha=ref_alpha, linewidth=0.5, elinewidth=0.5)
             else:
-               ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm, color=ref_line_color, fmt=ref_fmt, capsize=2,
+               ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm,
+                           color=ref_line_color, fmt=ref_fmt, capsize=2,
                            markersize=ref_markersize, alpha=ref_alpha, linewidth=0.5, elinewidth=0.5)
 
         else:
@@ -810,19 +722,18 @@ def configure_ccfs_and_reference_axis(ax,
                         yerr=yerr_norm,
                         label = format_label(line_name,
                                              as_latex=False,
-                                             for_paper=format_labels_as_paper),
+                                             for_paper=config.format_labels_as_paper),
                         color = SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]["color"],
-                        fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}{line_style}",
+                        fmt = f"{SYMBOLES_AND_COLORS_FOR_LIGHTCURVES[line_name]['symbole']}{config.line_style}",
                         alpha = 0.8,
                         capsize = 2,
                         markersize = 3,
                         linewidth = 0.5,
                         elinewidth = 0.5)
             if reference_name != "UVW2":
-                if show_reference_label:
-
+                if config.show_reference_label:
                     ax.errorbar(line_data["lightcurves_ref"][x_key], y_ref_norm, yerr=yerr_ref_norm,
-                                label=format_label(reference_name, as_latex=False, for_paper=format_labels_as_paper),
+                                label=format_label(reference_name, as_latex=False, for_paper=config.format_labels_as_paper),
                                 color=ref_line_color, fmt=ref_fmt, capsize=2, markersize=ref_markersize,
                                 alpha=ref_alpha, linewidth=0.5, elinewidth=0.5)
                 else:
@@ -830,14 +741,13 @@ def configure_ccfs_and_reference_axis(ax,
                                 color=ref_line_color, fmt=ref_fmt, capsize=2,
                                 markersize=ref_markersize, alpha=ref_alpha, linewidth=0.5, elinewidth=0.5)
 
-
         configure_axes_for_lightcurves(ax,
                                        row,
                                        only_one_label,
-                                       lightcurve_hide_yticklabels=lightcurve_hide_yticklabels,
-                                       layout_show_top_secondary_labels=layout_show_top_secondary_labels)
+                                       lightcurve_hide_yticklabels=config.lightcurve_hide_yticklabels,
+                                       layout_show_top_secondary_labels=config.layout_show_top_secondary_labels)
         ax.legend(fontsize=7, loc="upper right", frameon=False, markerfirst=False)
-        _apply_grid(ax, grid)
+        _apply_grid(ax, config.grid)
     else:
         ax.plot(x_values_ccfs, line_data["ccfs"], color=color)
 
@@ -871,7 +781,7 @@ def configure_ccfs_and_reference_axis(ax,
                 try:
 
                     ax.axvline(tau, color="grey", linestyle="--", linewidth=1)
-                    if show_histogram:
+                    if config.show_histogram:
                         ax.hist(merged_mc_correlation_data[line_name]["centroids"], bins=50, density=True, alpha=0.7,
                                 color="grey")
                 except KeyError:
@@ -883,18 +793,16 @@ def configure_ccfs_and_reference_axis(ax,
 
 
 
-
-
-
-
         ccfs_labels = format_label(line_name, as_latex=False).split(" ")[0]
         if "$" in ccfs_labels:
             ccfs_labels = ccfs_labels + "$"
 
-        if ccf_show_inline_label_text:
+        if config.ccf_show_inline_label_text:
             ax.text(9, 0.90, ccfs_labels, ha='right', va='top', fontsize=7)
-        configure_axes_for_ccfs(ax, row, rows, ylabel_ccfs, only_one_label, layout_show_top_secondary_labels=layout_show_top_secondary_labels, row_spacing=row_spacing)
-        _apply_grid(ax, grid)
+        configure_axes_for_ccfs(ax, row, rows, ylabel_ccfs, only_one_label,
+                                layout_show_top_secondary_labels=config.layout_show_top_secondary_labels,
+                                row_spacing=config.row_spacing)
+        _apply_grid(ax, config.grid)
 
 
 def configure_axes_for_lightcurves(ax, row, only_one_label=False, lightcurve_hide_yticklabels=True, layout_show_top_secondary_labels=True):
