@@ -134,6 +134,7 @@ def save_1d_corr_and_lightcurves_general(
         final_key_order=None,
         campaign_label=None,
         config: PlotConfig = None,
+        save_only: bool = True,
 ):
 
     if config is None:
@@ -174,6 +175,7 @@ def save_1d_corr_and_lightcurves_general(
             centroid_data=centroid_data,
             only_one_label=True,
             config=config,
+            save_only=save_only,
         )
 
     else:
@@ -193,6 +195,7 @@ def save_1d_corr_and_lightcurves_general(
                 centroid_data=centroid_data,
                 only_one_label=True,
                 config=config,
+                save_only=save_only,
             )
 
 
@@ -1102,104 +1105,251 @@ def _apply_grid(ax, grid):
                 linestyle=grid_linestyle)
 
 # =======================
-#   FIGURE CALLS
+#   FIGURE FUNCTIONS
 # =======================
-# Each figure has its own clearly labelled block below.
-# Commented-out blocks contain older versions (e.g. for talks/presentations).
+# Each figure is wrapped in its own function so it can be called
+# individually from the command line (see main() below).
 #
 # Available base configurations:
 #   EXPLORE_CONFIG  – all layout helpers enabled, no paper mode (exploration)
 #   PAPER_CONFIG    – clean layout for publications / thesis
-#   TALK_CONFIG     – like PAPER_CONFIG but without extra data (presentations)
 #
-# Individual overrides are possible using dataclasses.replace(), e.g.:
-#   from dataclasses import replace
+# Individual overrides via dataclasses.replace(), e.g.:
 #   config = replace(PAPER_CONFIG, rows=6, figsize=(6, 8))
 # =======================
 
-# -----------------------------------------------------------------
-# FIGURE 1: UVW2 CCFs – Balmer lines, Lyα, OI
-# (reference: UVW2; optically calibrated + Cont1150 as extra dataset)
-# -----------------------------------------------------------------
-uvw2_keyorders_optical = {
-    "UVW2": ["time shift (tau)", "UVW2", "HAlpha", "HBeta", "HGamma",
-             "HDelta", "LyAlpha_not_optical_calibrated", "OI8446"]
+def figure_1_uvw2_balmer_ly_o(save_only: bool = True):
+    """
+    FIGURE 1: UVW2 CCFs – Balmer lines, Lyα, OI
+    Reference: UVW2 (optically calibrated) + Cont1150 as extra dataset.
+    Output: UVW2_ccfs_Balmer_Ly_O
+    """
+    keyorders = {
+        "UVW2": ["time shift (tau)", "UVW2", "HAlpha", "HBeta", "HGamma",
+                 "HDelta", "LyAlpha_not_optical_calibrated", "OI8446"]
+    }
+    save_1d_corr_and_lightcurves_general(
+        campaign_keys=[],
+        keyorders_dict=keyorders,
+        file_name="UVW2_ccfs_Balmer_Ly_O",
+        config=replace(PAPER_CONFIG,
+                       rows=8,
+                       include_extra_data=True,
+                       extra_data_name="UVW2_ref_Cont1150_not_optical_calibrated",
+                       show_histogram=True),
+        save_only=save_only,
+    )
+
+
+def figure_2_uvw2_helium_uv(save_only: bool = True):
+    """
+    FIGURE 2: UVW2 CCFs – helium and UV lines
+    Reference: UVW2 (non-optically calibrated) + Cont1150 as extra dataset.
+    Output: UVW2_ccfs_Helium_UV
+    """
+    keyorders = {
+        "UVW2": ["time shift (tau)", "UVW2", "HeI5875", "HeII1640_not_optical_calibrated",
+                 "HeII4685", "NV1238_not_optical_calibrated",
+                 "SiIV1393_not_optical_calibrated", "CIV1548_not_optical_calibrated"]
+    }
+    save_1d_corr_and_lightcurves_general(
+        campaign_keys=[],
+        keyorders_dict=keyorders,
+        file_name="UVW2_ccfs_Helium_UV",
+        config=replace(PAPER_CONFIG,
+                       rows=8,
+                       include_extra_data=True,
+                       extra_data_name="UVW2_ref_Cont1150_not_optical_calibrated",
+                       show_histogram=True),
+        save_only=save_only,
+    )
+
+
+def figure_3_oi_second_paper_halpha(save_only: bool = True):
+    """
+    FIGURE 3: OI8446 CCFs – second paper (Hα reference)
+    Combined dataset; references: LyAlpha, HAlpha, UVW2.
+    Output: OI_ccfs_and_reference_lightcurves_second_paper
+    """
+    keyorders = {
+        "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
+        "HAlpha":                          ["time shift (tau)", "OI8446"],
+        "UVW2":                            ["time shift (tau)", "OI8446"],
+    }
+    save_1d_corr_and_lightcurves_general(
+        campaign_keys=[],
+        keyorders_dict=keyorders,
+        file_name="OI_ccfs_and_reference_lightcurves_second_paper",
+        final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
+        config=replace(PAPER_CONFIG,
+                       rows=3,
+                       figsize=(6, 5),
+                       adjust_last_row_gap_inch=0.0,
+                       include_extra_data=True,
+                       row_spacing=0.2,
+                       line_style=":",
+                       grid=(True, 0.5, 0.3, ':')),
+        save_only=save_only,
+    )
+
+
+def figure_4_oi_paper_halpha(save_only: bool = True):
+    """
+    FIGURE 4: OI8446 CCFs – paper (Hα reference)
+    Combined dataset; references: LyAlpha, UVW2.
+    Output: OI_ccfs_and_reference_lightcurves_paper_HAlpha
+    """
+    keyorders = {
+        "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446", "HAlpha"],
+        "UVW2":                            ["time shift (tau)", "HAlpha", "OI8446",
+                                            "LyAlpha_not_optical_calibrated"],
+    }
+    save_1d_corr_and_lightcurves_general(
+        campaign_keys=[],
+        keyorders_dict=keyorders,
+        file_name="OI_ccfs_and_reference_lightcurves_paper_HAlpha",
+        final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
+        config=replace(PAPER_CONFIG,
+                       rows=6,
+                       include_extra_data=True,
+                       extra_data_name="OI8446_ref_HAlpha"),
+        save_only=save_only,
+    )
+
+
+def figure_5_oi_hst_uv_halpha(save_only: bool = True):
+    """
+    FIGURE 5: OI8446 CCFs – HST/UV comparison (Hα reference)
+    Combined dataset; references: LyAlpha, Cont1150.
+    Output: OI_ccfs_and_reference_lightcurves_HST_UV_paper_HAlpha
+    """
+    keyorders = {
+        "LyAlpha_not_optical_calibrated":    ["time shift (tau)", "OI8446", "HAlpha"],
+        "Cont1150_not_optical_calibrated":   ["time shift (tau)", "HAlpha", "OI8446"],
+    }
+    save_1d_corr_and_lightcurves_general(
+        campaign_keys=[],
+        keyorders_dict=keyorders,
+        file_name="OI_ccfs_and_reference_lightcurves_HST_UV_paper_HAlpha",
+        final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
+        config=replace(PAPER_CONFIG,
+                       rows=5,
+                       figsize=(6, 8),
+                       include_extra_data=True,
+                       extra_data_name="OI8446_ref_HAlpha"),
+        save_only=save_only,
+    )
+
+
+# =======================
+#   MAIN
+# =======================
+
+# Registry: maps CLI name → (function, description)
+FIGURES = {
+    "fig1": (figure_1_uvw2_balmer_ly_o,      "UVW2 CCFs – Balmer lines, Lyα, OI"),
+    "fig2": (figure_2_uvw2_helium_uv,         "UVW2 CCFs – helium and UV lines"),
+    "fig3": (figure_4_oi_paper_halpha,        "OI8446 CCFs – paper (Hα ref)"),
+    "fig4": (figure_3_oi_second_paper_halpha, "OI8446 CCFs – second paper (Hα ref)"),
+    "fig5": (figure_5_oi_hst_uv_halpha,       "OI8446 CCFs – HST/UV comparison (Hα ref)"),
 }
 
-save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],
-    keyorders_dict=uvw2_keyorders_optical,
-    file_name="UVW2_ccfs_Balmer_Ly_O",
-    config=replace(PAPER_CONFIG,
-                   rows=8,
-                   include_extra_data=True,
-                   extra_data_name="UVW2_ref_Cont1150_not_optical_calibrated",
-                   show_histogram=True),
-)
 
-# -----------------------------------------------------------------
-# FIGURE 2: UVW2 CCFs – helium and UV lines
-# (reference: UVW2; non-optically calibrated + Cont1150 as extra dataset)
-# -----------------------------------------------------------------
-uvw2_keyorders_not_optical = {
-    "UVW2": ["time shift (tau)", "UVW2", "HeI5875", "HeII1640_not_optical_calibrated",
-             "HeII4685", "NV1238_not_optical_calibrated",
-             "SiIV1393_not_optical_calibrated", "CIV1548_not_optical_calibrated"]
-}
+def main():
+    """
+    Command-line entry point for generating individual figures.
 
-save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],
-    keyorders_dict=uvw2_keyorders_not_optical,
-    file_name="UVW2_ccfs_Helium_UV",
-    config=replace(PAPER_CONFIG,
-                   rows=8,
-                   include_extra_data=True,
-                   extra_data_name="UVW2_ref_Cont1150_not_optical_calibrated",
-                   show_histogram=True),
-)
+    Figures are saved to disk by default and not displayed.
+    Pass --show to also open them in a window after saving.
 
-# -----------------------------------------------------------------
-# FIGURE 3: OI8446 CCFs – second paper (Hα reference)
-# (combined dataset; references: LyAlpha, HAlpha, UVW2)
-# -----------------------------------------------------------------
-OI_paper_keyorder_second_paper_HAlpha = {
-    "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
-    "HAlpha":                          ["time shift (tau)", "OI8446"],
-    "UVW2":                            ["time shift (tau)", "OI8446"],
-}
+    Usage
+    -----
+    # Generate a single figure (save only):
+        python plot_1D_ccfs_and_reference_lightcurves.py fig1
 
-save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],
-    keyorders_dict=OI_paper_keyorder_second_paper_HAlpha,
-    file_name="OI_ccfs_and_reference_lightcurves_second_paper",
-    final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
-    config=replace(PAPER_CONFIG,
-                   rows=3,
-                   figsize=(6, 5),
-                   adjust_last_row_gap_inch=0.0,
-                   include_extra_data=True,
-                   row_spacing=0.2,
-                   line_style=":",
-                   grid=(True, 0.5, 0.3, ':')),
-)
+    # Generate and display a figure:
+        python plot_1D_ccfs_and_reference_lightcurves.py fig1 --show
 
-# -----------------------------------------------------------------
-# FIGURE 4: OI8446 CCFs – paper (Hα reference)
-# (combined dataset; references: LyAlpha, UVW2)
-# -----------------------------------------------------------------
-OI_paper_keyorder_HAlpha = {
-    "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446", "HAlpha"],
-    "UVW2":                            ["time shift (tau)", "HAlpha", "OI8446",
-                                        "LyAlpha_not_optical_calibrated"],
-}
+    # Generate multiple figures:
+        python plot_1D_ccfs_and_reference_lightcurves.py fig1 fig3 fig4
 
-save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],
-    keyorders_dict=OI_paper_keyorder_HAlpha,
-    file_name="OI_ccfs_and_reference_lightcurves_paper_HAlpha",
-    final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
-    config=replace(PAPER_CONFIG,
-                   rows=6,
-                   include_extra_data=True,
-                   extra_data_name="OI8446_ref_HAlpha"),
-)
+    # Generate all figures (fig1–fig5):
+        python plot_1D_ccfs_and_reference_lightcurves.py all
+
+    # List all available figure names:
+        python plot_1D_ccfs_and_reference_lightcurves.py --list
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Generate CCF and reference lightcurve figures for NGC4593.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="\n".join(
+            f"  {name:<6}  {desc}" for name, (_, desc) in FIGURES.items()
+        ),
+    )
+    parser.add_argument(
+        "figures",
+        nargs="*",
+        metavar="FIGURE",
+        help=(
+            "Figure name(s) to generate (e.g. fig1 fig3). "
+            "Use 'all' to generate all figures, "
+            "or '--list' to see available names."
+        ),
+    )
+    parser.add_argument(
+        "--show", "-s",
+        action="store_true",
+        help="Display figures in a window after saving (default: save only).",
+    )
+    parser.add_argument(
+        "--list", "-l",
+        action="store_true",
+        help="List all available figure names and exit.",
+    )
+
+    args = parser.parse_args()
+
+    if args.list or not args.figures:
+        print("\nAvailable figures:\n")
+        for name, (_, desc) in FIGURES.items():
+            print(f"  {name:<6}  {desc}")
+        print("\nShortcut:  all → fig1 fig2 fig3 fig4 fig5\n")
+        return
+
+    # Resolve 'all' shortcut
+    requested = []
+    for token in args.figures:
+        if token == "all":
+            requested += list(FIGURES.keys())
+        else:
+            requested.append(token)
+
+    # Deduplicate while preserving order
+    seen = set()
+    requested = [x for x in requested if not (x in seen or seen.add(x))]
+
+    # Validate
+    unknown = [r for r in requested if r not in FIGURES]
+    if unknown:
+        parser.error(
+            f"Unknown figure(s): {', '.join(unknown)}. "
+            f"Run with --list to see available names."
+        )
+
+    save_only = not args.show
+
+    # Run
+    for name in requested:
+        fn, desc = FIGURES[name]
+        print(f"\n{'='*60}")
+        print(f"  Generating: [{name}] {desc}")
+        print(f"{'='*60}")
+        fn(save_only=save_only)
+
+    print(f"\nDone. Generated {len(requested)} figure(s).")
+
+
+if __name__ == "__main__":
+    main()
