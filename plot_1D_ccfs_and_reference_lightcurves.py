@@ -1,6 +1,6 @@
 import datetime
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -57,7 +57,7 @@ class PlotConfig:
         Vertical offset (in inches) of the last row. A negative value reduces
         the gap to the second-to-last row (e.g. -0.2 for paper layout).
     include_extra_data : bool
-        If True, an additional dataset (extra_data_name) is appended to the plot.
+        If True, an additional dataset (extra_data_name) is appended as the last row to the plot.
     extra_data_name : str or None
         Key of the extra dataset, formatted as "<line>_ref_<reference>".
     show_histogram : bool or None
@@ -75,7 +75,7 @@ class PlotConfig:
     rows: int = 8
     cols: int = 2
     figsize: Optional[Tuple] = None
-    combine_data: bool = False
+    combine_data: bool = True
     show_reference_label: bool = False
     format_labels_as_paper: bool = False
     layout_show_right_ccf_ylabel: bool = True
@@ -90,6 +90,44 @@ class PlotConfig:
     row_spacing: Optional[float] = None
     line_style: str = "-"
     grid: Optional[Tuple] = None
+
+# -------------------------------------------------------------------
+# Predefined configurations for common use cases
+# -------------------------------------------------------------------
+
+# Exploration: all layout helpers enabled, no paper mode
+EXPLORE_CONFIG = PlotConfig()
+
+# Publication layout: clean appearance for papers / thesis
+PAPER_CONFIG = PlotConfig(
+    show_reference_label=True,
+    format_labels_as_paper=True,
+    layout_show_right_ccf_ylabel=False,
+    layout_show_top_secondary_labels=False,
+    lightcurve_hide_yticklabels=False,
+    ccf_show_inline_label_text=False,
+    adjust_last_row_gap_inch=-0.2,
+    show_histogram=False,
+    show_subfigure_labels=False,
+    line_style="-",
+    grid=(True, 0.12, 0.3, ':'),  # (show_minor, alpha, linewidth, linestyle)
+)
+
+# Talk/presentation: like PAPER_CONFIG but without extra data and row offset
+TALK_CONFIG = PlotConfig(
+    show_reference_label=True,
+    format_labels_as_paper=True,
+    layout_show_right_ccf_ylabel=False,
+    layout_show_top_secondary_labels=False,
+    lightcurve_hide_yticklabels=False,
+    ccf_show_inline_label_text=False,
+    adjust_last_row_gap_inch=0.0,
+    include_extra_data=False,
+    show_histogram=False,
+    show_subfigure_labels=False,
+    line_style="-",
+    grid=(True, 0.12, 0.3, ':'),
+)
 
 
 
@@ -112,26 +150,12 @@ def save_1d_corr_and_lightcurves_general(
         output_dir=DEFAULT_OUTPUT_DIR,
         file_name="ccfs_and_reference_lightcurves",
         final_key_order=None,
-        rows=8,
-        cols=2,
-        figsize=None,
-        combine_data=False,
         campaign_label=None,
-        show_reference_label=False,
-        format_labels_as_paper=False,
-        layout_show_right_ccf_ylabel=True,
-        layout_show_top_secondary_labels=True,
-        lightcurve_hide_yticklabels=True,
-        ccf_show_inline_label_text=True,
-        adjust_last_row_gap_inch=0.0,
-        include_extra_data=False,
-        extra_data_name=None,
-        show_histogram=None,
-        show_subfigure_labels=True,
-        row_spacing=None,
-        line_style="-",
-        grid=None
+        config: PlotConfig = None,
 ):
+
+    if config is None:
+        config = PlotConfig()
 
     ensure_output_dir(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -140,7 +164,7 @@ def save_1d_corr_and_lightcurves_general(
     centroid_data = load_centroid_data_by_reference()
     lightcurves_data = import_1d_lightcurve_data()
 
-    if combine_data:
+    if config.combine_data:
         lightcurves_ccfs_dict = {
             "lightcurves": {
                 "lines":
@@ -165,25 +189,25 @@ def save_1d_corr_and_lightcurves_general(
             keyorders_dict,
             file_name=file_name,
             final_key_order=final_key_order or list(keyorders_dict["UVW2"]),
-            rows=rows,
-            cols=cols,
-            figsize=figsize,
+            rows=config.rows,
+            cols=config.cols,
+            figsize=config.figsize,
             centroid_data=centroid_data,
             only_one_label=True,
-            show_reference_label=show_reference_label,
-            format_labels_as_paper=format_labels_as_paper,
-            layout_show_right_ccf_ylabel = layout_show_right_ccf_ylabel,
-            layout_show_top_secondary_labels = layout_show_top_secondary_labels,
-            lightcurve_hide_yticklabels = lightcurve_hide_yticklabels,
-            ccf_show_inline_label_text = ccf_show_inline_label_text,
-            adjust_last_row_gap_inch = adjust_last_row_gap_inch,
-            include_extra_data = include_extra_data,
-            extra_data_name=extra_data_name,
-            show_histogram=show_histogram,
-            show_subfigure_labels=show_subfigure_labels,
-            row_spacing=row_spacing,
-            line_style=line_style,
-            grid=grid
+            show_reference_label=config.show_reference_label,
+            format_labels_as_paper=config.format_labels_as_paper,
+            layout_show_right_ccf_ylabel=config.layout_show_right_ccf_ylabel,
+            layout_show_top_secondary_labels=config.layout_show_top_secondary_labels,
+            lightcurve_hide_yticklabels=config.lightcurve_hide_yticklabels,
+            ccf_show_inline_label_text=config.ccf_show_inline_label_text,
+            adjust_last_row_gap_inch=config.adjust_last_row_gap_inch,
+            include_extra_data=config.include_extra_data,
+            extra_data_name=config.extra_data_name,
+            show_histogram=config.show_histogram,
+            show_subfigure_labels=config.show_subfigure_labels,
+            row_spacing=config.row_spacing,
+            line_style=config.line_style,
+            grid=config.grid
         )
 
     else:
@@ -200,32 +224,32 @@ def save_1d_corr_and_lightcurves_general(
                 keyorders_dict[campaign],
                 file_name=file_name,
                 final_key_order=final_key_order or keyorders_dict[campaign],
-                rows=rows,
-                cols=cols,
-                figsize=figsize,
+                rows=config.rows,
+                cols=config.cols,
+                figsize=config.figsize,
                 centroid_data=centroid_data,
                 only_one_label=True,
-                show_reference_label=show_reference_label,
-                format_labels_as_paper=format_labels_as_paper,
-                layout_show_right_ccf_ylabel=layout_show_right_ccf_ylabel,
-                layout_show_top_secondary_labels=layout_show_top_secondary_labels,
-                lightcurve_hide_yticklabels=lightcurve_hide_yticklabels,
-                ccf_show_inline_label_text=ccf_show_inline_label_text,
-                adjust_last_row_gap_inch=adjust_last_row_gap_inch,
-                include_extra_data=include_extra_data,
-                show_histogram=show_histogram,
-                show_subfigure_labels=show_subfigure_labels,
-                row_spacing=row_spacing,
-                line_style=line_style,
-                grid=grid
-
+                show_reference_label=config.show_reference_label,
+                format_labels_as_paper=config.format_labels_as_paper,
+                layout_show_right_ccf_ylabel=config.layout_show_right_ccf_ylabel,
+                layout_show_top_secondary_labels=config.layout_show_top_secondary_labels,
+                lightcurve_hide_yticklabels=config.lightcurve_hide_yticklabels,
+                ccf_show_inline_label_text=config.ccf_show_inline_label_text,
+                adjust_last_row_gap_inch=config.adjust_last_row_gap_inch,
+                include_extra_data=config.include_extra_data,
+                show_histogram=config.show_histogram,
+                show_subfigure_labels=config.show_subfigure_labels,
+                row_spacing=config.row_spacing,
+                line_style=config.line_style,
+                grid=config.grid
             )
+
+
 
 
 # =======================
 #   DATA PROCESSING / SORTING
 # =======================
-
 
 
 def plot_1d_corr_and_lightcurves_in_groups(lightcurves_ccf_data_dict,
@@ -432,11 +456,11 @@ def prepare_ccfs_references_data(data, rows, cols):
         Index of the current group (starting from 0).
     """
 
-    # Jedes Item zweimal hintereinander einfügen
+    # Insert each item twice in a row (once for lightcurve, once for CCF)
     data_items = []
     for key, value in data.items():
         data_items.append((key, value))
-        data_items.append((key, value))  # direkt danach nochmal
+        data_items.append((key, value))  # repeated immediately after
 
     total_plots = len(data_items)
     plots_per_group = rows * cols
@@ -447,7 +471,7 @@ def prepare_ccfs_references_data(data, rows, cols):
         end_index = min(start_index + plots_per_group, total_plots)
         current_data = data_items[start_index:end_index]
 
-        # Mit Platzhaltern auffüllen, falls unvollständig
+        # Pad with placeholders if the group is incomplete
         while len(current_data) < plots_per_group:
             current_data.append((
                 f'Empty {len(current_data) + 1}',
@@ -458,21 +482,21 @@ def prepare_ccfs_references_data(data, rows, cols):
 
 def print_lightcurves_with_final_errors(line_name, x, y, yerr_vals, err_correction=None, err_set=None):
 
-    # Fehler berechnen
+    # Calculate errors
     yerr_vals = calculate_standard_error_for_lightcurves(
         y, yerr_vals, err_correction=err_correction, err_set=err_set
     )
 
-    # Dateiname (z.B. OI8446.txt)
+    # Output filename (e.g. OI8446.txt)
     filename = DEFAULT_OUTPUT_DIR / f"{line_name}_final_errors.txt"
 
-    # Header erzeugen
+    # Build header
     header = (
         f"# {line_name} timestamps [MJD], fluxes [ergs/s/cm2/A], "
         f"fluxerrs [ergs/s/cm2/A]\n"
     )
 
-    # Datei schreiben
+    # Write file
     with open(filename, "w") as f:
         f.write(header)
         for xi, yi, ei in zip(x, y, yerr_vals):
@@ -519,8 +543,8 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
                                                   row_spacing=None,
                                                   line_style="-",
                                                   grid=None,
-                                                  panel_height=1.2,          # <- NEU (inch pro Row)
-                                                  right_panel_width=1.2,     # <- NEU (inch für rechte Spalte)
+                                                  panel_height=1.2,          # inches per row
+                                                  right_panel_width=1.2,     # inches for right column (CCF)
                                                   padding=(1.0, 1.6),
                                                   ):
     """
@@ -560,7 +584,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
     None
     """
     if figsize is None:
-        # width_ratios = [4,1] -> Gesamtbreite pro Row = (4+1)*right_panel_width
+        # width_ratios = [4,1] -> total width per row = (4+1) * right_panel_width
         pad_w, pad_h = padding
         fig_w = (4 + 1) * right_panel_width + pad_w
         fig_h = rows * panel_height + pad_h
@@ -574,19 +598,19 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
         fig, axes = plt.subplots(rows, cols, figsize=figsize, sharex=False, sharey=shared_y,
                                  gridspec_kw={'width_ratios': [4, 1]})
 
-        # Spaltenweise X-Achse sharen
-        # Linke Spalte (Spalte 0)
+        # Share x-axis within each column
+        # Left column (column 0)
         for i in range(1, rows):
             axes[i, 0].sharex(axes[0, 0])
 
-        # Rechte Spalte (Spalte 1)
+        # Right column (column 1)
         for i in range(1, rows):
             axes[i, 1].sharex(axes[0, 1])
 
             fig.subplots_adjust(hspace=(0 if row_spacing is None else float(row_spacing)), wspace=0)
         #fig.tight_layout()
         if only_one_label is True:
-            # Linke Seite oben (y-Achse): "Normalized Lightcurves"
+            # Left side (y-axis): shared "Normalized Flux" label
             fig.text(0.06, 0.5, "Normalized Flux", va='center', ha='left', rotation='vertical', fontsize=12)
 
             if layout_show_right_ccf_ylabel:
@@ -642,16 +666,7 @@ def plot_ccfs_and_reference_lightcurves_in_groups(final_sorted_data_dict,
 
         check_for_empty_rows_ccfs_and_reference(axes, fig, x_label=(xlabel_lightcurves, xlabel_ccfs), adjust_last_row_gap_inch=adjust_last_row_gap_inch)
 
-        save_path = output_dir / f"{file_name}.pdf"
-        plt.savefig(save_path, bbox_inches='tight')
-        save_path = output_dir / f"{file_name}.png"
-        plt.savefig(save_path, bbox_inches='tight')
-
-        print(f"Figure saved to {save_path}")
-
-        if not save_only:
-            plt.show()
-        plt.close(fig)
+        finalize_figure_ccfs_and_reference(fig, file_name, save_only=save_only, output_dir=output_dir)
 
 
 
@@ -885,6 +900,11 @@ def configure_ccfs_and_reference_axis(ax,
                 print(f"No centroid data found for line {line_name}")
 
 
+
+
+
+
+
         ccfs_labels = format_label(line_name, as_latex=False).split(" ")[0]
         if "$" in ccfs_labels:
             ccfs_labels = ccfs_labels + "$"
@@ -968,7 +988,7 @@ def configure_axes_for_ccfs(ax, row, nrows, ylabel_ccfs, only_one_label=False, l
     if not only_one_label:
         ax.set_ylabel(ylabel_ccfs, fontsize=12)
 
-    # --- Tick-Labels steuern: 1 überall, 0 nur unten & vorletzte ---
+    # --- Tick label control: show "1" everywhere, show "0" only on bottom and second-to-last row ---
     is_bottom = (row == nrows - 1)
     if row_spacing == 0:
         is_bottom = (row == nrows)
@@ -980,7 +1000,7 @@ def configure_axes_for_ccfs(ax, row, nrows, ylabel_ccfs, only_one_label=False, l
         if np.isclose(y, 0.0):
             return "0" if (is_bottom or is_penultimate) else ""
         if np.isclose(y, 1.0):
-            return "1"                     # <-- 1 überall
+            return "1"                     # show "1" on every row
         return f"{y:g}"
 
     ax.yaxis.set_major_formatter(FuncFormatter(_yfmt))
@@ -1005,7 +1025,7 @@ def configure_axes_for_ccfs(ax, row, nrows, ylabel_ccfs, only_one_label=False, l
 
 def check_for_empty_rows_ccfs_and_reference(
     axes, fig, x_label,
-    adjust_last_row_gap_inch=0.0,   # z.B. -0.2 für Paper-Layout
+    adjust_last_row_gap_inch=0.0,   # e.g. -0.2 for paper layout
     xlabel_pad=2
 ):
     def _is_valid_axis(ax):
@@ -1013,21 +1033,21 @@ def check_for_empty_rows_ccfs_and_reference(
 
     n_rows = axes.shape[0]
 
-    # 1) Leere Reihen entfernen
+    # 1) Remove empty rows
     for r in range(n_rows):
         if all(not _is_valid_axis(axes[r, c]) for c in range(2)):
             for c in range(2):
                 if axes[r, c] in fig.axes:
                     fig.delaxes(axes[r, c])
 
-    # 2) Verbleibende Reihen finden
+    # 2) Find remaining (non-empty) rows
     remaining = [r for r in range(n_rows) if any(axes[r, c] in fig.axes for c in range(2))]
     if not remaining:
         return
     lowest_row = max(remaining)
     penultimate_row = max([r for r in remaining if r < lowest_row], default=None)
 
-    # 3) Formatter/Lokatoren für alle sichtbaren Achsen
+    # 3) Set formatters/locators for all visible axes
     for r in remaining:
         for c in range(2):
             ax = axes[r, c]
@@ -1036,7 +1056,7 @@ def check_for_empty_rows_ccfs_and_reference(
             ax.xaxis.set_major_locator(MultipleLocator(5))
             ax.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x)}"))
 
-    # 4) Ticklabel-Sichtbarkeit + x-Label unten an letzte Reihe
+    # 4) Tick label visibility + attach x-label to the bottom row
     for r in remaining:
         for c in range(2):
             ax = axes[r, c]
@@ -1050,10 +1070,10 @@ def check_for_empty_rows_ccfs_and_reference(
             lbl = x_label[c] if isinstance(x_label, tuple) else x_label
             axl.set_xlabel(lbl, labelpad=xlabel_pad)
 
-    # 5) Optional letzte Reihe nach oben schieben (kleinerer Abstand zur vorletzten)
+    # 5) Optionally shift the last row upward (reduces gap to second-to-last row)
     if (adjust_last_row_gap_inch != 0.0) and (penultimate_row is not None):
         fig_w, fig_h = fig.get_size_inches()
-        dy_rel = adjust_last_row_gap_inch / fig_h  # Zoll -> Figure-Fraction
+        dy_rel = adjust_last_row_gap_inch / fig_h  # inches -> figure fraction
         for c in range(2):
             ax_last = axes[lowest_row, c]
             if ax_last not in fig.axes:
@@ -1061,8 +1081,47 @@ def check_for_empty_rows_ccfs_and_reference(
             bbox = ax_last.get_position()
             x0, y0, x1, y1 = bbox.x0, bbox.y0, bbox.x1, bbox.y1
             w, h = (x1 - x0), (y1 - y0)
-            # verschiebe leicht nach oben (verkleinert Abstand nach oben)
+            # shift slightly upward (reduces gap above)
             ax_last.set_position([x0, y0 + dy_rel, w, h])
+
+
+def finalize_figure_ccfs_and_reference(fig, filename, save_only, output_dir):
+    """
+    Finalizes the layout of a Matplotlib figure: removes empty subplot rows, sets title,
+    saves the figure as PDF and PNG, and optionally displays it.
+
+    Parameters:
+    -----------
+    fig : matplotlib.figure.Figure
+        The figure to finalize.
+    axes : numpy.ndarray
+        2D array of Matplotlib Axes objects.
+    title : str
+        Title of the figure.
+    group_index : int
+        Index of the current group (used in filenames).
+    save_only : bool
+        If True, the figure will only be saved (not shown).
+    output_dir : str or pathlib.Path
+        Directory where the figure will be saved.
+    x_label : str or tuple of str
+        Label(s) for the x-axis. Tuple assigns different labels per column.
+
+    Returns:
+    -----------
+    None
+    """
+
+    save_path = output_dir / f"{filename}.pdf"
+    plt.savefig(save_path, bbox_inches='tight')
+    save_path = output_dir / f"{filename}.png"
+    plt.savefig(save_path, bbox_inches='tight')
+
+    print(f"Figure saved to {save_path}")
+
+    if not save_only:
+        plt.show()
+    plt.close(fig)
 
 
 # =======================
@@ -1124,15 +1183,20 @@ def mjd_to_date(mjd):
         The corresponding calendar date based on the MJD epoch (1858-11-17).
     """
 
-    mjd_start_date = datetime.datetime(1858, 11, 17)  # MJD Startdatum
+    mjd_start_date = datetime.datetime(1858, 11, 17)  # MJD epoch
     return mjd_start_date + datetime.timedelta(days=mjd)
 
 
 
 def _apply_grid(ax, grid):
     """
-    grid: None -> kein Grid
-          (minor: bool, alpha: float, linewidth: float, linestyle: str)
+    Apply a grid to the given axis.
+
+    grid : None
+        No grid is drawn.
+    grid : tuple (show_minor, alpha, linewidth, linestyle)
+        Draws a major grid with the given style; if show_minor is True,
+        also draws a minor grid with reduced alpha and linewidth.
     """
     if grid is None:
         return
@@ -1150,328 +1214,201 @@ def _apply_grid(ax, grid):
 # =======================
 #   FIGURE CALLS
 # =======================
+# Each figure has its own clearly labelled block below.
+# Commented-out blocks contain older versions (e.g. for talks/presentations).
+#
+# Available base configurations:
+#   EXPLORE_CONFIG  – all layout helpers enabled, no paper mode (exploration)
+#   PAPER_CONFIG    – clean layout for publications / thesis
+#   TALK_CONFIG     – like PAPER_CONFIG but without extra data (presentations)
+#
+# Individual overrides are possible using dataclasses.replace(), e.g.:
+#   from dataclasses import replace
+#   config = replace(PAPER_CONFIG, rows=6, figsize=(6, 8))
+# =======================
 
-uvw2_keyorders_optical = {"UVW2":
-                              ["time shift (tau)",
-                               "UVW2",
-                               "HAlpha",
-                               "HBeta",
-                               "HGamma",
-                               "HDelta",
-                               "LyAlpha_not_optical_calibrated",
-                               "OI8446"]}
-
-UV_keyorders_not_optical = {"Cont1150_not_optical_calibrated": ["time shift (tau)",
-                               "UVW2",],
-                            "UVW2": ["time shift (tau)", "LyAlpha_not_optical_calibrated"]}
-
-
-
-uvw2_keyorders_not_optical = { "UVW2": ["time shift (tau)",
-                                        "UVW2",
-                                        "HeI5875",
-                                        "HeII1640_not_optical_calibrated",
-                                        "HeII4685",
-                                        "NV1238_not_optical_calibrated",
-                                        "SiIV1393_not_optical_calibrated",
-                                        "CIV1548_not_optical_calibrated"]}
-
+# -----------------------------------------------------------------
+# FIGURE 1: UVW2 CCFs – Balmer lines, Lyα, OI
+# (reference: UVW2; optically calibrated + Cont1150 as extra dataset)
+# -----------------------------------------------------------------
+uvw2_keyorders_optical = {
+    "UVW2": ["time shift (tau)", "UVW2", "HAlpha", "HBeta", "HGamma",
+             "HDelta", "LyAlpha_not_optical_calibrated", "OI8446"]
+}
 
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=uvw2_keyorders_optical,
     file_name="UVW2_ccfs_Balmer_Ly_O",
-    combine_data=True,
-    rows=8,
-    show_reference_label=True,
-    format_labels_as_paper = True,
-    layout_show_right_ccf_ylabel = False,
-    layout_show_top_secondary_labels = False,
-    lightcurve_hide_yticklabels = False,
-    ccf_show_inline_label_text = False,
-    adjust_last_row_gap_inch = -0.2,
-    include_extra_data = True,
-    extra_data_name = "UVW2_ref_Cont1150_not_optical_calibrated",
-    show_histogram = True,
-    show_subfigure_labels=False,
-    row_spacing=None,
-    line_style="-",
-    grid=(True, 0.12, 0.3, ':')
+    config=replace(PAPER_CONFIG,
+                   rows=8,
+                   include_extra_data=True,
+                   extra_data_name="UVW2_ref_Cont1150_not_optical_calibrated",
+                   show_histogram=True),
 )
 
+# -----------------------------------------------------------------
+# FIGURE 2: UVW2 CCFs – helium and UV lines
+# (reference: UVW2; non-optically calibrated + Cont1150 as extra dataset)
+# -----------------------------------------------------------------
+uvw2_keyorders_not_optical = {
+    "UVW2": ["time shift (tau)", "UVW2", "HeI5875", "HeII1640_not_optical_calibrated",
+             "HeII4685", "NV1238_not_optical_calibrated",
+             "SiIV1393_not_optical_calibrated", "CIV1548_not_optical_calibrated"]
+}
 
-                                        
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=uvw2_keyorders_not_optical,
     file_name="UVW2_ccfs_Helium_UV",
-    combine_data=True,
-    rows=8,
-    show_reference_label=True,
-    format_labels_as_paper = True,
-    layout_show_right_ccf_ylabel = False,
-    layout_show_top_secondary_labels = False,
-    lightcurve_hide_yticklabels = False,
-    ccf_show_inline_label_text = False,
-    adjust_last_row_gap_inch = -0.2,
-    include_extra_data = True,
-    extra_data_name = "UVW2_ref_Cont1150_not_optical_calibrated",
-    show_histogram = True,
-    show_subfigure_labels=False,
-    row_spacing=None,
-    line_style="-",
-    grid=(True, 0.12, 0.3, ':')
+    config=replace(PAPER_CONFIG,
+                   rows=8,
+                   include_extra_data=True,
+                   extra_data_name="UVW2_ref_Cont1150_not_optical_calibrated",
+                   show_histogram=True),
 )
 
-uvw2_keyorders_optical_talk1 = {"UVW2":
-                              ["time shift (tau)",
-                               'HAlpha',
-                               'HBeta',
-                               'LyAlpha_not_optical_calibrated',
-                               'HeI5875',]}
-
-uvw2_keyorders_optical_talk2 = {"UVW2":
-                              ["time shift (tau)",
-                               'HeI5875',
-                               'HeII4685',
-                               'SiIV1393_not_optical_calibrated',
-                               'CIV1548_not_optical_calibrated']}
-
-
-uvw2_keyorders_not_optical_talk = {"UVW2": ["time shift (tau)",
-                                       "HeI5875",
-                                       "HeII1640_not_optical_calibrated",
-                                       "HeII4685",
-                                       "NV1238_not_optical_calibrated",
-                                       "SiIV1393_not_optical_calibrated",
-                                       "CIV1548_not_optical_calibrated"]}
-
-save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],
-    keyorders_dict=uvw2_keyorders_optical_talk1,
-    file_name="UVW2_talk1",
-    combine_data=True,
-    rows=4,
-    show_reference_label=True,
-    format_labels_as_paper=True,
-    layout_show_right_ccf_ylabel=False,
-    layout_show_top_secondary_labels=False,
-    lightcurve_hide_yticklabels=False,
-    ccf_show_inline_label_text=False,
-    adjust_last_row_gap_inch=-0.0,
-    include_extra_data=False,
-    show_histogram=False,
-    show_subfigure_labels=False,
-    row_spacing=None,
-    line_style="-",
-    grid=(True, 0.12, 0.3, ':')
-)
-
-save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],
-    keyorders_dict=uvw2_keyorders_optical_talk2,
-    file_name="UVW2_talk2",
-    combine_data=True,
-    rows=4,
-    show_reference_label=True,
-    format_labels_as_paper=True,
-    layout_show_right_ccf_ylabel=False,
-    layout_show_top_secondary_labels=False,
-    lightcurve_hide_yticklabels=False,
-    ccf_show_inline_label_text=False,
-    adjust_last_row_gap_inch=-0.0,
-    include_extra_data=False,
-    show_histogram=False,
-    show_subfigure_labels=False,
-    row_spacing=None,
-    line_style="-",
-    grid=(True, 0.12, 0.3, ':')
-)
-
-
-save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],
-    keyorders_dict=uvw2_keyorders_not_optical_talk,
-    file_name="UVW2_ccfs_Helium_UV_talk",
-    combine_data=True,
-    rows=6,
-    show_reference_label=True,
-    format_labels_as_paper=True,
-    layout_show_right_ccf_ylabel=False,
-    layout_show_top_secondary_labels=False,
-    lightcurve_hide_yticklabels=False,
-    ccf_show_inline_label_text=False,
-    adjust_last_row_gap_inch=-0.0,
-    include_extra_data=False,
-    show_histogram=False,
-    show_subfigure_labels=False,
-    row_spacing=None,
-    line_style="-",
-    grid=(True, 0.12, 0.3, ':')
-)
-
-
-OI_paper_keyorder_HAlpha = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446","HAlpha"],
-                      "UVW2": ["time shift (tau)", "HAlpha", "OI8446", "LyAlpha_not_optical_calibrated"],
-                      #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
-                      }
-
-OI_paper_HST_UV_keyorder_HAlpha = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446","HAlpha"],
-                      "Cont1150_not_optical_calibrated": ["time shift (tau)", "HAlpha", "OI8446"],
-                      #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
-                      }
-
-OI_paper_keyorder_HBeta = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446","HBeta"],
-                      "UVW2": ["time shift (tau)", "HBeta", "OI8446"],
-                      #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
-                      }
-
-OI_paper_HST_UV_keyorder_HBeta = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446", "HBeta"],
-                      "Cont1150_not_optical_calibrated": ["time shift (tau)", "HBeta", "OI8446"],
-                      #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
-                      }
-
-save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],
-    keyorders_dict=OI_paper_keyorder_HAlpha,
-    file_name="OI_ccfs_and_reference_lightcurves_paper HAlpha",
-    final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
-    combine_data=True,
-    rows=6,
-    show_reference_label=True,
-    format_labels_as_paper = True,
-    layout_show_right_ccf_ylabel = False,
-    layout_show_top_secondary_labels = False,
-    lightcurve_hide_yticklabels = False,
-    ccf_show_inline_label_text = False,
-    adjust_last_row_gap_inch = -0.2,
-    include_extra_data = True,
-    extra_data_name = "OI8446_ref_HAlpha",
-    show_histogram = False,
-    show_subfigure_labels=False,
-    row_spacing=None,
-    line_style="-",
-    grid=(True, 0.12, 0.3, ':')
-)
-
-
-
-OI_paper_keyorder_HAlpha_talk = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446",],
-                      "UVW2": ["time shift (tau)", "HAlpha", "OI8446", "LyAlpha_not_optical_calibrated"],
-                      #"HAlpha": ["time shift (tau)", "LyAlpha_not_optical_calibrated"],
-                      }
-
-save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],
-    keyorders_dict=OI_paper_keyorder_HAlpha_talk,
-    file_name="OI_ccfs_and_reference_lightcurves_paper HAlpha talk",
-    final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
-    combine_data=True,
-    rows=5,
-    show_reference_label=True,
-    format_labels_as_paper = True,
-    layout_show_right_ccf_ylabel = False,
-    layout_show_top_secondary_labels = False,
-    lightcurve_hide_yticklabels = False,
-    ccf_show_inline_label_text = False,
-    adjust_last_row_gap_inch = -0.2,
-    include_extra_data = True,
-    extra_data_name = "OI8446_ref_HAlpha",
-    show_histogram = False,
-    show_subfigure_labels=False,
-    row_spacing=None,
-    line_style="-",
-    grid=(True, 0.12, 0.3, ':')
-)
-
-"""
-
-OI_paper_keyorder_second_paper_HAlpha = { "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
-                                          "HAlpha": ["time shift (tau)", "OI8446"],
-                                          "UVW2": ["time shift (tau)",  "OI8446"],
-                      }
+# -----------------------------------------------------------------
+# FIGURE 3: OI8446 CCFs – second paper (Hα reference)
+# (combined dataset; references: LyAlpha, HAlpha, UVW2)
+# -----------------------------------------------------------------
+OI_paper_keyorder_second_paper_HAlpha = {
+    "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
+    "HAlpha":                          ["time shift (tau)", "OI8446"],
+    "UVW2":                            ["time shift (tau)", "OI8446"],
+}
 
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
     keyorders_dict=OI_paper_keyorder_second_paper_HAlpha,
     file_name="OI_ccfs_and_reference_lightcurves_second_paper",
     final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
-    combine_data=True,
-    rows=3,
-    figsize=(6, 5),
-    show_reference_label=True,
-    format_labels_as_paper = True,
-    layout_show_right_ccf_ylabel = False,
-    layout_show_top_secondary_labels = False,
-    lightcurve_hide_yticklabels = False,
-    ccf_show_inline_label_text = False,
-    adjust_last_row_gap_inch = 0.0,
-    include_extra_data = True,
-    show_histogram = False,
-    show_subfigure_labels=False,
-    row_spacing=0.2,
-    line_style=":",
-    grid=(True, 0.5, 0.3, ':')
+    config=replace(PAPER_CONFIG,
+                   rows=3,
+                   figsize=(6, 5),
+                   adjust_last_row_gap_inch=0.0,
+                   include_extra_data=True,
+                   row_spacing=0.2,
+                   line_style=":",
+                   grid=(True, 0.5, 0.3, ':')),
 )
 
-
-
+# -----------------------------------------------------------------
+# FIGURE 4: OI8446 CCFs – paper (Hα reference)
+# (combined dataset; references: LyAlpha, UVW2)
+# -----------------------------------------------------------------
+OI_paper_keyorder_HAlpha = {
+    "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446", "HAlpha"],
+    "UVW2":                            ["time shift (tau)", "HAlpha", "OI8446",
+                                        "LyAlpha_not_optical_calibrated"],
+}
 
 save_1d_corr_and_lightcurves_general(
     campaign_keys=[],
-    keyorders_dict=OI_paper_HST_UV_keyorder_HAlpha,
-    file_name="OI_ccfs_and_reference_lightcurves_HST_UV_paper HAlpha",
+    keyorders_dict=OI_paper_keyorder_HAlpha,
+    file_name="OI_ccfs_and_reference_lightcurves_paper_HAlpha",
     final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
-    combine_data=True,
-    rows=5,
-    figsize=(6, 8),
-    show_reference_label=True,
-    format_labels_as_paper=True,
-    layout_show_right_ccf_ylabel=False,
-    layout_show_top_secondary_labels=False,
-    lightcurve_hide_yticklabels=False,
-    ccf_show_inline_label_text=False,
-    adjust_last_row_gap_inch=-0.2,
-    include_extra_data=True,
-    extra_data_name="OI8446_ref_HAlpha"
+    config=replace(PAPER_CONFIG,
+                   rows=6,
+                   include_extra_data=True,
+                   extra_data_name="OI8446_ref_HAlpha"),
 )
 
+# -----------------------------------------------------------------
+# TALK/PRESENTATION FIGURES (commented out – activate only when needed)
+# -----------------------------------------------------------------
+"""
+# Talk: UVW2 – Balmer + Lyα (4 rows)
+uvw2_keyorders_optical_talk1 = {"UVW2": ["time shift (tau)", "HAlpha", "HBeta",
+                                          "LyAlpha_not_optical_calibrated", "HeI5875"]}
 save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],
-    keyorders_dict=OI_paper_keyorder_HBeta,
-    file_name="OI_ccfs_and_reference_lightcurves_paper HBeta",
-    final_key_order=["time shift (tau)", "OI8446", "HBeta"],
-    combine_data=True,
-    rows=5,
-    figsize=(6, 8),
-    show_reference_label=True,
-    format_labels_as_paper=True,
-    layout_show_right_ccf_ylabel=False,
-    layout_show_top_secondary_labels=False,
-    lightcurve_hide_yticklabels=False,
-    ccf_show_inline_label_text=False,
-    adjust_last_row_gap_inch=-0.2,
-    include_extra_data=True,
-    extra_data_name="OI8446_ref_HBeta"
+    campaign_keys=[], keyorders_dict=uvw2_keyorders_optical_talk1,
+    file_name="UVW2_talk1",
+    config=replace(TALK_CONFIG, rows=4),
 )
 
-
+# Talk: UVW2 – helium + UV (4 rows)
+uvw2_keyorders_optical_talk2 = {"UVW2": ["time shift (tau)", "HeI5875", "HeII4685",
+                                          "SiIV1393_not_optical_calibrated",
+                                          "CIV1548_not_optical_calibrated"]}
 save_1d_corr_and_lightcurves_general(
-    campaign_keys=[],
-    keyorders_dict=OI_paper_HST_UV_keyorder_HBeta,
-    file_name="OI_ccfs_and_reference_lightcurves_HST_UV_paper HBeta",
-    final_key_order=["time shift (tau)", "OI8446", "HBeta"],
-    combine_data=True,
-    rows=5,
-    figsize=(6, 8),
-    show_reference_label=True,
-    format_labels_as_paper=True,
-    layout_show_right_ccf_ylabel=False,
-    layout_show_top_secondary_labels=False,
-    lightcurve_hide_yticklabels=False,
-    ccf_show_inline_label_text=False,
-    adjust_last_row_gap_inch=-0.2,
-    include_extra_data=True,
-    extra_data_name="OI8446_ref_HBeta"
+    campaign_keys=[], keyorders_dict=uvw2_keyorders_optical_talk2,
+    file_name="UVW2_talk2",
+    config=replace(TALK_CONFIG, rows=4),
+)
+
+# Talk: UVW2 CCFs helium/UV (6 rows)
+uvw2_keyorders_not_optical_talk = {"UVW2": ["time shift (tau)", "HeI5875",
+                                             "HeII1640_not_optical_calibrated", "HeII4685",
+                                             "NV1238_not_optical_calibrated",
+                                             "SiIV1393_not_optical_calibrated",
+                                             "CIV1548_not_optical_calibrated"]}
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[], keyorders_dict=uvw2_keyorders_not_optical_talk,
+    file_name="UVW2_ccfs_Helium_UV_talk",
+    config=replace(TALK_CONFIG, rows=6),
+)
+
+# Talk: OI8446 (Hα reference, 5 rows)
+OI_paper_keyorder_HAlpha_talk = {
+    "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
+    "UVW2": ["time shift (tau)", "HAlpha", "OI8446", "LyAlpha_not_optical_calibrated"],
+}
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[], keyorders_dict=OI_paper_keyorder_HAlpha_talk,
+    file_name="OI_ccfs_paper_HAlpha_talk",
+    final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
+    config=replace(TALK_CONFIG, rows=5,
+                   include_extra_data=True, extra_data_name="OI8446_ref_HAlpha"),
+)
+"""
+
+# -----------------------------------------------------------------
+# ARCHIVE (older / experimental figures – kept for reference only)
+# -----------------------------------------------------------------
+"""
+# All UV lines up to Hα in a single figure (many rows)
+uv_to_halpha_keyorder = ["time shift (tau)", "UVW2", "LyAlpha_not_optical_calibrated",
+                         "NV1238_not_optical_calibrated", "SiIV1393_not_optical_calibrated",
+                         "CIV1548_not_optical_calibrated", "HeII1640_not_optical_calibrated",
+                         "HDelta", "HGamma", "HeII4685", "HBeta", "HeI5875", "HAlpha"]
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[], keyorders_dict={"UVW2": uv_to_halpha_keyorder},
+    file_name="UV_to_HAlpha_ccfs_and_reference_lightcurves",
+    final_key_order=uv_to_halpha_keyorder,
+    rows=len(uv_to_halpha_keyorder) - 1, cols=2,
+    campaign_label="NGC4593_Combined",
+)
+
+# Bowen fluorescence figure (optically calibrated)
+bowen_keyorders = {
+    "NGC4593_optical_calibrated": {
+        "Cont1150_not_optical_calibrated": ["time shift (tau)", "HAlpha", "HBeta",
+                                             "LyAlpha_not_optical_calibrated", "OI8446"],
+        "LyAlpha_not_optical_calibrated":  ["time shift (tau)", "HAlpha", "HBeta", "OI8446"],
+        "HAlpha": ["time shift (tau)", "OI8446"],
+        "HBeta":  ["time shift (tau)", "OI8446"],
+    }
+}
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=["NGC4593_optical_calibrated"],
+    keyorders_dict=bowen_keyorders,
+    file_name="bowen_fluorescence_ccfs_and_reference_lightcurves",
+    final_key_order=["time shift (tau)", "OI8446", "LyAlpha_not_optical_calibrated",
+                     "HBeta", "HAlpha"],
+    rows=9, figsize=(6, 11), show_reference_label=True,
+)
+
+# OI overview (all references, older version)
+OI_keyorder = {
+    "LyAlpha_not_optical_calibrated": ["time shift (tau)", "OI8446"],
+    "HAlpha": ["time shift (tau)", "OI8446"],
+    "UVW2":   ["time shift (tau)", "HAlpha", "OI8446"],
+}
+save_1d_corr_and_lightcurves_general(
+    campaign_keys=[], keyorders_dict=OI_keyorder,
+    file_name="OI_ccfs_and_reference_lightcurves",
+    final_key_order=["time shift (tau)", "OI8446", "HAlpha"],
+    rows=4, figsize=(6, 4), show_reference_label=True,
 )
 """
