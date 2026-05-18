@@ -1251,7 +1251,6 @@ FIGURES = {
     "fig2": (figure_2_uvw2_helium_uv,         "UVW2 CCFs – helium and UV lines"),
     "fig3": (figure_4_oi_paper_halpha,        "OI8446 CCFs – paper (Hα ref)"),
     "fig4": (figure_3_oi_second_paper_halpha, "OI8446 CCFs – second paper (Hα ref)"),
-    "fig5": (figure_5_oi_hst_uv_halpha,       "OI8446 CCFs – HST/UV comparison (Hα ref)"),
 }
 
 
@@ -1273,7 +1272,7 @@ def main():
     # Generate multiple figures:
         python plot_1D_ccfs_and_reference_lightcurves.py fig1 fig3 fig4
 
-    # Generate all figures (fig1–fig5):
+    # Generate all figures (fig1–fig4):
         python plot_1D_ccfs_and_reference_lightcurves.py all
 
     # List all available figure names:
@@ -1315,7 +1314,7 @@ def main():
         print("\nAvailable figures:\n")
         for name, (_, desc) in FIGURES.items():
             print(f"  {name:<6}  {desc}")
-        print("\nShortcut:  all → fig1 fig2 fig3 fig4 fig5\n")
+        print("\nShortcut:  all → fig1 fig2 fig3 fig4\n")
         return
 
     # Resolve 'all' shortcut
